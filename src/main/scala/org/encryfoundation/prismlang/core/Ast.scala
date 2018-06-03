@@ -9,6 +9,8 @@ object Ast {
   sealed trait Expr extends Node { var tpe: PType }
   object Expr {
 
+    case class Contract(body: List[Expr]) extends Expr { override var tpe: PType = PBoolean }
+
     case class Block(body: List[Expr]) extends Expr { override var tpe: PType = Nit }
 
     // Syntactical constructions

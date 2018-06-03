@@ -22,21 +22,26 @@ object Expressions {
   val BASE58STRING: P[String] = P( "base58" ~/ Lexer.stringliteral )
   val BASE16STRING: P[String] = P( "base16" ~/ Lexer.stringliteral )
 
+  val spaces: P[Unit] = P( (Semis.? ~~ "\n").repX(1) )
+
+  // This parser is for tests only.
+  val fileInput: P[Seq[Ast.Expr]] = P( Semis.? ~ expr.repX(0, Semis) ~ Semis.? )
+
   val block: P[Ast.Expr] = {
     val end = P( Semis.? ~ "}" )
     P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exprs => Ast.Expr.Block(exprs.toList))
   }
 
-  val expr: P[Ast.Expr] = P( arith_expr | test | block )
-  val arith_expr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
-  val term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
+  def expr: P[Ast.Expr] = P( arith_expr | test | lambdef | constdef | block )
+  def arith_expr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
+  def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
   val test: P[Ast.Expr] = {
     val ternary = P(orTest ~ (kwd("if") ~ orTest ~ kwd("else") ~ test).?).map {
       case (x, None) => x
-      case (x, Some((t, neg))) => ??? // if
+      case (x, Some((t, neg))) => ??? // if?
     }
-    P( ternary | lambdef )
+    P( ternary )
   }
   val orTest: core.Parser[Ast.Expr, Char, String] = P( andTest.rep(1, kwd("or") | "||") ).map {
     case Seq(x) => x
@@ -136,5 +141,9 @@ object Expressions {
 
   val lambdef: P[Ast.Expr.Lambda] = P( kwd("lamb") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, exp) =>
     Ast.Expr.Lambda(args.toList, exp)
+  }
+
+  val constdef: P[Ast.Expr.Let] = P( kwd("let") ~ NAME ~ typeAnnotation.? ~ "=" ~ expr ).map { case (name, typeOpt, value) =>
+    Ast.Expr.Let(name, value, typeOpt)
   }
 }
