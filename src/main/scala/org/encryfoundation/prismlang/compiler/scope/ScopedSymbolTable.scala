@@ -1,7 +1,5 @@
 package org.encryfoundation.prismlang.compiler.scope
 
-import org.encryfoundation.prismlang.compiler.AlreadyDefinedException
-
 import scala.collection.immutable.TreeMap
 
 case class ScopedSymbolTable(scopeLevel: Int,
@@ -11,7 +9,7 @@ case class ScopedSymbolTable(scopeLevel: Int,
   var symbols: TreeMap[String, Symbol] = TreeMap(PredefinedScope.members.map(m => m.name -> m):_*)
 
   def insert(sym: Symbol): Unit = {
-    symbols.get(sym.name).map(_ => throw AlreadyDefinedException(sym.name))
+    symbols.get(sym.name).map(_ => throw new Exception(s"${sym.name} is already defined in scope"))
     symbols = symbols.updated(sym.name, sym)
   }
 

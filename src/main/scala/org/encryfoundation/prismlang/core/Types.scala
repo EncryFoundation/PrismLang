@@ -12,7 +12,7 @@ object Types {
 
     def isCollection: Boolean = this.isInstanceOf[ESCollection]
 
-    def isOption: Boolean = this.isInstanceOf[ESOption]
+    def isOption: Boolean = this.isInstanceOf[POption]
 
     def isProduct: Boolean = this.isInstanceOf[ESProduct]
 
@@ -144,7 +144,7 @@ object Types {
     override val superTypeOpt: Option[ESProduct] = Some(ESProof)
 
     override val fields: Map[String, PType] = Map(
-      "proofs" -> ESList(Signature25519)
+      "proofs" -> PArray(Signature25519)
     )
   }
 
@@ -223,7 +223,7 @@ object Types {
 
     override val fields: Map[String, PType] = Map(
       "amount" -> PInt,
-      "tokenIdOpt" -> ESOption(PByteVector)
+      "tokenIdOpt" -> POption(PByteVector)
     )
   }
 
@@ -257,7 +257,7 @@ object Types {
 
     override val fields: Map[String, PType] = Map(
       "boxId" -> ESTransaction,
-      "proofOpt" -> ESOption(ESProof)
+      "proofOpt" -> POption(ESProof)
     )
   }
 
@@ -270,8 +270,8 @@ object Types {
       "fee" -> PInt,
       "timestamp" -> PInt,
       "signature" -> PByteVector,
-      "unlockers" -> ESList(ESUnlocker),
-      "outputs" -> ESList(ESBox),
+      "unlockers" -> PArray(ESUnlocker),
+      "outputs" -> PArray(ESBox),
       "messageToSign" -> PByteVector
     )
   }
@@ -296,7 +296,7 @@ object Types {
     )
   }
 
-  case class ESList(valT: PType) extends PType with ESCollection {
+  case class PArray(valT: PType) extends PType with ESCollection {
     override type Underlying = List[valT.Underlying]
     override val ident: String = "List"
 
@@ -304,18 +304,18 @@ object Types {
       if (numericTypes.contains(valT)) {
         super.fields ++ Map(
           "exists" -> ESFunc(List("predicate" -> ESFunc(List("any" -> valT), PBoolean)), PBoolean),
-          "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> valT), ESAny)), ESList(ESAny)),
+          "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> valT), ESAny)), PArray(ESAny)),
           "sum" -> valT
         )
       } else {
         super.fields ++ Map(
           "exists" -> ESFunc(List("predicate" -> ESFunc(List("any" -> valT), PBoolean)), PBoolean),
-          "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> valT), ESAny)), ESList(ESAny))
+          "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> valT), ESAny)), PArray(ESAny))
         )
       }
 
     override def equals(obj: Any): Boolean = obj match {
-      case l: ESList => l.valT == this.valT
+      case l: PArray => l.valT == this.valT
       case _ => false
     }
   }
@@ -326,7 +326,7 @@ object Types {
 
     override def fields: Map[String, PType] = super.fields ++ Map(
       "exists" -> ESFunc(List("predicate" -> ESFunc(List("any" -> keyT, "any" -> valT), PBoolean)), PBoolean),
-      "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> keyT, "any" -> valT), ESAny)), ESList(ESAny))
+      "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> keyT, "any" -> valT), ESAny)), PArray(ESAny))
     )
 
     override def equals(obj: Any): Boolean = obj match {
@@ -335,13 +335,13 @@ object Types {
     }
   }
 
-  case class ESOption(inT: PType) extends PType with ESProduct with Parametrized {
+  case class POption(inT: PType) extends PType with ESProduct with Parametrized {
     override type Underlying = Option[inT.Underlying]
     override val ident: String = "Option"
-    override val fields: Map[String, PType] = ESOption.fields ++ Map("get" -> inT)
+    override val fields: Map[String, PType] = POption.fields ++ Map("get" -> inT)
   }
 
-  object ESOption {
+  object POption {
     val fields: Map[String, PType] = Map(
       "isDefined" -> PBoolean
     )
@@ -396,12 +396,12 @@ object Types {
     ContractProposition,
     HeightProposition,
     SDObject,
-    ESOption(Nit)
+    POption(Nit)
   )
 
   lazy val collTypes: Seq[ESCollection] = Seq(
     ESDict(Nit, Nit),
-    ESList(Nit)
+    PArray(Nit)
   )
 
   lazy val numericTypes: Seq[PType] = Seq(
