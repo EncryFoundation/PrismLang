@@ -10,7 +10,7 @@ class ParserTest extends PropSpec with Matchers {
 
   property("Lambda parsing") {
 
-    val source = "lamb (a: Int, b: Int) = { a + b }"
+    val source = "lamb (a: Int, b: Int) = a + b"
 
     val expected: Expr = Lambda(
       List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
@@ -18,8 +18,6 @@ class ParserTest extends PropSpec with Matchers {
     )
 
     val parsedTry = Parser.parse(source)
-
-    parsedTry.get
 
     parsedTry.isSuccess shouldBe true
 

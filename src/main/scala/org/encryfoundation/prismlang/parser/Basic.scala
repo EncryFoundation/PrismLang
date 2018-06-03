@@ -1,7 +1,6 @@
 package org.encryfoundation.prismlang.parser
 
 import fastparse.all._
-import fastparse.CharPredicates._
 
 object Basic {
 
