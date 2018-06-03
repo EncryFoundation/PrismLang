@@ -28,8 +28,6 @@
     // If statement
     val flag: Bool = if (10 < 100) {
         true
-    } elif (10 == 100) {
-        true
     } else {
         false
     }

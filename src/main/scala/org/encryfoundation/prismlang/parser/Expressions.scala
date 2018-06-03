@@ -28,12 +28,12 @@ object Expressions {
   val fileInput: P[Seq[Ast.Expr]] = P( Semis.? ~ expr.repX(0, Semis) ~ Semis.? )
 
   val block: P[Ast.Expr] = {
-    val end = P( Semis.? ~ "}" )
+    val end: noApi.Parser[Unit] = P( Semis.? ~ "}" )
     P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exps => Ast.Expr.Block(exps.toList))
   }
 
-  def expr: P[Ast.Expr] = P( arith_expr | test | lambdef | funcdef | constdef | ifExpr | block )
-  def arith_expr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
+  def expr: P[Ast.Expr] = P( arithExpr | test | lambdef | funcdef | constdef | ifExpr | block )
+  def arithExpr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
   def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
   val test: P[Ast.Expr] = {
@@ -53,7 +53,7 @@ object Expressions {
   }
   val notTest: P[Ast.Expr] = P( (("not" | "!") ~ notTest).map(Ast.Expr.Unary(Ast.UnaryOp.Not, _)) | comparison )
 
-  val comparison: P[Ast.Expr] = P( arith_expr ~ (comp_op ~ arith_expr).rep ).map {
+  val comparison: P[Ast.Expr] = P( arithExpr ~ (comp_op ~ arithExpr).rep ).map {
     case (lhs, Nil) => lhs
     case (lhs, chunks) =>
       val (ops, vals) = chunks.unzip

@@ -256,4 +256,29 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     parsedTry.get.toString shouldEqual expected.toString
   }
+
+  property("Dot-notation") {
+
+    val source =
+      """
+        |object.method()
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Call(
+        Attribute(
+          Name(Ident("object")),
+          Ident("method"),
+          Types.Nit
+        ),
+        List()
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
 }
