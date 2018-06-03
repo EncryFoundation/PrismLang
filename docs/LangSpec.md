@@ -18,33 +18,33 @@
 
     // Function definition
     def sum(a: Int, b: Int): Int = {
-        return a + b
+        a + b
     }
     
     // Lambda definition
     lamb (a: Int, b: Int) = a + b
 
     // If statement
-    if (10 < 100) {
-        pass
+    val flag: Bool = if (10 < 100) {
+        true
     } elif (10 == 100) {
-        pass
+        true
     } else {
-        pass
+        false
     }
     
     // Type matching
-    let validProof: Bool = if let (sig: Signature25519 = poof) checkSig(sig, msg, pk) else false
+    let validProof: Bool = if (let sig: Signature25519 = poof) checkSig(sig, msg, pk) else false
 
     // Base58 string
     let pubKeyBytes: ByteVector = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
 
     // Collections
-    let ageList: Array[Int] = List(1, 2, 3, 4)   // Note, types could also be inferred implicitly by preprecessor.
+    let ageList: Array[Int] = List(1, 2, 3, 4)
     let ageDict: Dict[String, Int] = Dict('Alice' -> 4, 'Bob' -> 9, 'Tom' -> 17)
 
     let someonesAge = ageList[0].get        // Will result in `1`
     let aliceAge = ageDict['Alice'].get     // Will result in `4`
 
     // Lambdas application
-    let deesExist: Bool = ageList.exists(lamb (i: Int) = i > 3)     // Will result in `true`
+    let doesExist: Bool = ageList.exists(lamb (i: Int) = i > 3)     // Will result in `true`
