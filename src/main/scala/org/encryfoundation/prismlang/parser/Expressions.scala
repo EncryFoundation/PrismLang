@@ -22,7 +22,12 @@ object Expressions {
   val BASE58STRING: P[String] = P( "base58" ~/ Lexer.stringliteral )
   val BASE16STRING: P[String] = P( "base16" ~/ Lexer.stringliteral )
 
-  val expr: P[Ast.Expr] = P( arith_expr | test )
+  val block: P[Ast.Expr] = {
+    val end = P( Semis.? ~ "}" )
+    P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exprs => Ast.Expr.Block(exprs.toList))
+  }
+
+  val expr: P[Ast.Expr] = P( arith_expr | test | block )
   val arith_expr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
   val term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
@@ -129,7 +134,7 @@ object Expressions {
 
   val varargslist: P[Seq[(Ast.Ident, Ast.TypeIdent)]] = P( (NAME ~/ typeAnnotation).rep(sep = ",") ~ ",".? )
 
-  val lambdef: P[Ast.Expr.Lambda] = P( kwd("lamb") ~ "(" ~ varargslist ~ ")" ~ "=" ~ test ).map { case (args, exp) =>
+  val lambdef: P[Ast.Expr.Lambda] = P( kwd("lamb") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, exp) =>
     Ast.Expr.Lambda(args.toList, exp)
   }
 }

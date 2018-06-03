@@ -23,4 +23,20 @@ class ParserTest extends PropSpec with Matchers {
 
     parsedTry.get.toString shouldEqual expected.toString
   }
+
+  property("Lambda parsing (with block)") {
+
+    val source = "lamb (a: Int, b: Int) = { a + b }"
+
+    val expected: Expr = Lambda(
+      List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
+      Block(List(Bin(Name(Ident("a")), Operator.Add, Name(Ident("b")), Types.Nit)))
+    )
+
+    val parsedTry = Parser.parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
 }
