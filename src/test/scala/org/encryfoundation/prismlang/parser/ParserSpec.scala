@@ -5,7 +5,7 @@ import org.scalatest.{Matchers, PropSpec}
 
 import scala.collection.mutable.ArrayBuffer
 
-class ParserTest extends PropSpec with Matchers with Parser {
+class ParserSpec extends PropSpec with Matchers with Parser {
 
   import org.encryfoundation.prismlang.core.Ast.Expr._
   import org.encryfoundation.prismlang.core.Ast._
@@ -14,10 +14,10 @@ class ParserTest extends PropSpec with Matchers with Parser {
 
     val source = "lamb (a: Int, b: Int) = a + b"
 
-    val expected: Expr = Lambda(
+    val expected: Seq[Expr] = ArrayBuffer(Lambda(
       List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
       Bin(Name(Ident("a")), Operator.Add, Name(Ident("b")), Types.Nit)
-    )
+    ))
 
     val parsedTry = parse(source)
 
@@ -30,10 +30,10 @@ class ParserTest extends PropSpec with Matchers with Parser {
 
     val source = "lamb (a: Int, b: Int) = { a + b }"
 
-    val expected: Expr = Lambda(
+    val expected: Seq[Expr] = ArrayBuffer(Lambda(
       List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
       Block(List(Bin(Name(Ident("a")), Operator.Add, Name(Ident("b")), Types.Nit)))
-    )
+    ))
 
     val parsedTry = parse(source)
 
@@ -42,19 +42,28 @@ class ParserTest extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
-  // TODO
   property("Lambda parsing (with if)") {
 
     val source = "lamb (a: Int, b: Int) = if (a > b) b else a"
 
-    val expected: Seq[Expr] = ArrayBuffer(Lambda(
-      List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
-      Block(List(Bin(Name(Ident("a")), Operator.Add, Name(Ident("b")), Types.Nit)))
-    ))
+    val expected: Seq[Expr] = ArrayBuffer(
+      Lambda(
+        List(
+          (Ident("a"), TypeIdent("Int", List())),
+          (Ident("b"), TypeIdent("Int", List()))
+        ),
+        If(
+          Compare(
+            Name(Ident("a")),
+            List(CompOp.Gt),
+            List(Name(Ident("b")))
+          ),
+          Name(Ident("b")),
+          List(Name(Ident("a"))))
+      )
+    )
 
     val parsedTry = parse(source)
-
-    println(parsedTry.get)
 
     parsedTry.isSuccess shouldBe true
 
