@@ -167,8 +167,8 @@ class ParserTest extends PropSpec with Matchers with Parser {
       Def(
         Ident("sum"),
         List(
-          (Ident("a"), TypeIdent("Int",List())),
-          (Ident("b"), TypeIdent("Int",List()))
+          (Ident("a"), TypeIdent("Int", List())),
+          (Ident("b"), TypeIdent("Int", List()))
         ),
         Block(
           List(
@@ -176,10 +176,68 @@ class ParserTest extends PropSpec with Matchers with Parser {
               Name(Ident("a")),
               Operator.Add,
               Name(Ident("b")),
-              Types.Nit)
+              Types.Nit
+            )
           )
         ),
         TypeIdent("Int",List())
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
+  property("If (inline)") {
+
+    val source =
+      """
+        |if (3 > 0) true
+        |else false
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      If(
+        Compare(
+          IntConst(3),
+          List(CompOp.Gt),
+          List(IntConst(0))
+        ),
+        True,
+        List(False)
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
+  property("If") {
+
+    val source =
+      """
+        |if (3 > 0) {
+        |  true
+        |} else {
+        |  false
+        |}
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      If(
+        Compare(
+          IntConst(3),
+          List(CompOp.Gt),
+          List(IntConst(0))
+        ),
+        Block(List(True)),
+        List(Block(List(False)))
       )
     )
 
