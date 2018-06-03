@@ -153,4 +153,40 @@ class ParserTest extends PropSpec with Matchers with Parser {
 
     parsedTry.get.toString shouldEqual expected.toString
   }
+
+  property("Def") {
+
+    val source =
+      """
+        |def sum(a: Int, b: Int): Int = {
+        |  a + b
+        |}
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Def(
+        Ident("sum"),
+        List(
+          (Ident("a"), TypeIdent("Int",List())),
+          (Ident("b"), TypeIdent("Int",List()))
+        ),
+        Block(
+          List(
+            Bin(
+              Name(Ident("a")),
+              Operator.Add,
+              Name(Ident("b")),
+              Types.Nit)
+          )
+        ),
+        TypeIdent("Int",List())
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
 }

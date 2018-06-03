@@ -29,10 +29,10 @@ object Expressions {
 
   val block: P[Ast.Expr] = {
     val end = P( Semis.? ~ "}" )
-    P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exprs => Ast.Expr.Block(exprs.toList))
+    P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exps => Ast.Expr.Block(exps.toList))
   }
 
-  def expr: P[Ast.Expr] = P( arith_expr | test | lambdef | constdef | block )
+  def expr: P[Ast.Expr] = P( arith_expr | test | lambdef | funcdef | constdef | block )
   def arith_expr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
   def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
@@ -146,4 +146,7 @@ object Expressions {
   val constdef: P[Ast.Expr.Let] = P( kwd("let") ~ NAME ~ typeAnnotation.? ~ "=" ~ expr ).map { case (name, typeOpt, value) =>
     Ast.Expr.Let(name, value, typeOpt)
   }
+
+  val funcdef: P[Ast.Expr.Def] = P( kwd("def") ~ NAME ~ "(" ~ varargslist ~ ")" ~ typeAnnotation ~ "=" ~ expr )
+    .map { case (name, args, retType, body) => Ast.Expr.Def(name, args.toList, body, retType) }
 }
