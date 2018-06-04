@@ -23,6 +23,7 @@ case class StaticAnalyser(types: TypeSystem) {
   def scan: Scan =
     scanLet orElse
       scanDef orElse
+      scanIf orElse
       pass
 
   def scanLet: Scan = {
@@ -51,6 +52,24 @@ case class StaticAnalyser(types: TypeSystem) {
       scan(body)
       matchType(declaredReturnType, body.tpe)
       scopes = scopes.tail
+  }
+
+  def scanIf: Scan = {
+    /** Scan test expression ensuring its type is `Bool`,
+      * then scan bodies of each branch. */
+    case Expr.If(test, body, orelse) =>
+      scan(test)
+      matchType(test.tpe, Types.PBoolean)
+      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      scopes = bodyScope :: scopes
+      scan(body)
+      scopes = scopes.tail
+      val elseScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      scopes = elseScope :: scopes
+      scan(orelse)
+      scopes = scopes.tail
+
+    // TODO: IfLet
   }
 
   def pass: Scan = {

@@ -20,7 +20,7 @@ object Ast {
 
     case class Lambda(args: List[(Ident, TypeIdent)], body: Expr) extends Expr { override var tpe: PType = Nit }
 
-    case class If(test: Expr, body: Expr, orelse: List[Expr]) extends Expr { override var tpe: PType = Nit }
+    case class If(test: Expr, body: Expr, orelse: Expr) extends Expr { override var tpe: PType = Nit }
 
     case class IfLet(name: Ident, typeIdent: TypeIdent, target: Expr) extends Expr { override var tpe: PType = Nit }
 

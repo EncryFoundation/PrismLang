@@ -154,7 +154,7 @@ object Expressions {
     val firstIf = P( kwd("if") ~ "(" ~ test ~ ")" ~/ expr )
     val lastElse = P( Semi.? ~ kwd("else") ~/ expr )
     P( firstIf ~ lastElse ).map { case (tst, body, elseBody) =>
-      Ast.Expr.If(tst, body, List(elseBody))
+      Ast.Expr.If(tst, body, elseBody)
     }
   }
 

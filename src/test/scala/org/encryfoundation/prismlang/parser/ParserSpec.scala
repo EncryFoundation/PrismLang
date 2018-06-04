@@ -59,7 +59,8 @@ class ParserSpec extends PropSpec with Matchers with Parser {
             List(Name(Ident("b")))
           ),
           Name(Ident("b")),
-          List(Name(Ident("a"))))
+          Name(Ident("a"))
+        )
       )
     )
 
@@ -216,7 +217,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
           List(IntConst(0))
         ),
         True,
-        List(False)
+        False
       )
     )
 
@@ -246,7 +247,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
           List(IntConst(0))
         ),
         Block(List(True)),
-        List(Block(List(False)))
+        Block(List(False))
       )
     )
 
