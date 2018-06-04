@@ -25,7 +25,9 @@ object Expressions {
   val spaces: P[Unit] = P( (Semis.? ~~ "\n").repX(1) )
 
   // This parser is for tests only.
-  val fileInput: P[Seq[Ast.Expr]] = P( Semis.? ~ expr.repX(0, Semis) ~ Semis.? )
+  def fileInput: P[Seq[Ast.Expr]] = P( Semis.? ~ expr.repX(0, Semis) ~ Semis.? )
+
+  def fileInputContract: P[Ast.Expr.Contract] = P( Semis.? ~ contract ~ Semis.? )
 
   val block: P[Ast.Expr] = {
     val end: noApi.Parser[Unit] = P( Semis.? ~ "}" )
@@ -60,11 +62,9 @@ object Expressions {
       Ast.Expr.Compare(lhs, ops.toList, vals.toList)
   }
 
-  /**
-    * NUMBER appears here and below in `atom` to give it precedence.
+  /** NUMBER appears here and below in `atom` to give it precedence.
     * This ensures that "-2" will parse as `Num(-2)` rather than
-    * as `UnaryOp(USub, Num(2))`.
-    */
+    * as `UnaryOp(USub, Num(2))`. */
   val factor: P[Ast.Expr] = P( NUMBER | Unary(factor) | power )
   val power: P[Ast.Expr] = P( atom ~ trailer.rep ~ (Pow ~ factor).? ).map {
     case (lhs, trailers, rhs) =>
@@ -156,5 +156,9 @@ object Expressions {
     P( firstIf ~ lastElse ).map { case (tst, body, elseBody) =>
       Ast.Expr.If(tst, body, List(elseBody))
     }
+  }
+
+  val contract: P[Ast.Expr.Contract] = P( kwd("contract") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, body) =>
+    Ast.Expr.Contract(body, args.toList)
   }
 }

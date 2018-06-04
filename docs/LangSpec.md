@@ -26,7 +26,7 @@
     lamb (a: Int, b: Int) = a + b
 
     // If statement
-    val flag: Bool = if (10 < 100) {
+    let flag: Bool = if (10 < 100) {
         true
     } else {
         false
@@ -47,3 +47,10 @@
 
     // Lambdas application
     let doesExist: Bool = ageList.exists(lamb (i: Int) = i > 3)     // Will result in `true`
+
+## Contract Example
+
+    contract (signature: Signature25519) {
+        let ownerPubKey = base58"GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew"
+        checkSig(ctx.transaction.msg, ownerPubKey, signature)
+    }

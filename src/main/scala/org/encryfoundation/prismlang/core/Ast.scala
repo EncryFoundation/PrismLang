@@ -9,7 +9,7 @@ object Ast {
   sealed trait Expr extends Node { var tpe: PType }
   object Expr {
 
-    case class Contract(body: List[Expr]) extends Expr { override var tpe: PType = PBoolean }
+    case class Contract(body: Expr, args: List[(Ident, TypeIdent)]) extends Expr { override var tpe: PType = PBoolean }
 
     case class Block(body: List[Expr]) extends Expr { override var tpe: PType = Nit }
 

@@ -5,11 +5,20 @@ import org.encryfoundation.prismlang.core.{TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.compiler.scope.Symbol
 
+import scala.util.Try
+
 case class StaticAnalyser(types: TypeSystem) {
 
   import StaticAnalyser._
 
   var scopes: List[ScopedSymbolTable] = List(ScopedSymbolTable.initial)
+
+  def scanContract(contract: Expr.Contract): Try[Expr.Contract] = Try {
+    val args = resolveArgs(contract.args)
+    args.foreach(p => currentScope.insert(Symbol(p._1, p._2)))
+    scan(contract.body)
+    matchType(contract.body.tpe, Types.PBoolean)
+  }.map(_ => contract)
 
   def scan: Scan =
     scanLet orElse
@@ -23,7 +32,7 @@ case class StaticAnalyser(types: TypeSystem) {
     case Expr.Let(name, value, typeIdentOpt) =>
       scan(value)
       val valueType: Types.PType = value.tpe
-      typeIdentOpt.foreach(t => matchType(valueType, getType(t)))
+      typeIdentOpt.foreach(t => matchType(valueType, resolveType(t)))
       addToScope(name, valueType)
   }
 
@@ -33,8 +42,8 @@ case class StaticAnalyser(types: TypeSystem) {
       * with argument inserted, scan body and compare its type
       * with the declared one, pop function scope. */
     case Expr.Def(ident, args, body, returnTypeIdent) =>
-      val declaredReturnType: Types.PType = getType(returnTypeIdent)
-      val params: List[(String, Types.PType)] = args.map { case (id, typeId) => id.name -> getType(typeId) }
+      val declaredReturnType: Types.PType = resolveType(returnTypeIdent)
+      val params: List[(String, Types.PType)] = resolveArgs(args)
       currentScope.insert(Symbol(ident.name, Types.PFunc(params, declaredReturnType)))
       val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope, isFunc = true)
       params.foreach(p => bodyScope.insert(Symbol(p._1, p._2)))
@@ -52,7 +61,7 @@ case class StaticAnalyser(types: TypeSystem) {
 
   /** Resolves the type from its string representation
     * (including type parameters) */
-  def getType(ident: TypeIdent): Types.PType = {
+  def resolveType(ident: TypeIdent): Types.PType = {
     val typeParams: List[Types.PType] = ident.typeParams.map(p => types.typeByIdent(p)
       .getOrElse(error(s"Type '$p' is undefined.")))
     types.typeByIdent(ident.name).map {
@@ -67,6 +76,9 @@ case class StaticAnalyser(types: TypeSystem) {
         else error(s"'$otherT' does not take type parameters")
     }.getOrElse(error(s"Type '${ident.name}' is undefined."))
   }
+
+  def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] =
+    args.map { case (id, typeId) => id.name -> resolveType(typeId) }
 
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
     currentScope.insert(Symbol(ident.name, tpe))
