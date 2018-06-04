@@ -87,7 +87,7 @@ object Expressions {
 //        "{" ~ dictorsetmaker ~ "}" |
         BASE58STRING.rep(1).map(_.mkString).map(Ast.Expr.Base58Str) |
         STRING.rep(1).map(_.mkString).map(Ast.Expr.Str) |
-        NAME.map(Ast.Expr.Name) |
+        NAME.map(n => Ast.Expr.Name(n)) |
         NUMBER |
         BOOL
     )

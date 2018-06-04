@@ -20,9 +20,13 @@ case class StaticAnalyser(types: TypeSystem) {
     matchType(contract.body.tpe, Types.PBoolean)
   }.map(_ => contract)
 
+  /** Scan each node according to the specific rule, then
+    * compute its type (if the node is untyped by default)
+    * and return modified copy of the node */
   def scan: Scan =
     scanLet orElse
       scanDef orElse
+      scanLambda orElse
       scanIf orElse
       pass
 
@@ -30,11 +34,12 @@ case class StaticAnalyser(types: TypeSystem) {
     /** Scan the value to be assigned to the const, compute
       * its type, compare it with the declared one (if declared)
       * and add name to the scope. */
-    case Expr.Let(name, value, typeIdentOpt) =>
-      scan(value)
+    case let @ Expr.Let(name, value, typeIdentOpt) =>
+      val valueS: Expr = scan(value)
       val valueType: Types.PType = value.tpe
       typeIdentOpt.foreach(t => matchType(valueType, resolveType(t)))
       addToScope(name, valueType)
+      let.copy(name, valueS, typeIdentOpt)
   }
 
   def scanDef: Scan = {
@@ -42,52 +47,72 @@ case class StaticAnalyser(types: TypeSystem) {
       * to the current scope, create scope for the function body
       * with argument inserted, scan body and compare its type
       * with the declared one, pop function scope. */
-    case Expr.Def(ident, args, body, returnTypeIdent) =>
+    case func @ Expr.Def(ident, args, body, returnTypeIdent) =>
       val declaredReturnType: Types.PType = resolveType(returnTypeIdent)
       val params: List[(String, Types.PType)] = resolveArgs(args)
       currentScope.insert(Symbol(ident.name, Types.PFunc(params, declaredReturnType)))
       val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope, isFunc = true)
       params.foreach(p => bodyScope.insert(Symbol(p._1, p._2)))
       scopes = bodyScope :: scopes
-      scan(body)
+      val bodyS: Expr = scan(body)
       matchType(declaredReturnType, body.tpe)
       scopes = scopes.tail
+      func.copy(ident, args, bodyS, returnTypeIdent)
+  }
+
+  def scanLambda: Scan = {
+    /** Resolve arguments, create scope for the function body
+      * with argument inserted, scan body, pop function scope. */
+    case lamb @ Expr.Lambda(args, body, _) =>
+      val params: List[(String, Types.PType)] = resolveArgs(args)
+      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope, isFunc = true)
+      params.foreach(p => bodyScope.insert(Symbol(p._1, p._2)))
+      scopes = bodyScope :: scopes
+      val bodyS: Expr = scan(body)
+      scopes = scopes.tail
+      lamb.copy(args, bodyS, computeType(lamb))
   }
 
   def scanIf: Scan = {
     /** Scan test expression ensuring its type is `Bool`,
       * then scan bodies of each branch. */
-    case Expr.If(test, body, orelse) =>
+    case ifExp @ Expr.If(test, body, orelse, _) =>
       scan(test)
       matchType(test.tpe, Types.PBoolean)
       val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
       scopes = bodyScope :: scopes
-      scan(body)
+      val bodyS: Expr = scan(body)
       scopes = scopes.tail
       val elseScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
       scopes = elseScope :: scopes
-      scan(orelse)
+      val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
+      ifExp.copy(test, bodyS, orelseS, computeType(ifExp))
     /** Scan the target to be assigned, ensure that its type
       * can be cast to the declared local type, then scan
       * bodies of each branch. */
-    case Expr.IfLet(local, typeIdent, target, body, orelse) =>
-      scan(target)
+    case letIf @ Expr.IfLet(local, typeIdent, target, body, orelse, _) =>
+      val targetS: Expr = scan(target)
       val localT: Types.PType = resolveType(typeIdent)
       if (localT.isSubtypeOf(target.tpe)) error(s"${target.tpe} can not be cast to $localT")
       val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
       bodyScope.insert(Symbol(local.name, localT))
       scopes = bodyScope :: scopes
-      scan(body)
+      val bodyS: Expr = scan(body)
       scopes = scopes.tail
       val elseScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
       scopes = elseScope :: scopes
-      scan(orelse)
+      val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
+      letIf.copy(local, typeIdent, targetS, bodyS, orelseS, computeType(letIf))
   }
 
   def pass: Scan = {
-    case _ =>
+    case any => any
+  }
+
+  def computeType(expr: Expr): Types.PType = if (expr.tpe != Types.Nit) expr.tpe else {
+    ???
   }
 
   def currentScope: ScopedSymbolTable = scopes.head
@@ -124,5 +149,5 @@ case class StaticAnalyser(types: TypeSystem) {
 
 object StaticAnalyser {
 
-  type Scan = PartialFunction[Expr, Unit]
+  type Scan = PartialFunction[Expr, Expr]
 }
