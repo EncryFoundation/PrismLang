@@ -14,11 +14,12 @@ case class StaticAnalyser(types: TypeSystem) {
   var scopes: List[ScopedSymbolTable] = List(ScopedSymbolTable.initial)
 
   def scanContract(contract: Expr.Contract): Try[Expr.Contract] = Try {
-    val args = resolveArgs(contract.args)
+    val args: List[(String, Types.PType)] = resolveArgs(contract.args)
     args.foreach(p => currentScope.insert(Symbol(p._1, p._2)))
-    scan(contract.body)
+    val bodyS: Expr = scan(contract.body)
     matchType(contract.body.tpe, Types.PBoolean)
-  }.map(_ => contract)
+    contract.copy(bodyS)
+  }
 
   /** Scan each node according to the specific rule, then
     * compute its type (if the node is untyped by default)
