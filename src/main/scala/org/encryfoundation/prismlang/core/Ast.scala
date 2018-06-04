@@ -22,7 +22,7 @@ object Ast {
 
     case class If(test: Expr, body: Expr, orelse: Expr) extends Expr { override var tpe: PType = Nit }
 
-    case class IfLet(name: Ident, typeIdent: TypeIdent, target: Expr) extends Expr { override var tpe: PType = Nit }
+    case class IfLet(name: Ident, typeIdent: TypeIdent, target: Expr, body: Expr, orelse: Expr) extends Expr { override var tpe: PType = Nit }
 
     // Operations
     case class Bool(op: BooleanOp, values: List[Expr]) extends Expr { override var tpe: PType = PBoolean }

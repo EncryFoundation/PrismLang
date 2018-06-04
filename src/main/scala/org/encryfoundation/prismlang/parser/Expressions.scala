@@ -34,7 +34,7 @@ object Expressions {
     P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exps => Ast.Expr.Block(exps.toList))
   }
 
-  def expr: P[Ast.Expr] = P( arithExpr | test | lambdef | funcdef | constdef | ifExpr | block )
+  def expr: P[Ast.Expr] = P( arithExpr | test | lambdef | funcdef | constdef | ifLetExpr | ifExpr | block )
   def arithExpr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
   def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
@@ -155,6 +155,15 @@ object Expressions {
     val lastElse = P( Semi.? ~ kwd("else") ~/ expr )
     P( firstIf ~ lastElse ).map { case (tst, body, elseBody) =>
       Ast.Expr.If(tst, body, elseBody)
+    }
+  }
+
+  val ifLetExpr: P[Ast.Expr.IfLet] = {
+    val let: noApi.Parser[(Ast.Ident, Ast.TypeIdent, Ast.Expr)] = P( kwd("let") ~ NAME ~ typeAnnotation ~ "=" ~ expr )
+    val firstIf = P( kwd("if") ~ "(" ~ let ~ ")" ~/ expr )
+    val lastElse = P( Semi.? ~ kwd("else") ~/ expr )
+    P( firstIf ~ lastElse ).map { case (local, typeId, target, body, elseBody) =>
+      Ast.Expr.IfLet(local, typeId, target, body, elseBody)
     }
   }
 

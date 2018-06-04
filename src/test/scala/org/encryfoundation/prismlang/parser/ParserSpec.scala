@@ -258,6 +258,38 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
+//  property("IfLet") {
+//
+//    val source =
+//      """
+//        |if (let a: String = b) {
+//        |  true
+//        |} else {
+//        |  false
+//        |}
+//      """.stripMargin
+//
+//    val expected: Seq[Expr] = ArrayBuffer(
+//      If(
+//        Compare(
+//          IntConst(3),
+//          List(CompOp.Gt),
+//          List(IntConst(0))
+//        ),
+//        Block(List(True)),
+//        Block(List(False))
+//      )
+//    )
+//
+//    val parsedTry = parse(source)
+//
+//    println(parsedTry.get)
+//
+//    parsedTry.isSuccess shouldBe true
+//
+//    parsedTry.get.toString shouldEqual expected.toString
+//  }
+
   property("Dot-notation") {
 
     val source =
