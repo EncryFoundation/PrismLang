@@ -68,8 +68,22 @@ case class StaticAnalyser(types: TypeSystem) {
       scopes = elseScope :: scopes
       scan(orelse)
       scopes = scopes.tail
-
-    // TODO: IfLet
+    /** Scan the target to be assigned, ensure that its type
+      * can be cast to the declared local type, then scan
+      * bodies of each branch. */
+    case Expr.IfLet(local, typeIdent, target, body, orelse) =>
+      scan(target)
+      val localT: Types.PType = resolveType(typeIdent)
+      if (localT.isSubtypeOf(target.tpe)) error(s"${target.tpe} can not be cast to $localT")
+      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      bodyScope.insert(Symbol(local.name, localT))
+      scopes = bodyScope :: scopes
+      scan(body)
+      scopes = scopes.tail
+      val elseScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      scopes = elseScope :: scopes
+      scan(orelse)
+      scopes = scopes.tail
   }
 
   def pass: Scan = {

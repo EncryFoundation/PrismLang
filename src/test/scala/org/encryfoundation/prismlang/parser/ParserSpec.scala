@@ -14,10 +14,20 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     val source = "lamb (a: Int, b: Int) = a + b"
 
-    val expected: Seq[Expr] = ArrayBuffer(Lambda(
-      List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
-      Bin(Name(Ident("a")), Operator.Add, Name(Ident("b")), Types.Nit)
-    ))
+    val expected: Seq[Expr] = ArrayBuffer(
+      Lambda(
+        List(
+          (Ident("a"), TypeIdent("Int", List())),
+          (Ident("b"), TypeIdent("Int", List()))
+        ),
+        Bin(
+          Name(Ident("a")),
+          Operator.Add,
+          Name(Ident("b")),
+          Types.Nit
+        )
+      )
+    )
 
     val parsedTry = parse(source)
 
@@ -30,10 +40,23 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     val source = "lamb (a: Int, b: Int) = { a + b }"
 
-    val expected: Seq[Expr] = ArrayBuffer(Lambda(
-      List((Ident("a"), TypeIdent("Int", List())), (Ident("b"), TypeIdent("Int", List()))),
-      Block(List(Bin(Name(Ident("a")), Operator.Add, Name(Ident("b")), Types.Nit)))
-    ))
+    val expected: Seq[Expr] = ArrayBuffer(
+      Lambda(
+        List(
+          (Ident("a"), TypeIdent("Int", List())),
+          (Ident("b"), TypeIdent("Int", List()))
+        ),
+        Block(
+          List(
+            Bin(
+              Name(Ident("a")),
+              Operator.Add,
+              Name(Ident("b")),
+              Types.Nit)
+          )
+        )
+      )
+    )
 
     val parsedTry = parse(source)
 
@@ -258,37 +281,33 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
-//  property("IfLet") {
-//
-//    val source =
-//      """
-//        |if (let a: String = b) {
-//        |  true
-//        |} else {
-//        |  false
-//        |}
-//      """.stripMargin
-//
-//    val expected: Seq[Expr] = ArrayBuffer(
-//      If(
-//        Compare(
-//          IntConst(3),
-//          List(CompOp.Gt),
-//          List(IntConst(0))
-//        ),
-//        Block(List(True)),
-//        Block(List(False))
-//      )
-//    )
-//
-//    val parsedTry = parse(source)
-//
-//    println(parsedTry.get)
-//
-//    parsedTry.isSuccess shouldBe true
-//
-//    parsedTry.get.toString shouldEqual expected.toString
-//  }
+  property("IfLet") {
+
+    val source =
+      """
+        |if (let a: String = b) {
+        |  true
+        |} else {
+        |  false
+        |}
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      IfLet(
+        Ident("a"),
+        TypeIdent("String",List()),
+        Name(Ident("b")),
+        Block(List(True)),
+        Block(List(False))
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
 
   property("Dot-notation") {
 
