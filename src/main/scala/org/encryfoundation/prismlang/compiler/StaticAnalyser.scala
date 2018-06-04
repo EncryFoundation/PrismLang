@@ -13,14 +13,35 @@ case class StaticAnalyser(types: TypeSystem) {
 
   def scan: Scan =
     scanLet orElse
+      scanDef orElse
       pass
 
   def scanLet: Scan = {
+    /** Scan the value to be assigned to the const, compute
+      * its type, compare it with the declared one (if declared)
+      * and add name to the scope. */
     case Expr.Let(name, value, typeIdentOpt) =>
       scan(value)
       val valueType: Types.PType = value.tpe
       typeIdentOpt.foreach(t => matchType(valueType, getType(t)))
       addToScope(name, valueType)
+  }
+
+  def scanDef: Scan = {
+    /** Resolve arguments and return type, insert function symbol
+      * to the current scope, create scope for the function body
+      * with argument inserted, scan body and compare its type
+      * with the declared one, pop function scope. */
+    case Expr.Def(ident, args, body, returnTypeIdent) =>
+      val declaredReturnType: Types.PType = getType(returnTypeIdent)
+      val params: List[(String, Types.PType)] = args.map { case (id, typeId) => id.name -> getType(typeId) }
+      currentScope.insert(Symbol(ident.name, Types.PFunc(params, declaredReturnType)))
+      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope, isFunc = true)
+      params.foreach(p => bodyScope.insert(Symbol(p._1, p._2)))
+      scopes = bodyScope :: scopes
+      scan(body)
+      matchType(declaredReturnType, body.tpe)
+      scopes = scopes.tail
   }
 
   def pass: Scan = {
@@ -29,6 +50,8 @@ case class StaticAnalyser(types: TypeSystem) {
 
   def currentScope: ScopedSymbolTable = scopes.head
 
+  /** Resolves the type from its string representation
+    * (including type parameters) */
   def getType(ident: TypeIdent): Types.PType = {
     val typeParams: List[Types.PType] = ident.typeParams.map(p => types.typeByIdent(p)
       .getOrElse(error(s"Type '$p' is undefined.")))

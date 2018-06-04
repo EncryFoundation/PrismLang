@@ -16,7 +16,7 @@ object Types {
 
     def isProduct: Boolean = this.isInstanceOf[ESProduct]
 
-    def isFunc: Boolean = this.isInstanceOf[ESFunc]
+    def isFunc: Boolean = this.isInstanceOf[PFunc]
 
     def isNit: Boolean = this.isInstanceOf[Nit.type]
 
@@ -303,14 +303,14 @@ object Types {
     override def fields: Map[String, PType] =
       if (numericTypes.contains(valT)) {
         super.fields ++ Map(
-          "exists" -> ESFunc(List("predicate" -> ESFunc(List("any" -> valT), PBoolean)), PBoolean),
-          "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> valT), ESAny)), PArray(ESAny)),
+          "exists" -> PFunc(List("predicate" -> PFunc(List("any" -> valT), PBoolean)), PBoolean),
+          "map" -> PFunc(List("fn" -> PFunc(List("any" -> valT), ESAny)), PArray(ESAny)),
           "sum" -> valT
         )
       } else {
         super.fields ++ Map(
-          "exists" -> ESFunc(List("predicate" -> ESFunc(List("any" -> valT), PBoolean)), PBoolean),
-          "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> valT), ESAny)), PArray(ESAny))
+          "exists" -> PFunc(List("predicate" -> PFunc(List("any" -> valT), PBoolean)), PBoolean),
+          "map" -> PFunc(List("fn" -> PFunc(List("any" -> valT), ESAny)), PArray(ESAny))
         )
       }
 
@@ -325,8 +325,8 @@ object Types {
     override val ident: String = "Dict"
 
     override def fields: Map[String, PType] = super.fields ++ Map(
-      "exists" -> ESFunc(List("predicate" -> ESFunc(List("any" -> keyT, "any" -> valT), PBoolean)), PBoolean),
-      "map" -> ESFunc(List("fn" -> ESFunc(List("any" -> keyT, "any" -> valT), ESAny)), PArray(ESAny))
+      "exists" -> PFunc(List("predicate" -> PFunc(List("any" -> keyT, "any" -> valT), PBoolean)), PBoolean),
+      "map" -> PFunc(List("fn" -> PFunc(List("any" -> keyT, "any" -> valT), ESAny)), PArray(ESAny))
     )
 
     override def equals(obj: Any): Boolean = obj match {
@@ -347,12 +347,12 @@ object Types {
     )
   }
 
-  case class ESFunc(args: List[(String, PType)], retT: PType) extends PType {
+  case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
     override type Underlying = retT.Underlying
     override val ident: String = "Func"
 
     override def equals(obj: Any): Boolean = obj match {
-      case f: ESFunc =>
+      case f: PFunc =>
         (this.retT == f.retT || this.retT.isSubtypeOf(f.retT)) &&
           this.args.size == f.args.size &&
           this.args.zip(f.args).forall { case ((_, a1), (_, a2)) => a1 == a2 }
@@ -421,7 +421,7 @@ case class TypeSystem(externalTypes: Seq[Types.ESTypedObject]) {
 
   import Types._
 
-  lazy val allTypes: Seq[PType] = primitiveTypes ++ productTypes ++ collTypes ++ externalTypes :+ ESFunc(List.empty, Nit)
+  lazy val allTypes: Seq[PType] = primitiveTypes ++ productTypes ++ collTypes ++ externalTypes :+ PFunc(List.empty, Nit)
 
   lazy val typesMap: Map[String, PType] = allTypes.map(t => t.ident -> t).toMap
 

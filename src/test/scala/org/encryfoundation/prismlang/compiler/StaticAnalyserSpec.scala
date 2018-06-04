@@ -10,9 +10,9 @@ class StaticAnalyserSpec extends PropSpec with Matchers {
   import org.encryfoundation.prismlang.core.Ast.Expr._
   import org.encryfoundation.prismlang.core.Ast._
 
-  val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
-
   property("Let") {
+
+    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
 
     val expr: Expr = Let(Ident("age"), IntConst(28), Some(TypeIdent("Int", List())))
 
