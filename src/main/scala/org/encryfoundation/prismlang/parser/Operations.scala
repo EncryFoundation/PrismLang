@@ -8,8 +8,7 @@ object Operations {
 
   import org.encryfoundation.prismlang.core.Ast
 
-  // Common operators, mapped from their
-  // strings to their type-safe representations
+  /** Common operators, mapped from their strings to their type-safe representations */
   def op[T](s: P0, rhs: T): core.Parser[T, Char, String] = s.!.map(_ => rhs)
   val Lt: core.Parser[Ast.CompOp.Lt.type, Char, String] = op("<", Ast.CompOp.Lt)
   val Gt: core.Parser[Ast.CompOp.Gt.type, Char, String] = op(">", Ast.CompOp.Gt)
@@ -21,7 +20,7 @@ object Operations {
   val NotIn: core.Parser[Ast.CompOp.NotIn.type, Char, String] = op("not" ~ "in", Ast.CompOp.NotIn)
   val Is: core.Parser[Ast.CompOp.Is.type, Char, String] = op("is", Ast.CompOp.Is)
   val IsNot: core.Parser[Ast.CompOp.IsNot.type, Char, String] = op("is" ~ "not", Ast.CompOp.IsNot)
-  val comp_op: noApi.Parser[Ast.CompOp] = P( LtE|GtE|Eq|Gt|Lt|NotEq|In|NotIn|IsNot|Is )
+  val compOp: noApi.Parser[Ast.CompOp] = P( LtE|GtE|Eq|Gt|Lt|NotEq|In|NotIn|IsNot|Is )
   val Add: core.Parser[Ast.Operator.Add.type, Char, String] = op("+", Ast.Operator.Add)
   val Sub: core.Parser[Ast.Operator.Sub.type, Char, String] = op("-", Ast.Operator.Sub)
   val Pow: core.Parser[Ast.Operator.Pow.type, Char, String] = op("**", Ast.Operator.Pow)
@@ -31,10 +30,10 @@ object Operations {
   val UAdd: core.Parser[Ast.UnaryOp.UAdd.type, Char, String] = op("+", Ast.UnaryOp.UAdd)
   val USub: core.Parser[Ast.UnaryOp.USub.type, Char, String] = op("-", Ast.UnaryOp.USub)
   val Invert: core.Parser[Ast.UnaryOp.Invert.type, Char, String] = op("~", Ast.UnaryOp.Invert)
-  val unary_op: noApi.Parser[Ast.UnaryOp] = P ( UAdd | USub | Invert )
+  val unaryOp: noApi.Parser[Ast.UnaryOp] = P ( UAdd | USub | Invert )
 
   def Unary(p: P[Ast.Expr]): core.Parser[Ast.Expr.Unary, Char, String] =
-    (unary_op ~ p).map { case (op, operand) => Ast.Expr.Unary(op, operand) }
+    (unaryOp ~ p).map { case (op, operand) => Ast.Expr.Unary(op, operand) }
 
   def Chain(p: P[Ast.Expr], op: P[Ast.Operator]): core.Parser[Ast.Expr, Char, String] =
     P( p ~ (op ~ p).rep ).map {

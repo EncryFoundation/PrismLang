@@ -29,6 +29,9 @@ case class StaticAnalyser(types: TypeSystem) {
       scanDef orElse
       scanLambda orElse
       scanIf orElse
+      scanBlock orElse
+      scanSimpleExpr orElse
+      scanRef orElse
       pass
 
   def scanLet: Scan = {
@@ -37,9 +40,9 @@ case class StaticAnalyser(types: TypeSystem) {
       * and add name to the scope. */
     case let @ Expr.Let(name, value, typeIdentOpt) =>
       val valueS: Expr = scan(value)
-      val valueType: Types.PType = value.tpe
-      typeIdentOpt.foreach(t => matchType(valueType, resolveType(t)))
-      addToScope(name, valueType)
+      val valueT: Types.PType = valueS.tpe
+      typeIdentOpt.foreach(t => matchType(valueT, resolveType(t)))
+      addToScope(name, valueT)
       let.copy(name, valueS, typeIdentOpt)
   }
 
@@ -78,7 +81,7 @@ case class StaticAnalyser(types: TypeSystem) {
     /** Scan test expression ensuring its type is `Bool`,
       * then scan bodies of each branch. */
     case ifExp @ Expr.If(test, body, orelse, _) =>
-      scan(test)
+      val testS: Expr = scan(test)
       matchType(test.tpe, Types.PBoolean)
       val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
       scopes = bodyScope :: scopes
@@ -88,7 +91,7 @@ case class StaticAnalyser(types: TypeSystem) {
       scopes = elseScope :: scopes
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
-      ifExp.copy(test, bodyS, orelseS, computeType(ifExp))
+      ifExp.copy(testS, bodyS, orelseS, computeType(ifExp))
     /** Scan the target to be assigned, ensure that its type
       * can be cast to the declared local type, then scan
       * bodies of each branch. */
@@ -108,18 +111,77 @@ case class StaticAnalyser(types: TypeSystem) {
       letIf.copy(local, typeIdent, targetS, bodyS, orelseS, computeType(letIf))
   }
 
+  def scanBlock: Scan = {
+    /** Scan each expression in `body`. */
+    case block @ Expr.Block(body, _) =>
+      val bodyS: List[Expr] = body.map(scan)
+      block.copy(bodyS, computeType(block))
+  }
+
+  def scanSimpleExpr: Scan = {
+    /** Scan operands ensuring they are of `PInt` type. */
+    case bin @ Expr.Bin(left, op, right) =>
+      val leftS: Expr = scan(left)
+      val rightS: Expr = scan(right)
+      println(leftS)
+      println(rightS)
+      List(leftS, rightS).foreach(exp => matchType(Types.PInt, exp.tpe))
+      bin.copy(leftS, op, rightS)
+    /** Scan operands ensuring they support `op`. */
+    case bool @ Expr.Bool(op, values) =>
+      // TODO: Check whether operands support `op`.
+      val valuesS: List[Expr] = values.map(scan)
+      bool.copy(op, valuesS)
+    /** Scan operand ensuring it is of `PInt` type. */
+    case unary @ Expr.Unary(op, operand) =>
+      val operandS: Expr = scan(operand)
+      matchType(Types.PInt, operandS.tpe, Some(s"${operandS.tpe} does not support '$op'"))
+      unary.copy(op, operandS)
+    /** Scan operands ensuring it supports `op`. */
+    case compare @ Expr.Compare(left, ops, comparators) =>
+      // TODO: Check whether operands support `op`.
+      val leftS: Expr = scan(left)
+      val comparatorsS: List[Expr] = comparators.map(scan)
+      compare.copy(leftS, ops, comparatorsS)
+  }
+
+  def scanRef: Scan = {
+    /** Compute type of the referenced name and return its modified copy. */
+    case name @ Expr.Name(ident, _) => name.copy(ident, computeType(name))
+    /** Case when some plain function is called. Scan each expr
+      * in `args`, lookup name of the called function in the scope
+      * ensuring it is of `PFunc` type, check that the type of each
+      * of them matches the declared one. */
+    case call @ Expr.Call(func @ Expr.Name(ident, _), args, _) =>
+      val funcS: Expr = scan(func)
+      val argsS: List[Expr] = args.map(scan)
+      currentScope.lookup(ident.name).foreach { symbol =>
+        symbol.tpe match {
+          case Types.PFunc(declaredArgs, _) =>
+            declaredArgs.map(_._2).zip(argsS.map(_.tpe)).foreach { case (dt, ft) => matchType(dt, ft) }
+          case _ => error(s"${ident.name} is not a function")
+        }
+      }
+      call.copy(funcS, argsS, computeType(call))
+  }
+
   def pass: Scan = {
     case any => any
   }
 
   def computeType(expr: Expr): Types.PType = if (!expr.tpe.isNit) expr.tpe else expr match {
+    case Expr.Block(body, _) => body.last.tpe
     case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(error(s"$name is undefined"))
+    case Expr.Call(func @ Expr.Name(ident, _), _, _) => computeType(func) match {
+      case Types.PFunc(_, retT) => retT
+      case _ => error(s"${ident.name} is not a function")
+    }
     case Expr.Attribute(value, attr, _) => computeType(value) match {
-      case prod: Types.PProduct => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
+      case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
       case other => error(s"${other.ident} is not an object")
     }
-    case Expr.If(_, body, orelse, _) => primaryType(body.tpe, orelse.tpe)
-    case Expr.IfLet(_, _, _, body, orelse, _) => primaryType(body.tpe, orelse.tpe)
+    case Expr.If(_, body, orelse, _) => findCommonType(body.tpe, orelse.tpe)
+    case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(body.tpe, orelse.tpe)
   }
 
   def currentScope: ScopedSymbolTable = scopes.head
@@ -148,16 +210,16 @@ case class StaticAnalyser(types: TypeSystem) {
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
     currentScope.insert(Symbol(ident.name, tpe))
 
-  def matchType(required: Types.PType, actual: Types.PType): Unit =
-    if (!(required == actual || actual.isSubtypeOf(required))) error(s"Type mismatch: $required != $actual")
+  def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
+    if (!(required == actual || actual.isSubtypeOf(required))) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 
-  // TODO: Find common type between two Products.
-  def primaryType(t1: Types.PType, t2: Types.PType): Types.PType = {
+  /** Find common type for `t1` and `t2` */
+  def findCommonType(t1: Types.PType, t2: Types.PType): Types.PType = {
     if (t1 == t2) t1
     else if (t2.isSubtypeOf(t1)) t1
     else if (t1.isSubtypeOf(t2)) t2
     else (t1, t2) match {
-      case (prod1: Types.PProduct, prod2: Types.PProduct) => Types.PAny
+      case (p1: Types.Product, p2: Types.Product) => findCommonType(p1.superType, p2.superType)
       case (_, _) => Types.PAny
     }
   }

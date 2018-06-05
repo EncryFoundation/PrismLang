@@ -55,7 +55,7 @@ object Expressions {
   }
   val notTest: P[Ast.Expr] = P( (("not" | "!") ~ notTest).map(Ast.Expr.Unary(Ast.UnaryOp.Not, _)) | comparison )
 
-  val comparison: P[Ast.Expr] = P( arithExpr ~ (comp_op ~ arithExpr).rep ).map {
+  val comparison: P[Ast.Expr] = P( arithExpr ~ (compOp ~ arithExpr).rep ).map {
     case (lhs, Nil) => lhs
     case (lhs, chunks) =>
       val (ops, vals) = chunks.unzip

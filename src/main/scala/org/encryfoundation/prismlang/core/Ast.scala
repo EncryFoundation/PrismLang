@@ -29,7 +29,7 @@ object Ast {
 
     case class Bin(left: Expr, op: Operator, right: Expr) extends Expr { override val tpe: PType = PInt }
 
-    case class Unary(op: UnaryOp, operand: Expr, override val tpe: PType = Nit) extends Expr
+    case class Unary(op: UnaryOp, operand: Expr) extends Expr { override val tpe: PType = PInt }
 
     /** Sequences are required for compare to distinguish between: x < 4 < 3 and (x < 4) < 3 */
     case class Compare(left: Expr, ops: List[Ast.CompOp], comparators: List[Expr]) extends Expr { override val tpe: PType = PBoolean }
