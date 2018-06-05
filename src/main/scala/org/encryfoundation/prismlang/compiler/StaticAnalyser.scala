@@ -163,6 +163,10 @@ case class StaticAnalyser(types: TypeSystem) {
         }
       }
       call.copy(funcS, argsS, computeType(call))
+    /** Scan value, its type will be checked in `computeType()` */
+    case attr @ Expr.Attribute(value, attrName, _) =>
+      val valueS: Expr = scan(value)
+      attr.copy(valueS, attrName, computeType(attr))
   }
 
   def pass: Scan = {
@@ -170,7 +174,7 @@ case class StaticAnalyser(types: TypeSystem) {
   }
 
   def computeType(expr: Expr): Types.PType = if (!expr.tpe.isNit) expr.tpe else expr match {
-    case Expr.Block(body, _) => body.last.tpe
+    case Expr.Block(body, _) => computeType(body.last)
     case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(error(s"$name is undefined"))
     case Expr.Call(func @ Expr.Name(ident, _), _, _) => computeType(func) match {
       case Types.PFunc(_, retT) => retT
@@ -180,8 +184,9 @@ case class StaticAnalyser(types: TypeSystem) {
       case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
       case other => error(s"${other.ident} is not an object")
     }
-    case Expr.If(_, body, orelse, _) => findCommonType(body.tpe, orelse.tpe)
-    case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(body.tpe, orelse.tpe)
+    case Expr.If(_, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
+    case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
+    case Expr.Lambda(args, body, _) => Types.PFunc(resolveArgs(args), computeType(body))
   }
 
   def currentScope: ScopedSymbolTable = scopes.head

@@ -347,7 +347,6 @@ object Types {
     override val ident: String = "Option"
     override val fields: Map[String, PType] = POption.fields ++ Map("get" -> inT)
   }
-
   object POption {
     val fields: Map[String, PType] = Map(
       "isDefined" -> PBoolean
