@@ -112,8 +112,14 @@ case class StaticAnalyser(types: TypeSystem) {
     case any => any
   }
 
-  def computeType(expr: Expr): Types.PType = if (expr.tpe != Types.Nit) expr.tpe else {
-    ???
+  def computeType(expr: Expr): Types.PType = if (!expr.tpe.isNit) expr.tpe else expr match {
+    case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(error(s"$name is undefined"))
+    case Expr.Attribute(value, attr, _) => computeType(value) match {
+      case prod: Types.PProduct => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
+      case other => error(s"${other.ident} is not an object")
+    }
+    case Expr.If(_, body, orelse, _) => primaryType(body.tpe, orelse.tpe)
+    case Expr.IfLet(_, _, _, body, orelse, _) => primaryType(body.tpe, orelse.tpe)
   }
 
   def currentScope: ScopedSymbolTable = scopes.head
@@ -142,8 +148,19 @@ case class StaticAnalyser(types: TypeSystem) {
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
     currentScope.insert(Symbol(ident.name, tpe))
 
-  def matchType(t1: Types.PType, t2: Types.PType): Unit =
-    if (!(t1 == t2 || t2.isSubtypeOf(t1))) error(s"Type mismatch: $t1 != $t2")
+  def matchType(required: Types.PType, actual: Types.PType): Unit =
+    if (!(required == actual || actual.isSubtypeOf(required))) error(s"Type mismatch: $required != $actual")
+
+  // TODO: Find common type between two Products.
+  def primaryType(t1: Types.PType, t2: Types.PType): Types.PType = {
+    if (t1 == t2) t1
+    else if (t2.isSubtypeOf(t1)) t1
+    else if (t1.isSubtypeOf(t2)) t2
+    else (t1, t2) match {
+      case (prod1: Types.PProduct, prod2: Types.PProduct) => Types.PAny
+      case (_, _) => Types.PAny
+    }
+  }
 
   def error(msg: String) = throw new SemanticAnalysisException(msg)
 }

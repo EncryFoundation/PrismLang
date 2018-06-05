@@ -27,7 +27,7 @@ object Ast {
     // Operations
     case class Bool(op: BooleanOp, values: List[Expr]) extends Expr { override val tpe: PType = PBoolean }
 
-    case class Bin(left: Expr, op: Operator, right: Expr, override val tpe: PType = Nit) extends Expr
+    case class Bin(left: Expr, op: Operator, right: Expr) extends Expr { override val tpe: PType = PInt }
 
     case class Unary(op: UnaryOp, operand: Expr, override val tpe: PType = Nit) extends Expr
 

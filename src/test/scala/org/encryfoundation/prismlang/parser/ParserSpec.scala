@@ -23,8 +23,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
         Bin(
           Name(Ident("a")),
           Operator.Add,
-          Name(Ident("b")),
-          Types.Nit
+          Name(Ident("b"))
         )
       )
     )
@@ -51,8 +50,8 @@ class ParserSpec extends PropSpec with Matchers with Parser {
             Bin(
               Name(Ident("a")),
               Operator.Add,
-              Name(Ident("b")),
-              Types.Nit)
+              Name(Ident("b"))
+            )
           )
         )
       )
@@ -132,8 +131,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
             Bin(
               IntConst(100),
               Operator.Div,
-              IntConst(4),
-              Types.Nit
+              IntConst(4)
             )
           )
         ),
@@ -165,14 +163,17 @@ class ParserSpec extends PropSpec with Matchers with Parser {
           List(
             Let(
               Ident("sum"),
-              Bin(IntConst(30), Operator.Add, IntConst(40), Types.Nit),
+              Bin(
+                IntConst(30),
+                Operator.Add,
+                IntConst(40)
+              ),
               None
             ),
             Bin(
               Name(Ident("sum")),
               Operator.Sub,
-              IntConst(10),
-              Types.Nit
+              IntConst(10)
             )
           )
         ),
@@ -208,8 +209,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
             Bin(
               Name(Ident("a")),
               Operator.Add,
-              Name(Ident("b")),
-              Types.Nit
+              Name(Ident("b"))
             )
           )
         ),
