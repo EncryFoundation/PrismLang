@@ -129,7 +129,7 @@ case class StaticAnalyser(types: TypeSystem) {
       bin.copy(leftS, op, rightS)
     /** Scan operands ensuring they support `op`. */
     case bool @ Expr.Bool(op, values) =>
-      // TODO: Check whether operands support `op`.
+      // TODO: Check whether all operands support `op`.
       val valuesS: List[Expr] = values.map(scan)
       bool.copy(op, valuesS)
     /** Scan operand ensuring it is of `PInt` type. */
@@ -139,7 +139,7 @@ case class StaticAnalyser(types: TypeSystem) {
       unary.copy(op, operandS)
     /** Scan operands ensuring it supports `op`. */
     case compare @ Expr.Compare(left, ops, comparators) =>
-      // TODO: Check whether operands support `op`.
+      // TODO: Check whether all operands support `op`.
       val leftS: Expr = scan(left)
       val comparatorsS: List[Expr] = comparators.map(scan)
       compare.copy(leftS, ops, comparatorsS)
@@ -174,12 +174,19 @@ case class StaticAnalyser(types: TypeSystem) {
   }
 
   def computeType(expr: Expr): Types.PType = if (!expr.tpe.isNit) expr.tpe else expr match {
+    /** Type of the block is the type of its last expr. */
     case Expr.Block(body, _) => computeType(body.last)
+    /** Type of the referenced name is looked up in the scope. */
     case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(error(s"$name is undefined"))
+    /** In this case some referenced name is called, the type
+      * is inferred from the return-type of the ref, which is
+      * looked up in the scope. */
     case Expr.Call(func @ Expr.Name(ident, _), _, _) => computeType(func) match {
       case Types.PFunc(_, retT) => retT
       case _ => error(s"${ident.name} is not a function")
     }
+    /** Type of attribute is inferred from the type of
+      * corresponding field of the object. */
     case Expr.Attribute(value, attr, _) => computeType(value) match {
       case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
       case other => error(s"${other.ident} is not an object")

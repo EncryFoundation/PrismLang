@@ -49,4 +49,27 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
     analyseTry.isSuccess shouldBe true
   }
+
+  property("Conditional assignment") {
+
+    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+
+    val expr: Expr = Let(
+      Ident("age"),
+      If(
+        Compare(
+          IntConst(3),
+          List(CompOp.Gt),
+          List(IntConst(0))
+        ),
+        Block(List(True)),
+        Block(List(False))
+      ),
+      Some(TypeIdent("Bool", List()))
+    )
+
+    val analyseTry = Try(analyser.scan(expr))
+
+    analyseTry.isSuccess shouldBe true
+  }
 }
