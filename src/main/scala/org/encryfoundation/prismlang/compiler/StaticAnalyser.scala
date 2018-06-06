@@ -4,6 +4,7 @@ import org.encryfoundation.prismlang.compiler.scope.ScopedSymbolTable
 import org.encryfoundation.prismlang.core.{TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.compiler.scope.Symbol
+import scorex.crypto.encode.{Base16, Base58}
 
 import scala.util.Try
 
@@ -32,6 +33,7 @@ case class StaticAnalyser(types: TypeSystem) {
       scanBlock orElse
       scanSimpleExpr orElse
       scanRef orElse
+      scanByteString orElse
       pass
 
   def scanLet: Scan = {
@@ -123,8 +125,6 @@ case class StaticAnalyser(types: TypeSystem) {
     case bin @ Expr.Bin(left, op, right) =>
       val leftS: Expr = scan(left)
       val rightS: Expr = scan(right)
-      println(leftS)
-      println(rightS)
       List(leftS, rightS).foreach(exp => matchType(Types.PInt, exp.tpe))
       bin.copy(leftS, op, rightS)
     /** Scan operands ensuring they support `op`. */
@@ -167,6 +167,17 @@ case class StaticAnalyser(types: TypeSystem) {
     case attr @ Expr.Attribute(value, attrName, _) =>
       val valueS: Expr = scan(value)
       attr.copy(valueS, attrName, computeType(attr))
+  }
+
+  def scanByteString: Scan = {
+    /** Has default type, check base58-string validity. */
+    case base58 @ Expr.Base58Str(value) =>
+      if (Base58.decode(value).isFailure) error(s"Invalid Base58 string '$value'")
+      base58
+    /** Has default type, check base16-string validity. */
+    case base16 @ Expr.Base16Str(value) =>
+      if (Base16.decode(value).isFailure) error(s"Invalid Base16 string '$value'")
+      base16
   }
 
   def pass: Scan = {
