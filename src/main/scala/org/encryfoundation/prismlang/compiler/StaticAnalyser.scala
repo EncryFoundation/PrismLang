@@ -238,6 +238,8 @@ case class StaticAnalyser(types: TypeSystem) {
     case Expr.If(_, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
     case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
     case Expr.Lambda(args, body, _) => Types.PFunc(resolveArgs(args), computeType(body))
+    case Expr.Tuple(elts, _) => Types.PTuple(computeType(elts.head), elts.size)
+    case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
   }
 
   def currentScope: ScopedSymbolTable = scopes.head
