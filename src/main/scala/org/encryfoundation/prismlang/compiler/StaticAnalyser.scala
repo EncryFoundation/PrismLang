@@ -1,7 +1,7 @@
 package org.encryfoundation.prismlang.compiler
 
 import org.encryfoundation.prismlang.compiler.scope.ScopedSymbolTable
-import org.encryfoundation.prismlang.core.{TypeSystem, Types}
+import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.compiler.scope.Symbol
 import scorex.crypto.encode.{Base16, Base58}
@@ -33,7 +33,8 @@ case class StaticAnalyser(types: TypeSystem) {
       scanBlock orElse
       scanSimpleExpr orElse
       scanRef orElse
-      scanByteString orElse
+      scanCollection orElse
+      scanConstant orElse
       pass
 
   def scanLet: Scan = {
@@ -166,18 +167,50 @@ case class StaticAnalyser(types: TypeSystem) {
     /** Scan value, its type will be checked in `computeType()`. */
     case attr @ Expr.Attribute(value, attrName, _) =>
       val valueS: Expr = scan(value)
-      attr.copy(valueS, attrName, computeType(attr))
+      attr.copy(valueS, attrName, computeType(attr.copy(valueS)))
   }
 
-  def scanByteString: Scan = {
-    /** Has default type, check base58-string validity. */
+  def scanCollection: Scan = {
+    /** Scan each element contained in collection ensuring actual coll
+      * size does not overflow `CollMaxElements`, then check type
+      * consistency of all elements. */
+    case coll @ Expr.Collection(elts, _) =>
+      if (elts.size > Constants.CollMaxLength)
+        error(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
+      val eltsS: List[Expr] = elts.map(scan)
+      eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
+      coll.copy(eltsS, computeType(coll.copy(eltsS)))
+  }
+
+  def scanConstant: Scan = {
+    /** Scan each element of tuple ensuring its actual size does not
+      * overflow `TupleMaxLength`, then check type consistency of all elements. */
+    case tuple @ Expr.Tuple(elts, _) =>
+      if (elts.size > Constants.TupleMaxLength) error(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxLength})")
+      val eltsS: List[Expr] = elts.map(scan)
+      eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Tuple is inconsistent, ${elt.tpe} stands out.")))
+      tuple.copy(eltsS, computeType(tuple.copy(eltsS)))
+    /** Has default type, check max length overflow and base58-string validity. */
     case base58 @ Expr.Base58Str(value) =>
-      if (Base58.decode(value).isFailure) error(s"Invalid Base58 string '$value'")
+      if (value.length > Constants.ByteStringMaxLength)
+        error(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
+      else if (Base58.decode(value).isFailure) error(s"Invalid Base58 string '$value'")
       base58
-    /** Has default type, check base16-string validity. */
+    /** Has default type, check max length overflow and base16-string validity. */
     case base16 @ Expr.Base16Str(value) =>
-      if (Base16.decode(value).isFailure) error(s"Invalid Base16 string '$value'")
+      if (value.length > Constants.ByteStringMaxLength)
+        error(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
+      else if (Base16.decode(value).isFailure) error(s"Invalid Base16 string '$value'")
       base16
+    /** Has default type, check max length overflow. */
+    case string @ Expr.Str(value) =>
+      if (value.length > Constants.StringMaxLength)
+        error(s"String max length overflow (${value.length} > ${Constants.StringMaxLength})")
+      string
+    /** Make sure given `value` does not overflow `Long.MaxSize`. */
+    case int @ Expr.IntConst(value) =>
+      if (value > Long.MaxValue) error(s"int64 max size overflow ($value > ${Long.MaxValue})")
+      int
   }
 
   def pass: Scan = {

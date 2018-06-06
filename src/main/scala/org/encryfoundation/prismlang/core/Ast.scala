@@ -52,9 +52,9 @@ object Ast {
 
     case class Tuple(elts: List[Expr], override val tpe: PType = Nit) extends Expr
 
-    case class Base58Str(value: String) extends Expr { override val tpe: PType = PByteVector }
+    case class Base58Str(value: String) extends Expr { override val tpe: PType = PCollection.ofByte }
 
-    case class Base16Str(value: String) extends Expr { override val tpe: PType = PByteVector }
+    case class Base16Str(value: String) extends Expr { override val tpe: PType = PCollection.ofByte }
 
     case object True extends Expr { override val tpe: PType = PBoolean }
 
