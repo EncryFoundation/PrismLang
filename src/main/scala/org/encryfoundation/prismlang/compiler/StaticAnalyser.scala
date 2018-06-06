@@ -218,6 +218,9 @@ case class StaticAnalyser(types: TypeSystem) {
       case Types.PCollection(_) =>
         if (typeParams.size == 1) Types.PCollection(typeParams.head)
         else error("'Array[T]' takes exactly one type parameter")
+      case Types.PTuple(_, qty) =>
+        if (typeParams.size == 1) Types.PTuple(typeParams.head, qty)
+        else error("'Tuple[T]' takes exactly one type parameter")
       case Types.POption(_) =>
         if (typeParams.size == 1) Types.POption(typeParams.head)
         else error("'Option[T]' takes exactly one type parameter")

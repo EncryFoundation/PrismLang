@@ -301,7 +301,7 @@ object Types {
 
   case class PCollection(valT: PType) extends PType with Product with Parametrized {
     override type Underlying = List[valT.Underlying]
-    override val ident: String = "List"
+    override val ident: String = "Array"
 
     val baseFields = Map(
       "exists" -> PFunc(List("predicate" -> PFunc(List("any" -> valT), PBoolean)), PBoolean),
