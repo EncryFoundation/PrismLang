@@ -308,6 +308,9 @@ object Types {
       "length" -> PInt
     )
 
+    def isApplicable(func: Types.PFunc): Boolean =
+      func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
+
     override def fields: Map[String, PType] =
       if (valT.isNumeric) baseFields ++ Map("sum" -> valT)
       else baseFields
@@ -318,9 +321,10 @@ object Types {
     }
   }
   object PCollection {
-    val ofByte = PCollection(PByte)
-    val ofInt = PCollection(PInt)
-    val ofBool = PCollection(PBoolean)
+    val ofByte: PCollection = PCollection(PByte)
+    val ofInt: PCollection = PCollection(PInt)
+    val ofBool: PCollection = PCollection(PBoolean)
+    val ofString: PCollection = PCollection(PString)
   }
 
   case class PTuple(valT: PType, eltsQty: Int) extends PType with Product with Parametrized {

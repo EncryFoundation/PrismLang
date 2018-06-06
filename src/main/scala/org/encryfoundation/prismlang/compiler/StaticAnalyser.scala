@@ -220,6 +220,27 @@ case class StaticAnalyser(types: TypeSystem) {
       int
   }
 
+  def scanTransformers: Scan = {
+    /** Ensure `coll` is of type `Collection` and `func` is of
+      * type `Func`, check whether `func` can be applied to `coll`. */
+    case map @ Expr.Map(coll, func, _) =>
+      val collS: Expr = scan(coll)
+      val funcS: Expr = scan(func)
+      if (!collS.tpe.isCollection) error(s"'map()' is inapplicable to ${collS.tpe}")
+      else if (!funcS.tpe.isFunc) error(s"'${funcS.tpe}' is not a function")
+      else if (!isApplicableTo(collS, funcS)) error(s"${funcS.tpe} is inapplicable to ${collS.tpe}")
+      map.copy(collS, funcS, computeType(map.copy(collS, funcS)))
+    /** Ensure `coll` is of type `Collection` and `func` is of
+      * type `Func`, check whether `func` can be applied to `coll`. */
+    case exists @ Expr.Exists(coll, predicate) =>
+      val collS: Expr = scan(coll)
+      val predicateS: Expr = scan(predicate)
+      if (!collS.tpe.isCollection) error(s"'exists()' is inapplicable to ${collS.tpe}")
+      else if (!predicateS.tpe.isFunc) error(s"'${predicateS.tpe}' is not a function")
+      else if (!isApplicableTo(collS, predicateS)) error(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
+      exists.copy(collS, predicateS)
+  }
+
   def pass: Scan = {
     case any => any
   }
@@ -258,6 +279,10 @@ case class StaticAnalyser(types: TypeSystem) {
     case Expr.Lambda(args, body, _) => Types.PFunc(resolveArgs(args), computeType(body))
     case Expr.Tuple(elts, _) => Types.PTuple(computeType(elts.head), elts.size)
     case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
+    case Expr.Map(_, func, _) => computeType(func) match {
+      case Types.PFunc(_, retT) => Types.PCollection(retT)
+      case otherT => error(s"$otherT is not a function")
+    }
   }
 
   def currentScope: ScopedSymbolTable = scopes.head
@@ -281,6 +306,14 @@ case class StaticAnalyser(types: TypeSystem) {
         if (typeParams.isEmpty) otherT
         else error(s"'$otherT' does not take type parameters")
     }.getOrElse(error(s"Type '${ident.name}' is undefined."))
+  }
+
+  def isApplicableTo(coll: Expr, func: Expr): Boolean = coll.tpe match {
+    case coll: Types.PCollection => func.tpe match {
+      case func: Types.PFunc => coll.isApplicable(func)
+      case _ => false
+    }
+    case _ => false
   }
 
   def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] =
