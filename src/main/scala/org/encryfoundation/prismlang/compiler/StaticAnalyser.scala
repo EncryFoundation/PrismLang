@@ -23,7 +23,7 @@ case class StaticAnalyser(types: TypeSystem) {
 
   /** Scan each node according to the specific rule, then
     * compute its type (if the node is untyped by default)
-    * and return modified copy of the node */
+    * and return modified copy of the node. */
   def scan: Scan =
     scanLet orElse
       scanDef orElse
@@ -163,7 +163,7 @@ case class StaticAnalyser(types: TypeSystem) {
         }
       }
       call.copy(funcS, argsS, computeType(call))
-    /** Scan value, its type will be checked in `computeType()` */
+    /** Scan value, its type will be checked in `computeType()`. */
     case attr @ Expr.Attribute(value, attrName, _) =>
       val valueS: Expr = scan(value)
       attr.copy(valueS, attrName, computeType(attr))
@@ -199,7 +199,7 @@ case class StaticAnalyser(types: TypeSystem) {
   def currentScope: ScopedSymbolTable = scopes.head
 
   /** Resolves the type from its string representation
-    * (including type parameters) */
+    * (including type parameters). */
   def resolveType(ident: TypeIdent): Types.PType = {
     val typeParams: List[Types.PType] = ident.typeParams.map(p => types.typeByIdent(p)
       .getOrElse(error(s"Type '$p' is undefined.")))
@@ -225,7 +225,7 @@ case class StaticAnalyser(types: TypeSystem) {
   def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
     if (!(required == actual || actual.isSubtypeOf(required))) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 
-  /** Find common type for `t1` and `t2` */
+  /** Find common type for `t1` and `t2`. */
   def findCommonType(t1: Types.PType, t2: Types.PType): Types.PType = {
     if (t1 == t2) t1
     else if (t2.isSubtypeOf(t1)) t1
