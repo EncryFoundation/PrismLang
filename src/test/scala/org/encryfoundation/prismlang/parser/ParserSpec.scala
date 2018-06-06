@@ -333,4 +333,41 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     parsedTry.get.toString shouldEqual expected.toString
   }
+
+  property("Collection constant") {
+
+    val source =
+      """
+        |let coll: Array[Int] = Array(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024)
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Let(
+        Ident("coll"),
+        Collection(
+          List(
+            IntConst(1),
+            IntConst(2),
+            IntConst(4),
+            IntConst(8),
+            IntConst(16),
+            IntConst(32),
+            IntConst(64),
+            IntConst(128),
+            IntConst(256),
+            IntConst(512),
+            IntConst(1024)
+          ),
+          Types.Nit
+        ),
+        Some(TypeIdent("Array", List("Int")))
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
 }

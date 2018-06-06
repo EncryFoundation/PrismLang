@@ -74,18 +74,18 @@ object Expressions {
         case Some((op, right)) => Ast.Expr.Bin(left, op, right)
       }
   }
+
+  val listContents: noApi.Parser[Seq[Ast.Expr]] = P( test.rep(1, ",") ~ ",".? )
+  val list: core.Parser[Ast.Expr.Collection, Char, String] = P( listContents ).map(exps => Ast.Expr.Collection(exps.toList))
+  val tupleContents: core.Parser[Seq[Ast.Expr], Char, String] = P( test ~ "," ~ listContents.?).map { case (head, rest)  => head +: rest.getOrElse(Seq.empty) }
+  val tuple: core.Parser[Ast.Expr.Tuple, Char, String] = P( tupleContents ).map(tcs => Ast.Expr.Tuple(tcs.toList))
+
   val atom: P[Ast.Expr] = {
-//    val empty_tuple = ("(" ~ ")").map(_ => Ast.EXPR.ESTuple(Nil))
-//    val empty_list = ("[" ~ "]").map(_ => Ast.EXPR.ESList(Nil))
-//    val empty_dict = ("{" ~ "}").map(_ => Ast.EXPR.ESDictNode(Nil, Nil))
     P(
-//      empty_tuple  |
-//        empty_list |
-//        empty_dict |
-//        "(" ~ (tuple | test) ~ ")" |
-//        "[" ~ list ~ "]" |
-//        "{" ~ dictorsetmaker ~ "}" |
+        "(" ~ (tuple | test) ~ ")" |
+        "Array(" ~ list ~ ")" |
         BASE58STRING.rep(1).map(_.mkString).map(Ast.Expr.Base58Str) |
+        BASE16STRING.rep(1).map(_.mkString).map(Ast.Expr.Base16Str) |
         STRING.rep(1).map(_.mkString).map(Ast.Expr.Str) |
         NAME.map(n => Ast.Expr.Name(n)) |
         NUMBER |
@@ -98,7 +98,6 @@ object Expressions {
   val testlist: P[Seq[Ast.Expr]] = P( test.rep(1, sep = ",") ~ ",".? )
 
   val subscript: P[Ast.SliceOp] = {
-    val ellipses = P(("." ~ "." ~ ".").map(_ => Ast.SliceOp.Ellipsis))
     val single = P(test.map(Ast.SliceOp.Index))
     val multi = P(test.? ~ ":" ~ test.? ~ sliceop.?).map { case (lower, upper, step) =>
       Ast.SliceOp.Slice(
@@ -107,12 +106,11 @@ object Expressions {
         step.map(_.getOrElse(Ast.Expr.Name(Ast.Ident("None"))))
       )
     }
-    P( ellipses | multi | single )
+    P( multi | single )
   }
 
   val subscriptlist: core.Parser[Ast.SliceOp, Char, String] = P( subscript.rep(1, ",") ~ ",".? ).map {
     case Seq(x) => x
-    case xs => Ast.SliceOp.ExtSlice(xs.toList)
   }
 
   val trailer: P[Ast.Expr => Ast.Expr] = {

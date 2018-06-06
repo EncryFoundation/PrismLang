@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.compiler
 
-import org.encryfoundation.prismlang.core.TypeSystem
+import org.encryfoundation.prismlang.core.{TypeSystem, Types}
 import org.encryfoundation.prismlang.parser.Parser
 import org.scalatest.{Matchers, PropSpec}
 
@@ -67,6 +67,36 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
       ),
       Some(TypeIdent("Bool", List()))
     )
+
+    val analyseTry = Try(analyser.scan(expr))
+
+    analyseTry.isSuccess shouldBe true
+  }
+
+  property("Collection constant creation") {
+
+    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+
+    val expr: Expr = Let(
+        Ident("coll"),
+        Collection(
+          List(
+            IntConst(1),
+            IntConst(2),
+            IntConst(4),
+            IntConst(8),
+            IntConst(16),
+            IntConst(32),
+            IntConst(64),
+            IntConst(128),
+            IntConst(256),
+            IntConst(512),
+            IntConst(1024)
+          ),
+          Types.Nit
+        ),
+        Some(TypeIdent("Array", List("Int")))
+      )
 
     val analyseTry = Try(analyser.scan(expr))
 

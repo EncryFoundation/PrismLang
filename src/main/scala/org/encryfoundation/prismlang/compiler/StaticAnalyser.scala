@@ -117,7 +117,10 @@ case class StaticAnalyser(types: TypeSystem) {
   def scanBlock: Scan = {
     /** Scan each expression in `body`. */
     case block @ Expr.Block(body, _) =>
+      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      scopes = bodyScope :: scopes
       val bodyS: List[Expr] = body.map(scan)
+      scopes = scopes.tail
       block.copy(bodyS, computeType(block))
   }
 
@@ -164,10 +167,14 @@ case class StaticAnalyser(types: TypeSystem) {
         }
       }
       call.copy(funcS, argsS, computeType(call))
-    /** Scan value, its type will be checked in `computeType()`. */
+    /** Scan value, its type will be checked in `computeType()` (should be Object). */
     case attr @ Expr.Attribute(value, attrName, _) =>
       val valueS: Expr = scan(value)
       attr.copy(valueS, attrName, computeType(attr.copy(valueS)))
+    /** Scan value, its type will be checked in `computeType()` (should be Collection). */
+    case slice @ Expr.Subscript(value, op, _) =>
+      val valueS: Expr = scan(value)
+      slice.copy(valueS, op, computeType(slice.copy(valueS)))
   }
 
   def scanCollection: Scan = {
@@ -234,6 +241,17 @@ case class StaticAnalyser(types: TypeSystem) {
     case Expr.Attribute(value, attr, _) => computeType(value) match {
       case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
       case other => error(s"${other.ident} is not an object")
+    }
+    /** Infer type for the `value`, ensure it is of type `Collection`,
+      * in case of by-index subscription we infer resulted type as the
+      * type of collection element, in case of slicing we have the same
+      * type as subscripted collection has. */
+    case Expr.Subscript(value, op, _) => computeType(value) match {
+      case coll @ Types.PCollection(inT) => op match {
+        case _: SliceOp.Index => inT
+        case _: SliceOp.Slice => coll
+      }
+      case otherT => error(s"$otherT does not support subscription")
     }
     case Expr.If(_, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
     case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))

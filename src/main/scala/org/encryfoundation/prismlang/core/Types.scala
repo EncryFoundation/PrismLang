@@ -305,7 +305,6 @@ object Types {
 
     val baseFields = Map(
       "exists" -> PFunc(List("predicate" -> PFunc(List("any" -> valT), PBoolean)), PBoolean),
-      "map" -> PFunc(List("fn" -> PFunc(List("any" -> valT), PAny)), PCollection(PAny)),
       "length" -> PInt
     )
 

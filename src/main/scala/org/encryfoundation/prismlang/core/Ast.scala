@@ -73,11 +73,7 @@ object Ast {
   sealed trait SliceOp
   object SliceOp {
 
-    case object Ellipsis extends SliceOp
-
     case class Slice(lower: Option[Expr], upper: Option[Expr], step: Option[Expr]) extends SliceOp
-
-    case class ExtSlice(dims: List[SliceOp]) extends SliceOp
 
     case class Index(value: Expr) extends SliceOp
   }
