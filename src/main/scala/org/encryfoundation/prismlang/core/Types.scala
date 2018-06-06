@@ -4,6 +4,7 @@ object Types {
 
   type Field = (String, PType)
 
+  /** Base trait each type-class inherits. */
   sealed trait PType {
     type Underlying
     val ident: String
@@ -295,6 +296,7 @@ object Types {
     )
   }
 
+  /** Trait each type that have type-parameters inherits. */
   sealed trait Parametrized
 
   case class PCollection(valT: PType) extends PType with Product with Parametrized {
@@ -319,6 +321,7 @@ object Types {
   object PCollection {
     val ofByte = PCollection(PByte)
     val ofInt = PCollection(PInt)
+    val ofBool = PCollection(PBoolean)
   }
 
   case class PTuple(valT: PType, eltsQty: Int) extends PType with Product with Parametrized {
@@ -411,6 +414,8 @@ object Types {
     case _: Boolean => PBoolean
     case _: String => PString
     case _: Array[Byte] => PCollection.ofByte
+    case _: Array[Int] => PCollection.ofInt
+    case _: Array[Boolean] => PCollection.ofBool
   }
 }
 
