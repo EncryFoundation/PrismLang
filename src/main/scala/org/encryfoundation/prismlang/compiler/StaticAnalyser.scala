@@ -215,8 +215,8 @@ case class StaticAnalyser(types: TypeSystem) {
     val typeParams: List[Types.PType] = ident.typeParams.map(p => types.typeByIdent(p)
       .getOrElse(error(s"Type '$p' is undefined.")))
     types.typeByIdent(ident.name).map {
-      case Types.PArray(_) =>
-        if (typeParams.size == 1) Types.PArray(typeParams.head)
+      case Types.PCollection(_) =>
+        if (typeParams.size == 1) Types.PCollection(typeParams.head)
         else error("'Array[T]' takes exactly one type parameter")
       case Types.POption(_) =>
         if (typeParams.size == 1) Types.POption(typeParams.head)
