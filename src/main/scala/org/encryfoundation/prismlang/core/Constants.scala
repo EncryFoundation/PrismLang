@@ -9,4 +9,6 @@ object Constants {
   val ByteStringMaxLength: Int = CollMaxLength
 
   val TupleMaxLength: Int = 4
+
+  val InitialFuelLimit: Int = 2000
 }

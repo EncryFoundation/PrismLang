@@ -13,9 +13,9 @@ sealed trait PValue extends PWrappedMember {
   }
 }
 
-object ESValue {
+object PValue {
 
-  def apply(n: String, t: Types.PType)(v: Any): PValue = new PValue {
+  def apply(t: Types.PType)(v: Any): PValue = new PValue {
     override val tpe: Types.PType = t
     override val value: tpe.Underlying = v.asInstanceOf[tpe.Underlying]
   }

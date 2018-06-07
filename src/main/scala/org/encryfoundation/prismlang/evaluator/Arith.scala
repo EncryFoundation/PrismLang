@@ -1,4 +1,4 @@
-package org.encryfoundation.prismlang.executor
+package org.encryfoundation.prismlang.evaluator
 
 object Arith {
 
