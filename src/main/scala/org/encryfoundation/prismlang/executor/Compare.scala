@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.executor
 
-import org.encryfoundation.prismlang.core.PObject
+import org.encryfoundation.prismlang.core.wrapped.PObject
 
 object Compare {
 

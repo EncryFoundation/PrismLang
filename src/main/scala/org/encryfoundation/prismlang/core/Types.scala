@@ -1,5 +1,7 @@
 package org.encryfoundation.prismlang.core
 
+import org.encryfoundation.prismlang.core.wrapped.PObject
+
 object Types {
 
   type Field = (String, PType)

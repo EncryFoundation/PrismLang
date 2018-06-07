@@ -1,6 +1,8 @@
-package org.encryfoundation.prismlang.core
+package org.encryfoundation.prismlang.core.wrapped
 
-sealed trait PValue {
+import org.encryfoundation.prismlang.core.Types
+
+sealed trait PValue extends PWrappedMember {
 
   val tpe: Types.PType
   val value: tpe.Underlying

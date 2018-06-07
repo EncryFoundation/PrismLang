@@ -1,6 +1,8 @@
-package org.encryfoundation.prismlang.core
+package org.encryfoundation.prismlang.core.wrapped
 
-case class PObject(fields: Map[String, PValue], tpe: Types.Product) {
+import org.encryfoundation.prismlang.core.Types
+
+case class PObject(fields: Map[String, PValue], tpe: Types.Product) extends PWrappedMember {
 
   def getAttr(n: String): Option[PValue] = fields.get(n)
 
