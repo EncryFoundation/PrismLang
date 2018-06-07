@@ -180,12 +180,16 @@ case class StaticAnalyser(types: TypeSystem) {
   def scanCollection: Scan = {
     /** Scan each element contained in collection ensuring actual coll
       * size does not overflow `CollMaxElements`, then check type
-      * consistency of all elements. */
+      * consistency of all elements and collection nesting. */
     case coll @ Expr.Collection(elts, _) =>
-      if (elts.size > Constants.CollMaxLength)
-        error(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
+      if (elts.size > Constants.CollMaxLength) error(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
+      else if (elts.size < 1) error("Empty collection")
       val eltsS: List[Expr] = elts.map(scan)
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
+      eltsS.head.tpe match {
+        case Types.PCollection(inT) if inT.isCollection => error("Illegal level of nesting")
+        case _ => // Do nothing
+      }
       coll.copy(eltsS, computeType(coll.copy(eltsS)))
   }
 
@@ -194,6 +198,7 @@ case class StaticAnalyser(types: TypeSystem) {
       * overflow `TupleMaxLength`, then check type consistency of all elements. */
     case tuple @ Expr.Tuple(elts, _) =>
       if (elts.size > Constants.TupleMaxLength) error(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxLength})")
+      else if (elts.size < 1) error("Empty collection")
       val eltsS: List[Expr] = elts.map(scan)
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Tuple is inconsistent, ${elt.tpe} stands out.")))
       tuple.copy(eltsS, computeType(tuple.copy(eltsS)))
