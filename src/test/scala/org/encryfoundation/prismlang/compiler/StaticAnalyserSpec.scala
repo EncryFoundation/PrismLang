@@ -15,7 +15,11 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
     val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
 
-    val expr: Expr = Let(Ident("age"), IntConst(28), Some(TypeIdent("Int", List())))
+    val expr: Expr = Let(
+      Ident("age"),
+      IntConst(28),
+      Some(TypeIdent("Int", List()))
+    )
 
     val analyseTry = Try(analyser.scan(expr))
 
