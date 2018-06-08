@@ -2,7 +2,7 @@ package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.core.Ast.Expr.Contract
 import org.encryfoundation.prismlang.core.Ast._
-import org.encryfoundation.prismlang.core.wrapped.{PFunction, PObject, PValue, PWrappedMember}
+import org.encryfoundation.prismlang.core.wrapped._
 import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.evaluator.Evaluator.OutOfFuelException
 
@@ -89,6 +89,23 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
         case (CompOp.Lt, comp) => Compare.lt(leftV, eval[comp.tpe.Underlying](comp))
         case (CompOp.LtE, comp) => Compare.lte(leftV, eval[comp.tpe.Underlying](comp))
       }
+    case Expr.Name(ident, tpe) =>
+      currentEnvironment.get(ident.name).getOrElse(error(s"Unresolved reference '${ident.name}'"))
+    case Expr.Call(name: Expr.Name, args, tpe) =>
+      eval[name.tpe.Underlying](name) match {
+        case PFunction(varargs, _, body) =>
+          environments = currentEnvironment.emptyChild :: environments
+          args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs).foreach { case (value, (id, argT)) =>
+            addToEnv(id, PValue(argT)(value))
+          }
+          val result: body.tpe.Underlying = eval[body.tpe.Underlying](body)
+          environments = environments.tail
+          result
+        case PFunctionPredef(varargs, body) =>
+          val argsR: List[(String, PValue)] = args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs).map { case (value, (id, argT)) => id -> PValue(argT)(value) }
+          body(argsR)
+      }
+    /** For simple constants just return their value. */
     case Expr.IntConst(value) => value
     case Expr.Str(value) => value
     case Expr.True => true
