@@ -1,23 +1,15 @@
 package org.encryfoundation.prismlang.evaluator
 
-import org.encryfoundation.prismlang.core.Ast.Expr.Contract
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.wrapped._
 import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.evaluator.Evaluator.OutOfFuelException
 import scorex.crypto.encode.{Base16, Base58}
 
-import scala.util.{Success, Try}
-
 case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 
   var environments: List[ScopedRuntimeEnvironment] = List(initialEnv)
   var fuel: Int = Constants.InitialFuelLimit
-
-  def evalContract(contract: Contract): Boolean = Try(eval[Boolean](contract)) match {
-    case Success(result) => result
-    case _ => false
-  }
 
   def eval[T](expr: Expr): T = if (fuel > 0) {
     fuel = fuel - 1
