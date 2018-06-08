@@ -18,9 +18,13 @@ object PredefFunctions {
     decode.Base58decode,
     decode.SchemaDecode
   )
+  val mathF: Seq[BuiltInFunctionHolder] = Seq(
+    math.Max,
+    math.Min
+  )
 
   val all: Map[String, PWrappedMember] =
-    (timeF ++ cryptoF ++ hashF ++ decodeF).map(f => f.name -> f.asFunc).toMap
+    (timeF ++ cryptoF ++ hashF ++ decodeF ++ mathF).map(f => f.name -> f.asFunc).toMap
 
   /** The most computationally expensive functions */
   val heavyFunctions: Seq[BuiltInFunctionHolder] = cryptoF ++ hashF
