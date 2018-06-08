@@ -136,6 +136,8 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
     val analyseTry = Try(analyser.scan(expr))
 
+    println(analyseTry.get)
+
     analyseTry.isSuccess shouldBe true
   }
 }

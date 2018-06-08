@@ -35,6 +35,7 @@ case class StaticAnalyser(types: TypeSystem) {
       scanRef orElse
       scanCollection orElse
       scanConstant orElse
+      scanTransformers orElse
       pass
 
   def scanLet: Scan = {

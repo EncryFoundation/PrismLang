@@ -41,43 +41,41 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
     resultTry.get shouldBe true
   }
 
-//  property("Map") {
-//
-//    val expr: Expr = Call(
-//      Attribute(
-//        Collection(
-//          List(
-//            IntConst(1),
-//            IntConst(2),
-//            IntConst(3)
-//          ),
-//          Types.Nit
-//        ),
-//        Ident("map"),
-//        Types.Nit
-//      ),
-//      List(
-//        Lambda(
-//          List(
-//            (Ident("a"), TypeIdent("Int",List()))
-//          ),
-//          Bin(
-//            Name(Ident("a"), Types.Nit),
-//            Operator.Mult,
-//            IntConst(2)
-//          ),
-//          Types.Nit
-//        )
-//      ),
-//      Types.Nit
-//    )
-//
-//    println(compile(expr).get)
-//
-//    val resultTry: Try[Any] = eval(compile(expr).get)
-//
-//    resultTry.isSuccess shouldBe true
-//
-//    resultTry.get shouldBe List(2, 4, 6)
-//  }
+  property("Map") {
+
+    val expr: Expr = Call(
+      Attribute(
+        Collection(
+          List(
+            IntConst(1),
+            IntConst(2),
+            IntConst(3)
+          ),
+          Types.Nit
+        ),
+        Ident("map"),
+        Types.Nit
+      ),
+      List(
+        Lambda(
+          List(
+            (Ident("a"), TypeIdent("Int",List()))
+          ),
+          Bin(
+            Name(Ident("a"), Types.Nit),
+            Operator.Mult,
+            IntConst(2)
+          ),
+          Types.Nit
+        )
+      ),
+      Types.Nit
+    )
+
+    val resultTry: Try[Any] = eval(compile(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe List(2, 4, 6)
+  }
 }

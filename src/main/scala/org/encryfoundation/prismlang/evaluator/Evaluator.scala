@@ -23,7 +23,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
     fuel = fuel - 1
 
     /** Invokes user-defined function. */
-    def invoke(func: PFunction, args: List[Any]): func.body.tpe.Underlying = {
+    def invoke(func: PFunction, args: Any*): func.body.tpe.Underlying = {
       environments = currentEnvironment.emptyChild :: environments
       if (args.size != func.args.size) error(s"Wrong number of arguments, ${func.args.size} required, ${args.size} given.")
       args.zip(func.args).foreach { case (value, (id, argT)) =>
@@ -38,8 +38,8 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
     def applyFunction(coll: Expr, func: Expr): Any = eval[coll.tpe.Underlying](coll) match {
       case elts: List[_] if func.tpe.isFunc => eval[func.tpe.Underlying](func) match {
         case func: PFunction => elts.map {
-          case lst: List[_] => invoke(func, lst)
-          case plain => invoke(func, List(plain))
+          case packedArgs: List[_] => invoke(func, packedArgs:_*)
+          case plain => invoke(func, plain)
         }
       }
       case _ => error(s"'$coll' is not a collection")
@@ -91,7 +91,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
         result
 
       /** Evaluate operands, then perform `op`. */
-      case bin@Expr.Bin(left, op, right) =>
+      case bin @ Expr.Bin(left, op, right) =>
         val leftR: left.tpe.Underlying = eval[left.tpe.Underlying](left)
         val rightR: right.tpe.Underlying = eval[right.tpe.Underlying](right)
         op match {
@@ -134,7 +134,12 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
 
       /** Get referenced name from environment. */
       case Expr.Name(ident, _) =>
-        currentEnvironment.get(ident.name).getOrElse(error(s"Unresolved reference '${ident.name}'"))
+        currentEnvironment.get(ident.name) match {
+          case Some(v: PValue) => v.value
+          case Some(f: PFunction) => f
+          case Some(pf: PFunctionPredef) => pf
+          case None => error(s"Unresolved reference '${ident.name}'")
+        }
 
       /** Get called function from env. In case regular function is called, create nested
         * env, put there resolved arguments and evaluate `body`. In case predefined function
@@ -174,13 +179,13 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
           }
           case _ => error("Illegal expression")
         }
-      case Expr.Map(coll, func, tpe) => applyFunction(coll, func)
+      case Expr.Map(coll, func, _) => applyFunction(coll, func)
       case Expr.Exists(coll, func) => applyFunction(coll, func) match {
         case bools: List[Boolean] => bools.contains(true)
         case _ => error("Illegal operation")
       }
-      case Expr.Collection(elts, _) => List(elts.map(elt => eval[elt.tpe.Underlying](elt)))
-      case Expr.Tuple(elts, _) => List(elts.map(elt => eval[elt.tpe.Underlying](elt)))
+      case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
+      case Expr.Tuple(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
       case Expr.Base58Str(value) => Base58.decode(value).getOrElse(error("Base58 string decoding failed"))
       case Expr.Base16Str(value) => Base16.decode(value).getOrElse(error("Base16 string decoding failed"))
 
