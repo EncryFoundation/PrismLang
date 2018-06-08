@@ -10,7 +10,4 @@ trait ExprEvaluator {
 
   def eval(expr: Expr): Try[expr.tpe.Underlying] =
     Try(Evaluator(ScopedRuntimeEnvironment.empty(1), TypeSystem.default).eval[expr.tpe.Underlying](expr))
-
-  def evalContract(contract: Contract): Boolean =
-    Evaluator(ScopedRuntimeEnvironment.empty(1), TypeSystem.default).evalContract(contract)
 }
