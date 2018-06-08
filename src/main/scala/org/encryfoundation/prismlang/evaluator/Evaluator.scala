@@ -9,7 +9,7 @@ import scorex.crypto.encode.{Base16, Base58}
 
 import scala.util.{Success, Try}
 
-case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, debug: Boolean = true) {
+case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 
   var environments: List[ScopedRuntimeEnvironment] = List(initialEnv)
   var fuel: Int = Constants.InitialFuelLimit
@@ -222,7 +222,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
     }.getOrElse(error(s"Type '${ident.name}' is undefined."))
   }
 
-  def error(msg: String): Nothing = if (debug) throw new PRuntimeException(msg) else throw new PRuntimeException("Runtime exception")
+  def error(msg: String) = throw new PRuntimeException(msg)
 }
 
 object Evaluator {
