@@ -102,8 +102,9 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
           environments = environments.tail
           result
         case PFunctionPredef(varargs, body) =>
-          val argsR: List[(String, PValue)] = args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs).map { case (value, (id, argT)) => id -> PValue(argT)(value) }
-          body(argsR)
+          val argsR: List[(String, PValue)] = args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs)
+            .map { case (value, (id, argT)) => id -> PValue(argT)(value) }
+          body(argsR).getOrElse(error("Predef function execution failed"))
       }
     /** For simple constants just return their value. */
     case Expr.IntConst(value) => value
