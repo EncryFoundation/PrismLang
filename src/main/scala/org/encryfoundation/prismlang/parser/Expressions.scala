@@ -43,7 +43,7 @@ object Expressions {
       case (x, None) => x
       case (x, Some((t, neg))) => ??? // if?
     }
-    P( ternary )
+    P( ternary | lambdef )
   }
   val orTest: core.Parser[Ast.Expr, Char, String] = P( andTest.rep(1, kwd("or") | "||") ).map {
     case Seq(x) => x

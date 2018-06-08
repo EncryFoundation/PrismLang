@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.core
 
-import org.encryfoundation.prismlang.core.wrapped.PObject
+import org.encryfoundation.prismlang.core.wrapped.{PFunction, PObject}
 
 object Types {
 
@@ -100,7 +100,7 @@ object Types {
   }
 
   case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
-    override type Underlying = PFunc
+    override type Underlying = PFunction
     override val ident: String = "Func"
 
     override def equals(obj: Any): Boolean = obj match {

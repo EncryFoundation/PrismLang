@@ -106,4 +106,36 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
     analyseTry.isSuccess shouldBe true
   }
+
+  property("Map") {
+
+    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+
+    val expr: Expr = Map(
+      Collection(
+        List(
+          IntConst(1),
+          IntConst(2),
+          IntConst(3)
+        ),
+        Types.Nit
+      ),
+      Lambda(
+        List(
+          (Ident("a"), TypeIdent("Int",List()))
+        ),
+        Bin(
+          Name(Ident("a"), Types.Nit),
+          Operator.Mult,
+          IntConst(2)
+        ),
+        Types.Nit
+      ),
+      Types.Nit
+    )
+
+    val analyseTry = Try(analyser.scan(expr))
+
+    analyseTry.isSuccess shouldBe true
+  }
 }
