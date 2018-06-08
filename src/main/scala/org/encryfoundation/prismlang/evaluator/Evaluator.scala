@@ -26,9 +26,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
     def invoke(func: PFunction, args: Any*): func.body.tpe.Underlying = {
       environments = currentEnvironment.emptyChild :: environments
       if (args.size != func.args.size) error(s"Wrong number of arguments, ${func.args.size} required, ${args.size} given.")
-      args.zip(func.args).foreach { case (value, (id, argT)) =>
-        addToEnv(id, PValue(argT)(value))
-      }
+      args.zip(func.args).foreach { case (value, (id, argT)) => addToEnv(id, PValue(argT)(value)) }
       val result: func.body.tpe.Underlying = eval[func.body.tpe.Underlying](func.body)
       environments = environments.tail
       result
@@ -177,11 +175,19 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
               //val stepR = step.map(i => eval[i.tpe.Underlying](i)).getOrElse(0)
               coll.slice(lowerR.toInt, upperR.toInt)
           }
-          case _ => error("Illegal expression")
+          case _ => error("Illegal operation")
         }
       case Expr.Map(coll, func, _) => applyFunction(coll, func)
       case Expr.Exists(coll, func) => applyFunction(coll, func) match {
         case bools: List[Boolean] => bools.contains(true)
+        case _ => error("Illegal operation")
+      }
+      case Expr.SizeOf(coll) => eval[coll.tpe.Underlying](coll) match {
+        case list: List[_] => list.size.toLong
+        case _ => error("Illegal operation")
+      }
+      case Expr.Sum(coll) => eval[coll.tpe.Underlying](coll) match {
+        case list: List[Long] => list.sum
         case _ => error("Illegal operation")
       }
       case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))

@@ -18,7 +18,7 @@ object Transformer {
     /** Rule: Attribute(coll, "size") -> SizeOf(coll) */
     case Ast.Expr.Attribute(value, attr, _) if attr.name == "size" => Some(Ast.Expr.SizeOf(value))
 
-    /** Rule: Attribute(coll, "sum") -> SizeOf(coll) */
+    /** Rule: Attribute(coll, "sum") -> Sum(coll) */
     case Ast.Expr.Attribute(value, attr, _) if attr.name == "sum" => Some(Ast.Expr.Sum(value))
 
 //    // Rule: Attribute(option, "isDefined") -> IsDefined(option)
