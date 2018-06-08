@@ -27,10 +27,8 @@ object Operations {
   val Mult: core.Parser[Ast.Operator.Mult.type, Char, String] = op("*", Ast.Operator.Mult)
   val Div: core.Parser[Ast.Operator.Div.type, Char, String] = op("/", Ast.Operator.Div)
   val Mod: core.Parser[Ast.Operator.Mod.type, Char, String] = op("%", Ast.Operator.Mod)
-  val UAdd: core.Parser[Ast.UnaryOp.UAdd.type, Char, String] = op("+", Ast.UnaryOp.UAdd)
-  val USub: core.Parser[Ast.UnaryOp.USub.type, Char, String] = op("-", Ast.UnaryOp.USub)
   val Invert: core.Parser[Ast.UnaryOp.Invert.type, Char, String] = op("~", Ast.UnaryOp.Invert)
-  val unaryOp: noApi.Parser[Ast.UnaryOp] = P ( UAdd | USub | Invert )
+  val unaryOp: noApi.Parser[Ast.UnaryOp] = P ( Invert )
 
   def Unary(p: P[Ast.Expr]): core.Parser[Ast.Expr.Unary, Char, String] =
     (unaryOp ~ p).map { case (op, operand) => Ast.Expr.Unary(op, operand) }

@@ -5,6 +5,7 @@ import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.wrapped._
 import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.evaluator.Evaluator.OutOfFuelException
+import scorex.crypto.encode.{Base16, Base58}
 
 import scala.util.{Success, Try}
 
@@ -78,6 +79,11 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
         bool || eval[Boolean](operand)
       }
     }
+    case Expr.Unary(op, operand) =>
+      op match {
+        case UnaryOp.Not => !eval[Boolean](operand)
+        case UnaryOp.Invert => eval[Long](operand) * (-1)
+      }
     /** Evaluate left operand then compare it with evaluated
       * operands using `ops`. */
     case Expr.Compare(left, ops, comps) =>
@@ -89,9 +95,13 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
         case (CompOp.Lt, comp) => Compare.lt(leftV, eval[comp.tpe.Underlying](comp))
         case (CompOp.LtE, comp) => Compare.lte(leftV, eval[comp.tpe.Underlying](comp))
       }
-    case Expr.Name(ident, tpe) =>
+    /** Get referenced name from environment. */
+    case Expr.Name(ident, _) =>
       currentEnvironment.get(ident.name).getOrElse(error(s"Unresolved reference '${ident.name}'"))
-    case Expr.Call(name: Expr.Name, args, tpe) =>
+    /** Get called function from env. In case regular function is called, create nested
+      * env, put there resolved arguments and evaluate `body`. In case predefined function
+      * is called, just call body passing to it list of resolved arguments. */
+    case Expr.Call(name: Expr.Name, args, _) =>
       eval[name.tpe.Underlying](name) match {
         case PFunction(varargs, _, body) =>
           environments = currentEnvironment.emptyChild :: environments
@@ -106,6 +116,37 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem, de
             .map { case (value, (id, argT)) => id -> PValue(argT)(value) }
           body(argsR).getOrElse(error("Predef function execution failed"))
       }
+    /** Evaluate `value`, in case it is an `PObject`, get corresponding field. If evaluated
+      * `value` is a `PTuple` then parse index contained in the `attr` name and return
+      * corresponding element from underlying collection. */
+    case Expr.Attribute(value, attr, _) =>
+      eval[value.tpe.Underlying](value) match {
+        case obj: PObject => obj.getAttr(attr.name).getOrElse(error(s"No such attribute '${obj.tpe.ident}.${attr.name}'"))
+        case tuple: List[_] if value.tpe.isTuple => tuple(attr.name.stripPrefix("_").toInt)
+        case _ => error("Illegal expression")
+      }
+    /** Evaluate `value`, in case `op` is by-index subscription evaluate index and return
+      * element of collection at corresponding position. In case `op` is slicing, evaluate
+      * lower and upper indexes and perform slicing. Third element of `Subscript` is ommited
+      * for now. */
+    case Expr.Subscript(value, op, _) =>
+      eval[value.tpe.Underlying](value) match {
+        case coll: List[_] if value.tpe.isCollection => op match {
+          case SliceOp.Index(idx) => coll(eval[Long](idx).toInt)
+          case SliceOp.Slice(lower, upper, _) =>
+            val lowerR: Long = lower.map(idx => eval[Long](idx)).getOrElse(0)
+            val upperR: Long = upper.map(idx => eval[Long](idx)).getOrElse(coll.size)
+            //val stepR = step.map(i => eval[i.tpe.Underlying](i)).getOrElse(0)
+            coll.slice(lowerR.toInt, upperR.toInt)
+        }
+        case _ => error("Illegal expression")
+      }
+    case Expr.Collection(elts, _) => List(elts.map(elt => eval[elt.tpe.Underlying](elt)))
+    case Expr.Tuple(elts, _) => List(elts.map(elt => eval[elt.tpe.Underlying](elt)))
+    case Expr.Base58Str(value) =>
+      Base58.decode(value).getOrElse(error("Base58 string decoding failed"))
+    case Expr.Base16Str(value) =>
+      Base16.decode(value).getOrElse(error("Base16 string decoding failed"))
     /** For simple constants just return their value. */
     case Expr.IntConst(value) => value
     case Expr.Str(value) => value

@@ -15,6 +15,8 @@ object Types {
 
     def isCollection: Boolean = this.isInstanceOf[PCollection]
 
+    def isTuple: Boolean = this.isInstanceOf[PTuple]
+
     def isOption: Boolean = this.isInstanceOf[POption]
 
     def isProduct: Boolean = this.isInstanceOf[Product]
@@ -87,16 +89,6 @@ object Types {
     val ofString: PCollection = PCollection(PString)
   }
 
-  case class PTuple(valT: PType, eltsQty: Int) extends PType with Parametrized {
-    override type Underlying = List[valT.Underlying]
-    override val ident: String = "Tuple"
-
-    override def equals(obj: Any): Boolean = obj match {
-      case tuple: PTuple => tuple.valT == this.valT
-      case _ => false
-    }
-  }
-
   case class POption(inT: PType) extends PType with Parametrized {
     override type Underlying = Option[inT.Underlying]
     override val ident: String = "Option"
@@ -134,7 +126,6 @@ object Types {
   /** Base trait all complex type-classes inherit
     * (complex - means types which have properties). */
   sealed trait Product extends PType {
-    override type Underlying = PObject
     val superType: Product = BaseObject
     def fields: Map[String, PType] = superType.fields
 
@@ -152,23 +143,39 @@ object Types {
     }
   }
 
+  case class PTuple(valT: PType, eltsQty: Int) extends PType with Product with Parametrized {
+    override type Underlying = List[valT.Underlying]
+    override val ident: String = "Tuple"
+
+    override def fields: Map[String, PType] = (1 to eltsQty).map(i => s"_$i" -> valT).toMap
+
+    override def equals(obj: Any): Boolean = obj match {
+      case tuple: PTuple => tuple.valT == this.valT
+      case _ => false
+    }
+  }
+
   /** Abstract type each product type inherits */
   case object BaseObject extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Object"
     override val fields: Map[String, PType] = Map.empty
   }
 
   /** Used to describe dynamic data structures */
   case class ESTypedObject(override val ident: String, fs: List[Field]) extends PType with Product {
+    override type Underlying = PObject
     override val fields: Map[String, PType] = fs.toMap
   }
 
   /** TL schema object type tag */
   case object SDObject extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "SelfDescribingObject"
   }
 
   case object EContext extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Context"
 
     override val fields: Map[String, PType] = Map(
@@ -180,6 +187,7 @@ object Types {
   }
 
   case object ESScript extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Script"
 
     override val fields: Map[String, PType] = Map(
@@ -189,6 +197,7 @@ object Types {
 
   // Abstract type
   case object EProof extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Proof"
 
     override val fields: Map[String, PType] = Map(
@@ -198,6 +207,7 @@ object Types {
 
   // ESProof impl
   case object Signature25519 extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Signature25519"
 
     override val superType: Product = EProof
@@ -209,6 +219,7 @@ object Types {
 
   // ESProof impl
   case object MultiSig extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "MultiSig"
 
     override val superType: Product = EProof
@@ -220,6 +231,7 @@ object Types {
 
   // Abstract type
   case object EProposition extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Proposition"
 
     override val fields: Map[String, PType] = Map(
@@ -229,6 +241,7 @@ object Types {
 
   // ESProposition impl
   case object AccountProposition extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "AccountProposition"
 
     override val superType: Product = EProposition
@@ -240,6 +253,7 @@ object Types {
 
   // ESProposition impl
   case object ContractProposition extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "ContractProposition"
 
     override val superType: Product = EProposition
@@ -251,6 +265,7 @@ object Types {
 
   // ESProposition impl
   case object HeightProposition extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "HeightProposition"
 
     override val superType: Product = EProposition
@@ -262,6 +277,7 @@ object Types {
 
   // ESProposition impl
   case object OpenProposition extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "OpenProposition"
 
     override val superType: Product = EProposition
@@ -269,6 +285,7 @@ object Types {
 
   // Abstract type
   case object EBox extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Box"
 
     override val fields: Map[String, PType] = Map(
@@ -280,6 +297,7 @@ object Types {
 
   // ESBox impl
   case object AssetBox extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "AssetBox"
 
     override val superType: Product = EBox
@@ -292,6 +310,7 @@ object Types {
 
   // ESBox impl
   case object AssetIssuingBox extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "AssetIssuingBox"
 
     override val superType: Product = EBox
@@ -303,6 +322,7 @@ object Types {
 
   // ESBox impl
   case object DataBox extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "DataBox"
 
     override val superType: Product = EBox
@@ -313,6 +333,7 @@ object Types {
   }
 
   case object EUnlocker extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Unlocker"
 
     override val fields: Map[String, PType] = Map(
@@ -322,6 +343,7 @@ object Types {
   }
 
   case object ETransaction extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "Transaction"
 
     override val fields: Map[String, PType] = Map(
@@ -336,6 +358,7 @@ object Types {
   }
 
   case object EState extends PType with Product {
+    override type Underlying = PObject
     override val ident: String = "State"
 
     override val fields: Map[String, PType] = Map(
@@ -361,6 +384,7 @@ object Types {
   )
 
   val productTypes: Seq[Product] = Seq(
+    PTuple(Nit, 0),
     ETransaction,
     EProof,
     EProposition,

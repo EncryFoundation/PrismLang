@@ -10,7 +10,7 @@ object Blake2b512Hash extends BuiltInFunctionHolder {
 
   val name: String = "blake2b512hash"
 
-  def asFunc: PFunctionPredef = PFunctionPredef(name, args, body)
+  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("input" -> Types.PCollection.ofByte)
 

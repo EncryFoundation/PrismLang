@@ -12,7 +12,7 @@ object SchemaDecode extends BuiltInFunctionHolder {
 
   val name: String = "read"
 
-  override def asFunc: PFunctionPredef = PFunctionPredef(name, args, body)
+  override def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("data" -> Types.PCollection.ofByte)
 

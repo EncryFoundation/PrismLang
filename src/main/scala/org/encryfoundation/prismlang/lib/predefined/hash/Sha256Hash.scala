@@ -10,7 +10,7 @@ object Sha256Hash extends BuiltInFunctionHolder {
 
   val name = "sha256hash"
 
-  def asFunc: PFunctionPredef = PFunctionPredef(name, args, body)
+  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("input" -> Types.PCollection.ofByte)
 

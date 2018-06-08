@@ -10,7 +10,7 @@ object CheckSig extends BuiltInFunctionHolder {
 
   val name: String = "checkSig"
 
-  def asFunc: PFunctionPredef = PFunctionPredef(name, args, body)
+  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("sig" -> Types.PCollection.ofByte, "msg" -> Types.PCollection.ofByte, "pubKey" -> Types.PCollection.ofByte)
 

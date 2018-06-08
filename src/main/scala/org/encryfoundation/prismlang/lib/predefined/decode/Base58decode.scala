@@ -10,7 +10,7 @@ object Base58decode extends BuiltInFunctionHolder {
 
   val name: String = "decode"
 
-  def asFunc: PFunctionPredef = PFunctionPredef(name, args, body)
+  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("s" -> Types.PString)
 

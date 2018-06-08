@@ -10,7 +10,7 @@ object Keccak512Hash extends BuiltInFunctionHolder {
 
   val name = "keccak512hash"
 
-  def asFunc: PFunctionPredef = PFunctionPredef(name, args, body)
+  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("input" -> Types.PCollection.ofByte)
 

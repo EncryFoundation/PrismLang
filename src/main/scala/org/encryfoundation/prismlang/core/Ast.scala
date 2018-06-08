@@ -108,10 +108,6 @@ object Ast {
     case object Invert extends UnaryOp
 
     case object Not extends UnaryOp
-
-    case object UAdd extends UnaryOp
-
-    case object USub extends UnaryOp
   }
 
   sealed trait CompOp
