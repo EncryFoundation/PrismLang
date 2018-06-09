@@ -2,7 +2,7 @@ package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.core.wrapped.PObject
 
-object Compare {
+object CompareOps {
 
   def eq(op1: Any, op2: Any): Boolean = {
     (op1, op2) match {

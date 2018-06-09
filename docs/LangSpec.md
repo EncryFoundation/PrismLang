@@ -41,11 +41,12 @@
     let ageList: Array[Int] = List(1, 2, 3, 4)
     let ageDict: Dict[String, Int] = Dict('Alice' -> 4, 'Bob' -> 9, 'Tom' -> 17) [Under discussion]
 
-    let someonesAge = ageList[0].get        // Will result in `1`
-    let aliceAge = ageDict['Alice'].get     // Will result in `4`
+    // Collection subscription
+    let someonesAge = ageList[0]            // Will result in `1`
 
-    // Lambdas application
-    let doesExist: Bool = ageList.exists(lamb (i: Int) = i > 3)     // Will result in `true`
+    // Lambda application
+    let doesExist: Bool = ageList.exists(lamb (i: Int) = i > 3)             // true
+    let ageListDoubled: Array[Int] = ageList.map(lamb (i: Int) = i * 2)     // Array(2, 4, 6, 8)
 
 ## Contract Example
 

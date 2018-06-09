@@ -115,11 +115,11 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       case Expr.Compare(left, ops, comps) =>
         val leftV: left.tpe.Underlying = eval[left.tpe.Underlying](left)
         ops.zip(comps).forall {
-          case (CompOp.Eq, comp) => Compare.eq(leftV, eval[comp.tpe.Underlying](comp))
-          case (CompOp.Gt, comp) => Compare.gt(leftV, eval[comp.tpe.Underlying](comp))
-          case (CompOp.GtE, comp) => Compare.gte(leftV, eval[comp.tpe.Underlying](comp))
-          case (CompOp.Lt, comp) => Compare.lt(leftV, eval[comp.tpe.Underlying](comp))
-          case (CompOp.LtE, comp) => Compare.lte(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.Eq, comp) => CompareOps.eq(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.Gt, comp) => CompareOps.gt(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.GtE, comp) => CompareOps.gte(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.Lt, comp) => CompareOps.lt(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.LtE, comp) => CompareOps.lte(leftV, eval[comp.tpe.Underlying](comp))
         }
 
       /** Get referenced name from environment. */
