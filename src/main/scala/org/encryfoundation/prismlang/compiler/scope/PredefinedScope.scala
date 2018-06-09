@@ -9,7 +9,6 @@ import org.encryfoundation.prismlang.lib.predefined.time.Str2Time
 object PredefinedScope {
 
   val members: Seq[Symbol] = Seq(
-    Symbol(Types.EContext.ident.toLowerCase, Types.EContext),
     Symbol(CheckSig.name, Types.PFunc(CheckSig.args.toList, Types.PBoolean)),
     Symbol(Blake2b256Hash.name, Types.PFunc(Blake2b256Hash.args.toList, Types.PCollection.ofByte)),
     Symbol(Blake2b512Hash.name, Types.PFunc(Blake2b512Hash.args.toList, Types.PCollection.ofByte)),

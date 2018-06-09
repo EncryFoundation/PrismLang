@@ -16,7 +16,7 @@ sealed trait PValue extends PWrappedMember {
 object PValue {
 
   def apply(t: Types.PType)(v: Any): PValue = {
-    if (!v.isInstanceOf[t.Underlying])
+    if (!v.isInstanceOf[t.Underlying@unchecked])
       throw new Exception("Can't create PValue, actual value type mismatches the declared one")
     new PValue {
       override val tpe: Types.PType = t

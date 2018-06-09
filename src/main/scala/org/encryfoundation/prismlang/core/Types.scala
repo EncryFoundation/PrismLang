@@ -165,25 +165,14 @@ object Types {
   }
 
   /** Used to describe dynamic data structures */
-  case class Struct(override val ident: String, override val fields: Map[String, PType]) extends PType with Product {
+  case class Struct(override val ident: String, props: List[(String, PType)]) extends PType with Product {
     override type Underlying = PObject
+    override val fields: Map[String, PType] = props.toMap
   }
 
-  case object EContext extends PType with Product {
+  case object EncryContract extends PType with Product {
     override type Underlying = PObject
-    override val ident: String = "Context"
-
-    override val fields: Map[String, PType] = Map(
-      "proof" -> EProof,
-      "transaction" -> ETransaction,
-      "state" -> EState,
-      "self" -> ESScript
-    )
-  }
-
-  case object ESScript extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Script"
+    override val ident: String = "Contract"
 
     override val fields: Map[String, PType] = Map(
       "fingerprint" -> PCollection.ofByte
@@ -191,7 +180,7 @@ object Types {
   }
 
   // Abstract type
-  case object EProof extends PType with Product {
+  case object EncryProof extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Proof"
 
@@ -205,7 +194,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "Signature25519"
 
-    override val superType: Product = EProof
+    override val superType: Product = EncryProof
 
     override val fields: Map[String, PType] = Map(
       "sigBytes" -> PCollection.ofByte
@@ -217,74 +206,30 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "MultiSig"
 
-    override val superType: Product = EProof
+    override val superType: Product = EncryProof
 
     override val fields: Map[String, PType] = Map(
       "proofs" -> PCollection(Signature25519)
     )
   }
 
-  // Abstract type
-  case object EProposition extends PType with Product {
+  case object EncryProposition extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Proposition"
 
     override val fields: Map[String, PType] = Map(
-      "typeId" -> PInt
-    )
-  }
-
-  // ESProposition impl
-  case object AccountProposition extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "AccountProposition"
-
-    override val superType: Product = EProposition
-
-    override val fields: Map[String, PType] = Map(
-      "accountAddress" -> PString
-    )
-  }
-
-  // ESProposition impl
-  case object ContractProposition extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "ContractProposition"
-
-    override val superType: Product = EProposition
-
-    override val fields: Map[String, PType] = Map(
+      "typeId" -> PInt,
       "fingerprint" -> PCollection.ofByte
     )
   }
 
-  // ESProposition impl
-  case object HeightProposition extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "HeightProposition"
-
-    override val superType: Product = EProposition
-
-    override val fields: Map[String, PType] = Map(
-      "height" -> PInt
-    )
-  }
-
-  // ESProposition impl
-  case object OpenProposition extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "OpenProposition"
-
-    override val superType: Product = EProposition
-  }
-
   // Abstract type
-  case object EBox extends PType with Product {
+  case object EncryBox extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Box"
 
     override val fields: Map[String, PType] = Map(
-      "proposition" -> EProposition,
+      "proposition" -> EncryProposition,
       "typeId" -> PInt,
       "id" -> PCollection.ofByte
     )
@@ -295,7 +240,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "AssetBox"
 
-    override val superType: Product = EBox
+    override val superType: Product = EncryBox
 
     override val fields: Map[String, PType] = Map(
       "amount" -> PInt,
@@ -308,7 +253,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "AssetIssuingBox"
 
-    override val superType: Product = EBox
+    override val superType: Product = EncryBox
 
     override val fields: Map[String, PType] = Map(
       "amount" -> PInt
@@ -320,24 +265,24 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "DataBox"
 
-    override val superType: Product = EBox
+    override val superType: Product = EncryBox
 
     override val fields: Map[String, PType] = Map(
       "data" -> PCollection.ofByte
     )
   }
 
-  case object EUnlocker extends PType with Product {
+  case object EncryUnlocker extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Unlocker"
 
     override val fields: Map[String, PType] = Map(
-      "boxId" -> ETransaction,
-      "proofOpt" -> POption(EProof)
+      "boxId" -> EncryTransaction,
+      "proofOpt" -> POption(EncryProof)
     )
   }
 
-  case object ETransaction extends PType with Product {
+  case object EncryTransaction extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Transaction"
 
@@ -346,13 +291,13 @@ object Types {
       "fee" -> PInt,
       "timestamp" -> PInt,
       "signature" -> PCollection.ofByte,
-      "unlockers" -> PCollection(EUnlocker),
-      "outputs" -> PCollection(EBox),
+      "unlockers" -> PCollection(EncryUnlocker),
+      "outputs" -> PCollection(EncryBox),
       "messageToSign" -> PCollection.ofByte
     )
   }
 
-  case object EState extends PType with Product {
+  case object EncryState extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "State"
 
@@ -380,21 +325,16 @@ object Types {
 
   val productTypes: Seq[Product] = Seq(
     PTuple(Nit, 0),
-    ETransaction,
-    EProof,
-    EProposition,
-    EContext,
-    EBox,
-    EState,
+    EncryTransaction,
+    EncryProof,
+    EncryProposition,
+    EncryBox,
+    EncryState,
     Signature25519,
     MultiSig,
     AssetBox,
     AssetIssuingBox,
-    DataBox,
-    AccountProposition,
-    OpenProposition,
-    ContractProposition,
-    HeightProposition
+    DataBox
   )
 
   val numericTypes: Seq[PType] = Seq(
