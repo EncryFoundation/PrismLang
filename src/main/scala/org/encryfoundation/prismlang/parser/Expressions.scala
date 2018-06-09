@@ -27,11 +27,13 @@ object Expressions {
   // This parser is for tests only.
   def fileInput: P[Seq[Ast.Expr]] = P( Semis.? ~ expr.repX(0, Semis) ~ Semis.? )
 
-  def fileInputContract: P[Ast.Expr.Contract] = P( Semis.? ~ contract ~ Semis.? )
+  def module: P[Ast.Module] = P( Semis.? ~ struct.rep(0, Semis) ~ Semis.? ~ contract ~ Semis.? ).map { case (structsN, contractN) =>
+    Ast.Module(contractN, structsN.toList)
+  }
 
   val block: P[Ast.Expr] = {
     val end: noApi.Parser[Unit] = P( Semis.? ~ "}" )
-    P( "{" ~ Semis.? ~ expr.rep(min=0, sep=Semi) ~ end ).map(exps => Ast.Expr.Block(exps.toList))
+    P( "{" ~ Semis.? ~ expr.rep(min=1, sep=Semi) ~ end ).map(exps => Ast.Expr.Block(exps.toList))
   }
 
   def expr: P[Ast.Expr] = P( arithExpr | test | lambdef | funcdef | constdef | ifLetExpr | ifExpr | block )
@@ -168,4 +170,20 @@ object Expressions {
   val contract: P[Ast.Expr.Contract] = P( kwd("contract") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, body) =>
     Ast.Expr.Contract(body, args.toList)
   }
+
+  def typeDescriptorParams: P[Seq[Ast.TypeDescriptor]] = P( "[" ~ tpe.rep(1, ",") ~ ",".? ~ "]" )
+
+  def simpleType: P[Ast.TypeDescriptor.SimpleType] = P( NAME ~ typeDescriptorParams.? ).map { case (tpeN, tpsOpt) =>
+    Ast.TypeDescriptor.SimpleType(tpeN, tpsOpt.map(_.toList).getOrElse(List.empty))
+  }
+
+  def field: P[Ast.TypeDescriptor.Field] = P( NAME ~ ":" ~ tpe )
+
+  def fields: P[Seq[Ast.TypeDescriptor.Field]] = P( Semis.? ~ field.rep(min = 1, Semis) ~ Semis.? )
+
+  def productType: P[Ast.TypeDescriptor.ProductType] = P( "Object" ~ "(" ~ fields ~ ")" ).map(flds => Ast.TypeDescriptor.ProductType(flds.toList))
+
+  def tpe: P[Ast.TypeDescriptor] = P( productType | simpleType )
+
+  def struct: P[Ast.Expr.Schema] = P( kwd("struct") ~ NAME ~ ":" ~ tpe ).map { case (id, tp) => Ast.Expr.Schema(id, tp) }
 }

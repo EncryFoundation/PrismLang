@@ -227,4 +227,5 @@ object Evaluator {
 
   case object OutOfFuelException extends Exception("Out of fuel")
 
+  def default: Evaluator = Evaluator(ScopedRuntimeEnvironment.empty(1), TypeSystem.default)
 }

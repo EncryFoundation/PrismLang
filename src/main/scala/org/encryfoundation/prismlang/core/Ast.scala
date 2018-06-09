@@ -6,10 +6,14 @@ object Ast {
 
   sealed trait Node
 
+  case class Module(contract: Expr.Contract, schemas: List[Expr.Schema]) extends Node
+
   sealed trait Expr extends Node { val tpe: PType }
   object Expr {
 
     case class Contract(body: Expr, args: List[(Ident, TypeIdent)]) extends Expr { override val tpe: PType = PBoolean }
+
+    case class Schema(id: Ident, typeDescriptor: TypeDescriptor) extends Expr { override val tpe: PType = PUnit }
 
     case class Block(body: List[Expr], override val tpe: PType = Nit) extends Expr
 
@@ -132,6 +136,17 @@ object Ast {
     case object In extends CompOp
 
     case object NotIn extends CompOp
+  }
+
+  sealed trait TypeDescriptor
+  object TypeDescriptor {
+
+    type Field = (Ident, TypeDescriptor)
+
+    case class SimpleType(id: Ident, typeParams: List[TypeDescriptor]) extends TypeDescriptor
+
+    case class ProductType(fields: List[Field]) extends TypeDescriptor
+
   }
 
   case class Ident(name: String)

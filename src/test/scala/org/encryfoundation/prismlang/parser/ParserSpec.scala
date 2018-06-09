@@ -1,5 +1,6 @@
 package org.encryfoundation.prismlang.parser
 
+import org.encryfoundation.prismlang.core.Ast.TypeDescriptor.{ProductType, SimpleType}
 import org.encryfoundation.prismlang.core.Types
 import org.scalatest.{Matchers, PropSpec}
 
@@ -365,6 +366,71 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     )
 
     val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
+  property("module") {
+
+    val source =
+      """
+        |struct CustomerBox:Object(
+        |  person:Object(name:String; age:Int);
+        |  orders:List[Object(product_id:Long; amount:Long;)];
+        |  id:Long;
+        |)
+        |
+        |contract (signature: Signature25519) = {
+        |  let ownerPubKey = base58"GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew"
+        |  checkSig(ctx.transaction.msg, ownerPubKey, signature)
+        |}
+      """.stripMargin
+
+    val expected: Module = Module(
+      Contract(
+        Block(
+          List(
+            Let(
+              Ident("ownerPubKey"),
+              Base58Str("GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew"),
+              None
+            ),
+            Call(
+              Name(Ident("checkSig"), Types.Nit),
+              List(
+                Attribute(
+                  Attribute(
+                    Name(Ident("ctx"), Types.Nit),
+                    Ident("transaction"), Types.Nit
+                  ),
+                  Ident("msg"), Types.Nit),
+                Name(Ident("ownerPubKey"), Types.Nit),
+                Name(Ident("signature"), Types.Nit)), Types.Nit
+            )
+          ),
+          Types.Nit
+        ),
+        List(
+          (Ident("signature"), TypeIdent("Signature25519", List()))
+        )
+      ),
+      List(
+        Schema(
+          Ident("CustomerBox"),
+          ProductType(
+            List(
+              (Ident("person"), ProductType(List((Ident("name"), SimpleType(Ident("String"),List())), (Ident("age"),SimpleType(Ident("Int"), List()))))),
+              (Ident("orders"), SimpleType(Ident("List"), List(ProductType(List((Ident("product_id"), SimpleType(Ident("Long"), List())), (Ident("amount"), SimpleType(Ident("Long"), List()))))))),
+              (Ident("id"), SimpleType(Ident("Long"),List()))
+            )
+          )
+        )
+      )
+    )
+
+    val parsedTry = parseModule(source)
 
     parsedTry.isSuccess shouldBe true
 

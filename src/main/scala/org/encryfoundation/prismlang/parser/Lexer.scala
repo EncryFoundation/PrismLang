@@ -8,15 +8,24 @@ object WsApi extends fastparse.WhitespaceApi.Wrapper(Lexer.WS)
 
 object Lexer {
 
-  // TODO: Remove redundant
   val keywords = Set(
-    "and",       "not",       "true",      "return",
-    "elif",      "abort",     "or",
-    "assert",    "else",      "if",
-    "case",      "unlock",    "print",
-    "match",     "exec",      "in",
-    "let",       "is",        "false",
-    "def",       "lamb",      "pass",
+    "and",
+    "not",
+    "true",
+    "return",
+    "elif",
+    "or",
+    "else",
+    "if",
+    "contract",
+    "match",
+    "in",
+    "let",
+    "is",
+    "false",
+    "def",
+    "lamb",
+    "struct"
   )
 
   /**
