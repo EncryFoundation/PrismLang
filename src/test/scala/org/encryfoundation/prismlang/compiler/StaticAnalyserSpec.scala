@@ -84,19 +84,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
     val expr: Expr = Let(
       Ident("coll"),
       Collection(
-        List(
-          IntConst(1),
-          IntConst(2),
-          IntConst(4),
-          IntConst(8),
-          IntConst(16),
-          IntConst(32),
-          IntConst(64),
-          IntConst(128),
-          IntConst(256),
-          IntConst(512),
-          IntConst(1024)
-        ),
+        List(1,2,4,8,16,32,64,128,256,512,1024).map(IntConst(_)),
         Types.Nit
       ),
       Some(TypeIdent("Array", List("Int")))
@@ -113,11 +101,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
     val expr: Expr = Map(
       Collection(
-        List(
-          IntConst(1),
-          IntConst(2),
-          IntConst(3)
-        ),
+        List(1,2,3).map(IntConst(_)),
         Types.Nit
       ),
       Lambda(

@@ -10,15 +10,14 @@ import scala.util.Try
 
 class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEvaluator {
 
+  implicit def int2intConst = IntConst(_)
+  implicit def str2ident = Ident(_)
+
   property("BinOp") {
 
-    val expr: Expr = Bin(
-      IntConst(100),
-      Operator.Div,
-      IntConst(4)
-    )
+    val expr: Expr = Bin( 100L, Operator.Div, 4L)
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = compile(expr).flatMap(eval)
 
     resultTry.isSuccess shouldBe true
 
@@ -27,13 +26,9 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
 
   property("Compare") {
 
-    val expr: Expr = Expr.Compare(
-      IntConst(3),
-      List(CompOp.Gt),
-      List(IntConst(0))
-    )
+    val expr: Expr = Expr.Compare(3L, List(CompOp.Gt), List(0L))
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = compile(expr).flatMap(eval)
 
     resultTry.isSuccess shouldBe true
 
@@ -45,33 +40,22 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
     val expr: Expr = Call(
       Attribute(
         Collection(
-          List(
-            IntConst(1),
-            IntConst(2),
-            IntConst(3)
-          ),
+          List[IntConst](1L, 2L, 3L),
           Types.Nit
-        ),
-        Ident("map"),
+        ), "map",
         Types.Nit
       ),
       List(
         Lambda(
-          List(
-            (Ident("a"), TypeIdent("Int",List()))
-          ),
-          Bin(
-            Name(Ident("a"), Types.Nit),
-            Operator.Mult,
-            IntConst(2)
-          ),
+          List( Ident("a") -> TypeIdent("Int",List())),
+          Bin( Name("a", Types.Nit), Operator.Mult, 2L),
           Types.Nit
         )
       ),
       Types.Nit
     )
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = compile(expr).flatMap(eval)
 
     resultTry.isSuccess shouldBe true
 
@@ -81,16 +65,12 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
   property("IfElse") {
 
     val expr: Expr = If(
-      Compare(
-        IntConst(5),
-        List(CompOp.Gt),
-        List(IntConst(10))
-      ),
+      Compare( 5L, List(CompOp.Gt), List(10L)),
       Block(List(True)),
       Block(List(False))
     )
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = compile(expr).flatMap(eval)
 
     resultTry.isSuccess shouldBe true
 
