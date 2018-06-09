@@ -9,7 +9,7 @@ object PredefFunctions {
   val cryptoF: Seq[BuiltInFunctionHolder] = Seq(signature.CheckSig)
   val hashF: Seq[BuiltInFunctionHolder] = Seq(
     hash.Blake2b256Hash,
-    hash.Blake2b256Hash,
+    hash.Blake2b512Hash,
     hash.Keccak256Hash,
     hash.Keccak512Hash,
     hash.Sha256Hash

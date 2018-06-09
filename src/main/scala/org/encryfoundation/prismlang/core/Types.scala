@@ -165,15 +165,8 @@ object Types {
   }
 
   /** Used to describe dynamic data structures */
-  case class ESTypedObject(override val ident: String, fs: List[Field]) extends PType with Product {
+  case class Struct(override val ident: String, override val fields: Map[String, PType]) extends PType with Product {
     override type Underlying = PObject
-    override val fields: Map[String, PType] = fs.toMap
-  }
-
-  /** TL schema object type tag */
-  case object SDObject extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "SelfDescribingObject"
   }
 
   case object EContext extends PType with Product {
@@ -401,8 +394,7 @@ object Types {
     AccountProposition,
     OpenProposition,
     ContractProposition,
-    HeightProposition,
-    SDObject
+    HeightProposition
   )
 
   val numericTypes: Seq[PType] = Seq(
@@ -421,7 +413,7 @@ object Types {
   }
 }
 
-case class TypeSystem(externalTypes: Seq[Types.ESTypedObject]) {
+case class TypeSystem(externalTypes: Seq[Types.Struct]) {
 
   import Types._
 
