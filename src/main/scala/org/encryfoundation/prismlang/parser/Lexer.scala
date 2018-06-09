@@ -47,10 +47,10 @@ object Lexer {
   // terminal node. That means that a comment before any terminal will
   // prevent any backtracking from working, which is not what we want!
   val CommentChunk: Parser[Unit] = P( CharsWhile(c => c != '/' && c != '*') | MultilineComment | !"*/" ~ AnyChar )
-  val MultilineComment: P0 = P( "/*" ~/ CommentChunk.rep ~ "*/" )
+  lazy val MultilineComment: P0 = P( "/*" ~/ CommentChunk.rep ~ "*/" )
   val SameLineCharChunks: Parser[Unit] = P( CharsWhile(c => c != '\n' && c != '\r')  | !Basic.Newline ~ AnyChar )
   val LineComment: Parser[Unit] = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
-  val Comment: P0 = P( MultilineComment | LineComment )
+  lazy val Comment: P0 = P( MultilineComment | LineComment )
 
   def negatable[T](p: P[T])(implicit ev: Numeric[T]): core.Parser[T, Char, String] = (("+" | "-").?.! ~ p).map {
     case ("-", i) => ev.negate(i)
@@ -59,8 +59,8 @@ object Lexer {
 
   val integer: core.Parser[Long, Char, String] = negatable[Long](P( CharIn('0' to '9').rep(min = 1).!.map(_.toLong) ))
 
-  val stringliteral: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
-  val stringprefix: P0 = P(
+  lazy val stringliteral: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
+  lazy val stringprefix: P0 = P(
     "r" | "u" | "ur" | "R" | "U" | "UR" | "Ur" | "uR" | "b" | "B" | "br" | "Br" | "bR" | "BR"
   )
 
@@ -71,7 +71,7 @@ object Lexer {
   def shortstringitem(quote: String): P0 = P( shortstringchar(quote) | escapeseq )
   def shortstringchar(quote: String): P0 = P( CharsWhile(!s"\\\n${quote(0)}".contains(_)) )
 
-  val longstring: P[String] = P( longstring0("'''") | longstring0("\"\"\"") )
+  lazy val longstring: P[String] = P( longstring0("'''") | longstring0("\"\"\"") )
   def longstring0(delimiter: String): all.Parser[String] = P( delimiter ~ longstringitem(delimiter).rep.! ~ delimiter)
   def longstringitem(quote: String): P0 = P( longstringchar(quote) | escapeseq | !quote ~ quote.take(1)  )
   def longstringchar(quote: String): P0 = P( CharsWhile(!s"\\${quote(0)}".contains(_)) )
@@ -79,10 +79,10 @@ object Lexer {
   val identifier: P[Ast.Ident] = P( (letter|"_") ~ (letter | digit | "_").rep ).!.filter(!keywords.contains(_))
     .map(Ast.Ident)
 
-  val letter: all.Parser[Unit] =        P( lowercase | uppercase )
-  val lowercase: all.Parser[Unit] =     P( CharIn('a' to 'z') )
-  val uppercase: all.Parser[Unit] =     P( CharIn('A' to 'Z') )
-  val digit: all.Parser[Unit] =         P( CharIn('0' to '9') )
+  lazy val letter: all.Parser[Unit] =        P( lowercase | uppercase )
+  lazy val lowercase: all.Parser[Unit] =     P( CharIn('a' to 'z') )
+  lazy val uppercase: all.Parser[Unit] =     P( CharIn('A' to 'Z') )
+  lazy val digit: all.Parser[Unit] =         P( CharIn('0' to '9') )
 
   def kwd(s: String): core.Parser[Unit, Char, String] = s ~ !(letter | digit | "_")
 }

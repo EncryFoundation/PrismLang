@@ -49,13 +49,13 @@ object Expressions {
     case Seq(x) => x
     case xs => Ast.Expr.Bool(Ast.BooleanOp.Or, xs.toList)
   }
-  val andTest: core.Parser[Ast.Expr, Char, String] = P( notTest.rep(1, kwd("and") | "&&") ).map {
+  lazy val andTest: core.Parser[Ast.Expr, Char, String] = P( notTest.rep(1, kwd("and") | "&&") ).map {
     case Seq(x) => x
     case xs => Ast.Expr.Bool(Ast.BooleanOp.And, xs.toList)
   }
   val notTest: P[Ast.Expr] = P( (("not" | "!") ~ notTest).map(Ast.Expr.Unary(Ast.UnaryOp.Not, _)) | comparison )
 
-  val comparison: P[Ast.Expr] = P( arithExpr ~ (compOp ~ arithExpr).rep ).map {
+  lazy val comparison: P[Ast.Expr] = P( arithExpr ~ (compOp ~ arithExpr).rep ).map {
     case (lhs, Nil) => lhs
     case (lhs, chunks) =>
       val (ops, vals) = chunks.unzip
@@ -66,7 +66,7 @@ object Expressions {
     * This ensures that "-2" will parse as `Num(-2)` rather than
     * as `UnaryOp(USub, Num(2))`. */
   val factor: P[Ast.Expr] = P( NUMBER | Unary(factor) | power )
-  val power: P[Ast.Expr] = P( atom ~ trailer.rep ~ (Pow ~ factor).? ).map {
+  lazy val power: P[Ast.Expr] = P( atom ~ trailer.rep ~ (Pow ~ factor).? ).map {
     case (lhs, trailers, rhs) =>
       val left = trailers.foldLeft(lhs)((l, t) => t(l))
       rhs match{
@@ -137,15 +137,15 @@ object Expressions {
 
   val varargslist: P[Seq[(Ast.Ident, Ast.TypeIdent)]] = P( (NAME ~/ typeAnnotation).rep(sep = ",") ~ ",".? )
 
-  val lambdef: P[Ast.Expr.Lambda] = P( kwd("lamb") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, exp) =>
+  lazy val lambdef: P[Ast.Expr.Lambda] = P( kwd("lamb") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, exp) =>
     Ast.Expr.Lambda(args.toList, exp)
   }
 
-  val constdef: P[Ast.Expr.Let] = P( kwd("let") ~ NAME ~ typeAnnotation.? ~ "=" ~ expr ).map { case (name, typeOpt, value) =>
+  lazy val constdef: P[Ast.Expr.Let] = P( kwd("let") ~ NAME ~ typeAnnotation.? ~ "=" ~ expr ).map { case (name, typeOpt, value) =>
     Ast.Expr.Let(name, value, typeOpt)
   }
 
-  val funcdef: P[Ast.Expr.Def] = P( kwd("def") ~ NAME ~ "(" ~ varargslist ~ ")" ~ typeAnnotation ~ "=" ~ expr )
+  lazy val funcdef: P[Ast.Expr.Def] = P( kwd("def") ~ NAME ~ "(" ~ varargslist ~ ")" ~ typeAnnotation ~ "=" ~ expr )
     .map { case (name, args, retType, body) => Ast.Expr.Def(name, args.toList, body, retType) }
 
   val ifExpr: P[Ast.Expr.If] = {
