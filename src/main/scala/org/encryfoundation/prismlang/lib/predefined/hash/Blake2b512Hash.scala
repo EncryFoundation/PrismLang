@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.lib.predefined.hash
 import org.encryfoundation.prismlang.core.wrapped.{PFunctionPredef, PValue}
 import scorex.crypto.hash.Blake2b512
 
-object Blake2b512Hash extends BuiltInHashHolder {
+object Blake2b512Hash extends HashFunctionHolder {
 
   val name: String = "blake2b512hash"
 

@@ -2,7 +2,7 @@ package org.encryfoundation.prismlang.lib.predefined.hash
 
 import scorex.crypto.hash.Keccak512
 
-object Keccak512Hash extends BuiltInHashHolder {
+object Keccak512Hash extends HashFunctionHolder {
 
   val name = "keccak512hash"
 
