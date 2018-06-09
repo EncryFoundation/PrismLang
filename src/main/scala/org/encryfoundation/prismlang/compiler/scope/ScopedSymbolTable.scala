@@ -13,18 +13,17 @@ case class ScopedSymbolTable(scopeLevel: Int,
     symbols = symbols.updated(sym.name, sym)
   }
 
-  def lookup(name: String, currentScopeOnly: Boolean = false): Option[Symbol] = symbols.get(name) match {
-    case Some(r) => Some(r)
-    case None if !currentScopeOnly => parentalScopeOpt.flatMap(_.lookup(name))
-    case _ => None
-  }
+  def lookup(name: String, currentScopeOnly: Boolean = false): Option[Symbol] =
+    symbols.get(name).orElse(
+      if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookup(name)) else None
+    )
 
   override def toString: String = s"L$scopeLevel ${this.symbols}"
 }
 
 object ScopedSymbolTable {
 
-  def initial: ScopedSymbolTable = ScopedSymbolTable(scopeLevel=1)
+  def initial: ScopedSymbolTable = ScopedSymbolTable(scopeLevel = 1)
 
   def nested(oldScope: ScopedSymbolTable, isFunc: Boolean = false): ScopedSymbolTable =
     ScopedSymbolTable( oldScope.scopeLevel + 1, Some(oldScope), isFunc)

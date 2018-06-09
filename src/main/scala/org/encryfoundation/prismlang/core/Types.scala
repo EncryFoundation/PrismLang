@@ -11,21 +11,14 @@ object Types {
     type Underlying
     val ident: String
 
-    def isPrimitive: Boolean = this.isInstanceOf[Primitive]
-
-    def isCollection: Boolean = this.isInstanceOf[PCollection]
-
-    def isTuple: Boolean = this.isInstanceOf[PTuple]
-
-    def isOption: Boolean = this.isInstanceOf[POption]
-
-    def isProduct: Boolean = this.isInstanceOf[Product]
-
-    def isFunc: Boolean = this.isInstanceOf[PFunc]
-
-    def isNumeric: Boolean = this.isInstanceOf[PInt.type]
-
-    def isNit: Boolean = this.isInstanceOf[Nit.type]
+    val isPrimitive: Boolean = false
+    val isCollection: Boolean = false
+    val isTuple: Boolean = false
+    val isOption: Boolean = false
+    val isProduct: Boolean = false
+    val isFunc: Boolean = false
+    val isNumeric: Boolean = false
+    val isNit: Boolean = false
 
     def isSubtypeOf(thatT: PType): Boolean = thatT match {
       case _: PAny.type => true
@@ -39,7 +32,9 @@ object Types {
     }
   }
 
-  sealed trait Primitive extends PType
+  sealed trait Primitive extends PType {
+    override val isPrimitive = true
+  }
 
   /** Each type inherits this one by default. */
   case object PAny extends PType with Primitive {
@@ -57,6 +52,7 @@ object Types {
   case object PInt extends PType with Primitive {
     override type Underlying = Int
     override val ident: String = "Int"
+    override val isNumeric: Boolean = true
   }
   case object PByte extends PType with Primitive {
     override type Underlying = Byte
@@ -73,6 +69,7 @@ object Types {
   case class PCollection(valT: PType) extends PType with Parametrized {
     override type Underlying = List[valT.Underlying]
     override val ident: String = "Array"
+    override val isCollection: Boolean = true
 
     def isApplicable(func: Types.PFunc): Boolean =
       func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
@@ -92,6 +89,7 @@ object Types {
   case class POption(inT: PType) extends PType with Parametrized {
     override type Underlying = Option[inT.Underlying]
     override val ident: String = "Option"
+    override val isOption: Boolean = true
 
     override def equals(obj: Any): Boolean = obj match {
       case option: POption => option.inT == this.inT
@@ -102,6 +100,7 @@ object Types {
   case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
     override type Underlying = PFunction
     override val ident: String = "Func"
+    override val isFunc: Boolean = true
 
     override def equals(obj: Any): Boolean = obj match {
       case f: PFunc =>
@@ -120,12 +119,14 @@ object Types {
     * which is interpreted as dynamic typing. */
   case object Nit extends PType {
     override type Underlying = Nothing
+    override val isNit: Boolean = true
     override val ident: String = "Nit"
   }
 
   /** Base trait all complex type-classes inherit
     * (complex - means types which have properties). */
   sealed trait Product extends PType {
+    override val isProduct: Boolean = true
     val superType: Product = BaseObject
     def fields: Map[String, PType] = superType.fields
 
@@ -145,6 +146,7 @@ object Types {
 
   case class PTuple(valT: PType, eltsQty: Int) extends PType with Product with Parametrized {
     override type Underlying = List[valT.Underlying]
+    override val isTuple: Boolean = true
     override val ident: String = "Tuple"
 
     override def fields: Map[String, PType] = (1 to eltsQty).map(i => s"_$i" -> valT).toMap
