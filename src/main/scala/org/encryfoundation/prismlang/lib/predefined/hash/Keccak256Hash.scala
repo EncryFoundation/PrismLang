@@ -6,5 +6,5 @@ object Keccak256Hash extends BuiltInHashHolder {
 
   val name = "keccak256hash"
 
-  private val body = bodyValue(Keccak256.hash)
+  val body = bodyValue(Keccak256.hash)
 }
