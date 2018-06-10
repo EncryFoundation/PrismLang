@@ -214,7 +214,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       .getOrElse(error(s"Type '$p' is undefined.")))
     types.typeByIdent(ident.name).map {
       case Types.PCollection(_) => Types.PCollection(typeParams.head)
-      case Types.PTuple(_, qty) => Types.PTuple(typeParams.head, qty)
+      case Types.PTuple(_, dim) => Types.PTuple(typeParams.head, dim)
       case Types.POption(_) => Types.POption(typeParams.head)
       case otherT: Types.PType => otherT
     }.getOrElse(error(s"Type '${ident.name}' is undefined."))
