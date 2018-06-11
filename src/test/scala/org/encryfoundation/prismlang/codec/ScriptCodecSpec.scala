@@ -1,18 +1,17 @@
 package org.encryfoundation.prismlang.codec
 
-import org.encryfoundation.prismlang.core.Ast.{Expr, Ident, TypeIdent}
 import org.encryfoundation.prismlang.core.Ast.Expr._
+import org.encryfoundation.prismlang.core.Ast.{Expr, Ident}
 import org.encryfoundation.prismlang.core.Types
 import org.scalatest.{Matchers, PropSpec}
-import scodec.{Attempt, DecodeResult}
 import scodec.bits.BitVector
+import scodec.{Attempt, DecodeResult}
 
 class ScriptCodecSpec extends PropSpec with Matchers {
 
   property("Encode/decode") {
 
-    val expr: Expr = Contract(
-      Block(
+    val expr: Expr = Block(
         List(
           Let(
             Ident("ownerPubKey"),
@@ -27,17 +26,14 @@ class ScriptCodecSpec extends PropSpec with Matchers {
                   Name(Ident("ctx"), Types.Nit),
                   Ident("transaction"), Types.Nit
                 ),
-                Ident("msg"), Types.Nit),
+                Ident("msg"), Types.Nit
+              ),
               Name(Ident("ownerPubKey"), Types.Nit),
               Name(Ident("signature"), Types.Nit)), Types.Nit
           )
         ),
         Types.Nit
-      ),
-      List(
-        (Ident("signature"), TypeIdent("Signature25519", List()))
       )
-    )
 
     val exprEncoded: BitVector = ScriptCodec.exprCodec.encode(expr).require
 

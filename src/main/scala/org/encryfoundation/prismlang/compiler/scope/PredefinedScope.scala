@@ -8,14 +8,14 @@ import org.encryfoundation.prismlang.lib.predefined.time.Str2Time
 
 object PredefinedScope {
 
-  val members: Seq[Symbol] = Seq(
-    Symbol(CheckSig.name, Types.PFunc(CheckSig.args.toList, Types.PBoolean)),
-    Symbol(Blake2b256Hash.name, Types.PFunc(Blake2b256Hash.args.toList, Types.PCollection.ofByte)),
-    Symbol(Blake2b512Hash.name, Types.PFunc(Blake2b512Hash.args.toList, Types.PCollection.ofByte)),
-    Symbol(Keccak256Hash.name, Types.PFunc(Keccak256Hash.args.toList, Types.PCollection.ofByte)),
-    Symbol(Keccak512Hash.name, Types.PFunc(Keccak512Hash.args.toList, Types.PCollection.ofByte)),
-    Symbol(Sha256Hash.name, Types.PFunc(Sha256Hash.args.toList, Types.PCollection.ofByte)),
-    Symbol(Str2Time.name, Types.PFunc(Str2Time.args.toList, Types.PInt)),
-    Symbol(Base58decode.name, Types.PFunc(Base58decode.args.toList, Types.POption(Types.PCollection.ofByte)))
+  val members: List[(String, Types.PType)] = List(
+    (CheckSig.name, Types.PFunc(CheckSig.args.toList, Types.PBoolean)),
+    (Blake2b256Hash.name, Types.PFunc(Blake2b256Hash.args.toList, Types.PCollection.ofByte)),
+    (Blake2b512Hash.name, Types.PFunc(Blake2b512Hash.args.toList, Types.PCollection.ofByte)),
+    (Keccak256Hash.name, Types.PFunc(Keccak256Hash.args.toList, Types.PCollection.ofByte)),
+    (Keccak512Hash.name, Types.PFunc(Keccak512Hash.args.toList, Types.PCollection.ofByte)),
+    (Sha256Hash.name, Types.PFunc(Sha256Hash.args.toList, Types.PCollection.ofByte)),
+    (Str2Time.name, Types.PFunc(Str2Time.args.toList, Types.PInt)),
+    (Base58decode.name, Types.PFunc(Base58decode.args.toList, Types.POption(Types.PCollection.ofByte)))
   )
 }

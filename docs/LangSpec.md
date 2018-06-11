@@ -36,6 +36,9 @@
 
     // Base58 string
     let pubKeyBytes: Array[Byte] = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
+    
+    // Byte
+    let byte: Byte = (127).toByte
 
     // Collections
     let ageList: Array[Int] = List(1, 2, 3, 4)

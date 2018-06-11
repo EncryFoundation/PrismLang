@@ -43,7 +43,7 @@ object Expressions {
   val test: P[Ast.Expr] = {
     val ternary = P(orTest ~ (kwd("if") ~ orTest ~ kwd("else") ~ test).?).map {
       case (x, None) => x
-      case (x, Some((t, neg))) => ??? // if?
+      case (x, Some((t, neg))) => x
     }
     P( ternary | lambdef )
   }
@@ -95,18 +95,14 @@ object Expressions {
     )
   }
 
-  val sliceop: noApi.Parser[Option[Ast.Expr]] = P(":" ~ test.?)
+  //val sliceop: noApi.Parser[Option[Ast.Expr]] = P(":" ~ test.?)
   val exprlist: P[Seq[Ast.Expr]] = P( expr.rep(1, sep = ",") ~ ",".? )
   val testlist: P[Seq[Ast.Expr]] = P( test.rep(1, sep = ",") ~ ",".? )
 
   val subscript: P[Ast.SliceOp] = {
     val single = P(test.map(Ast.SliceOp.Index))
-    val multi = P(test.? ~ ":" ~ test.? ~ sliceop.?).map { case (lower, upper, step) =>
-      Ast.SliceOp.Slice(
-        lower,
-        upper,
-        step.map(_.getOrElse(Ast.Expr.Name(Ast.Ident("None"))))
-      )
+    val multi = P(test.? ~ ":" ~ test.?).map { case (lower, upper) =>
+      Ast.SliceOp.Slice(lower, upper)
     }
     P( multi | single )
   }
@@ -167,8 +163,8 @@ object Expressions {
     }
   }
 
-  val contract: P[Ast.Expr.Contract] = P( kwd("contract") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, body) =>
-    Ast.Expr.Contract(body, args.toList)
+  val contract: P[Ast.Contract] = P( kwd("contract") ~ "(" ~ varargslist ~ ")" ~ "=" ~ expr ).map { case (args, body) =>
+    Ast.Contract(body, args.toList)
   }
 
   def typeDescriptorParams: P[Seq[Ast.TypeDescriptor]] = P( "[" ~ tpe.rep(1, ",") ~ ",".? ~ "]" )
@@ -185,5 +181,5 @@ object Expressions {
 
   def tpe: P[Ast.TypeDescriptor] = P( productType | simpleType )
 
-  def struct: P[Ast.Expr.Schema] = P( kwd("struct") ~ NAME ~ ":" ~ tpe ).map { case (id, tp) => Ast.Expr.Schema(id, tp) }
+  def struct: P[Ast.Struct] = P( kwd("struct") ~ NAME ~ ":" ~ tpe ).map { case (id, tp) => Ast.Struct(id, tp) }
 }

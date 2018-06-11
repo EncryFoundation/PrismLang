@@ -92,6 +92,7 @@ object Lexer {
   lazy val lowercase: all.Parser[Unit] =     P( CharIn('a' to 'z') )
   lazy val uppercase: all.Parser[Unit] =     P( CharIn('A' to 'Z') )
   lazy val digit: all.Parser[Unit] =         P( CharIn('0' to '9') )
+  lazy val hexdigit: P0 =                    P( digit | CharIn('a' to 'f', 'A' to 'F') )
 
   def kwd(s: String): core.Parser[Unit, Char, String] = s ~ !(letter | digit | "_")
 }

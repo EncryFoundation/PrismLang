@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.compiler
 
-import org.encryfoundation.prismlang.core.{TypeSystem, Types}
+import org.encryfoundation.prismlang.core.Types
 import org.encryfoundation.prismlang.parser.Parser
 import org.scalatest.{Matchers, PropSpec}
 
@@ -13,7 +13,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
   property("Let") {
 
-    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+    val analyser: StaticAnalyser = StaticAnalyser.default
 
     val expr: Expr = Let(
       Ident("age"),
@@ -28,7 +28,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
   property("BinOp") {
 
-    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+    val analyser: StaticAnalyser = StaticAnalyser.default
 
     val expr: Expr = Let(
       Ident("age"),
@@ -56,7 +56,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
   property("Conditional assignment") {
 
-    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+    val analyser: StaticAnalyser = StaticAnalyser.default
 
     val expr: Expr = Let(
       Ident("age"),
@@ -79,7 +79,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
   property("Collection constant creation") {
 
-    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+    val analyser: StaticAnalyser = StaticAnalyser.default
 
     val expr: Expr = Let(
       Ident("coll"),
@@ -109,7 +109,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
 
   property("Map") {
 
-    val analyser: StaticAnalyser = StaticAnalyser(TypeSystem.default)
+    val analyser: StaticAnalyser = StaticAnalyser.default
 
     val expr: Expr = Map(
       Collection(

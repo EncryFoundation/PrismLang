@@ -6,21 +6,11 @@ import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.compiler.scope.Symbol
 import scorex.crypto.encode.{Base16, Base58}
 
-import scala.util.Try
-
-case class StaticAnalyser(types: TypeSystem) {
+case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
 
   import StaticAnalyser._
 
-  var scopes: List[ScopedSymbolTable] = List(ScopedSymbolTable.initial)
-
-  def scanContract(contract: Expr.Contract): Try[Expr.Contract] = Try {
-    val args: List[(String, Types.PType)] = resolveArgs(contract.args)
-    args.foreach(p => currentScope.insert(Symbol(p._1, p._2)))
-    val bodyS: Expr = scan(contract.body)
-    matchType(contract.body.tpe, Types.PBoolean)
-    contract.copy(bodyS)
-  }
+  var scopes: List[ScopedSymbolTable] = List(initialScope)
 
   /** Scan each node according to the specific rule, then
     * compute its type (if the node is untyped by default)
@@ -41,11 +31,13 @@ case class StaticAnalyser(types: TypeSystem) {
   def scanLet: Scan = {
     /** Scan the value to be assigned to the const, compute
       * its type, compare it with the declared one (if declared)
-      * and add name to the scope. */
+      * and add name to the scope. Note, explicit type annotation
+      * which is stored in `typeIdentOpt` is no longer matters
+      * when the node is scanned, so we just throw it out. */
     case let @ Expr.Let(name, value, typeIdentOpt) =>
       val valueS: Expr = scan(value)
       val valueT: Types.PType = valueS.tpe
-      typeIdentOpt.foreach(t => matchType(valueT, resolveType(t)))
+      typeIdentOpt.foreach(t => matchType(types.resolveType(t), valueT))
       addToScope(name, valueT)
       let.copy(name, valueS, typeIdentOpt)
   }
@@ -56,11 +48,10 @@ case class StaticAnalyser(types: TypeSystem) {
       * with argument inserted, scan body and compare its type
       * with the declared one, pop function scope. */
     case func @ Expr.Def(ident, args, body, returnTypeIdent) =>
-      val declaredReturnType: Types.PType = resolveType(returnTypeIdent)
-      val params: List[(String, Types.PType)] = resolveArgs(args)
+      val declaredReturnType: Types.PType = types.resolveType(returnTypeIdent)
+      val params: List[(String, Types.PType)] = types.resolveArgs(args)
       currentScope.insert(Symbol(ident.name, Types.PFunc(params, declaredReturnType)))
-      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope, isFunc = true)
-      params.foreach(p => bodyScope.insert(Symbol(p._1, p._2)))
+      val bodyScope: ScopedSymbolTable = currentScope.nested(params.map(p => Symbol(p._1, p._2)), isFunc = true)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
       matchType(declaredReturnType, body.tpe)
@@ -72,9 +63,8 @@ case class StaticAnalyser(types: TypeSystem) {
     /** Resolve arguments, create scope for the function body
       * with argument inserted, scan body, pop function scope. */
     case lamb @ Expr.Lambda(args, body, _) =>
-      val params: List[(String, Types.PType)] = resolveArgs(args)
-      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope, isFunc = true)
-      params.foreach(p => bodyScope.insert(Symbol(p._1, p._2)))
+      val params: List[(String, Types.PType)] = types.resolveArgs(args)
+      val bodyScope: ScopedSymbolTable = currentScope.nested(params.map(p => Symbol(p._1, p._2)), isFunc = true)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
       scopes = scopes.tail
@@ -87,11 +77,11 @@ case class StaticAnalyser(types: TypeSystem) {
     case ifExp @ Expr.If(test, body, orelse, _) =>
       val testS: Expr = scan(test)
       matchType(test.tpe, Types.PBoolean)
-      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      val bodyScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
       scopes = scopes.tail
-      val elseScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      val elseScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = elseScope :: scopes
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
@@ -101,14 +91,13 @@ case class StaticAnalyser(types: TypeSystem) {
       * bodies of each branch. */
     case letIf @ Expr.IfLet(local, typeIdent, target, body, orelse, _) =>
       val targetS: Expr = scan(target)
-      val localT: Types.PType = resolveType(typeIdent)
+      val localT: Types.PType = types.resolveType(typeIdent)
       if (localT.isSubtypeOf(target.tpe)) error(s"${target.tpe} can not be cast to $localT")
-      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
-      bodyScope.insert(Symbol(local.name, localT))
+      val bodyScope: ScopedSymbolTable = currentScope.nested(List(Symbol(local.name, localT)))
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
       scopes = scopes.tail
-      val elseScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      val elseScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = elseScope :: scopes
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
@@ -118,7 +107,7 @@ case class StaticAnalyser(types: TypeSystem) {
   def scanBlock: Scan = {
     /** Scan each expression in `body`. */
     case block @ Expr.Block(body, _) =>
-      val bodyScope: ScopedSymbolTable = ScopedSymbolTable.nested(currentScope)
+      val bodyScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = bodyScope :: scopes
       val bodyS: List[Expr] = body.map(scan)
       scopes = scopes.tail
@@ -198,8 +187,8 @@ case class StaticAnalyser(types: TypeSystem) {
     /** Scan each element of tuple ensuring its actual size does not
       * overflow `TupleMaxLength`, then check type consistency of all elements. */
     case tuple @ Expr.Tuple(elts, _) =>
-      if (elts.size > Constants.TupleMaxLength) error(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxLength})")
-      else if (elts.size < 1) error("Empty collection")
+      if (elts.size > Constants.TupleMaxDim) error(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxDim})")
+      else if (elts.size < 1) error("Empty tuple")
       val eltsS: List[Expr] = elts.map(scan)
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Tuple is inconsistent, ${elt.tpe} stands out.")))
       tuple.copy(eltsS, computeType(tuple.copy(eltsS)))
@@ -267,6 +256,7 @@ case class StaticAnalyser(types: TypeSystem) {
       * corresponding field of the object. */
     case Expr.Attribute(value, attr, _) => computeType(value) match {
       case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
+      case Types.StructTag(_, realType: Types.Product) => realType.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${realType.ident}"))
       case other => error(s"${other.ident} is not an object")
     }
     /** Infer type for the `value`, ensure it is of type `Collection`,
@@ -282,8 +272,8 @@ case class StaticAnalyser(types: TypeSystem) {
     }
     case Expr.If(_, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
     case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
-    case Expr.Lambda(args, body, _) => Types.PFunc(resolveArgs(args), computeType(body))
-    case Expr.Tuple(elts, _) => Types.PTuple(computeType(elts.head), elts.size)
+    case Expr.Lambda(args, body, _) => Types.PFunc(types.resolveArgs(args), computeType(body))
+    case Expr.Tuple(elts, _) => Types.PTuple(elts.map(elt => computeType(elt)))
     case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
     case Expr.Map(_, func, _) => computeType(func) match {
       case Types.PFunc(_, retT) => Types.PCollection(retT)
@@ -293,43 +283,17 @@ case class StaticAnalyser(types: TypeSystem) {
 
   def currentScope: ScopedSymbolTable = scopes.head
 
-  /** Resolves the type from its string representation
-    * (including type parameters). */
-  def resolveType(ident: TypeIdent): Types.PType = {
-    val typeParams: List[Types.PType] = ident.typeParams.map(p => types.typeByIdent(p)
-      .getOrElse(error(s"Type '$p' is undefined.")))
-    types.typeByIdent(ident.name).map {
-      case Types.PCollection(_) =>
-        if (typeParams.size == 1) Types.PCollection(typeParams.head)
-        else error("'Array[T]' takes exactly one type parameter")
-      case Types.PTuple(_, qty) =>
-        if (typeParams.size == 1) Types.PTuple(typeParams.head, qty)
-        else error("'Tuple[T]' takes exactly one type parameter")
-      case Types.POption(_) =>
-        if (typeParams.size == 1) Types.POption(typeParams.head)
-        else error("'Option[T]' takes exactly one type parameter")
-      case otherT: Types.PType =>
-        if (typeParams.isEmpty) otherT
-        else error(s"'$otherT' does not take type parameters")
-    }.getOrElse(error(s"Type '${ident.name}' is undefined."))
-  }
-
-  def isApplicableTo(coll: Expr, func: Expr): Boolean = coll.tpe match {
-    case coll: Types.PCollection => func.tpe match {
-      case func: Types.PFunc => coll.isApplicable(func)
-      case _ => false
-    }
+  def isApplicableTo(coll: Expr, func: Expr): Boolean = (coll.tpe, func.tpe) match {
+    case (coll: Types.PCollection, func: Types.PFunc) => coll.isApplicable(func)
     case _ => false
   }
-
-  def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] =
-    args.map { case (id, typeId) => id.name -> resolveType(typeId) }
 
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
     currentScope.insert(Symbol(ident.name, tpe))
 
   def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
-    if (!(required == actual || actual.isSubtypeOf(required))) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
+    if (!(required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)))
+      error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 
   /** Find common type for `t1` and `t2`. */
   def findCommonType(t1: Types.PType, t2: Types.PType): Types.PType = {
@@ -348,4 +312,9 @@ case class StaticAnalyser(types: TypeSystem) {
 object StaticAnalyser {
 
   type Scan = PartialFunction[Expr, Expr]
+
+  def apply(initialMembers: List[(String, Types.PType)], types: List[Types.PType]): StaticAnalyser =
+    StaticAnalyser(ScopedSymbolTable(1, None, initialMembers.map(m => Symbol(m._1, m._2))), TypeSystem(types))
+
+  def default: StaticAnalyser = StaticAnalyser(ScopedSymbolTable(1), TypeSystem.default)
 }

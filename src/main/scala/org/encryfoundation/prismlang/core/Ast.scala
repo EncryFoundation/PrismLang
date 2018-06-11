@@ -6,14 +6,14 @@ object Ast {
 
   sealed trait Node
 
-  case class Module(contract: Expr.Contract, schemas: List[Expr.Schema]) extends Node
+  case class Module(contract: Contract, schemas: List[Struct]) extends Node
 
-  sealed trait Expr extends Node { val tpe: PType }
+  case class Struct(id: Ident, typeDescriptor: TypeDescriptor) extends Node
+
+  case class Contract(body: Expr, args: List[(Ident, TypeIdent)]) extends Node
+
+  sealed trait Expr { val tpe: PType }
   object Expr {
-
-    case class Contract(body: Expr, args: List[(Ident, TypeIdent)]) extends Expr { override val tpe: PType = PBoolean }
-
-    case class Schema(id: Ident, typeDescriptor: TypeDescriptor) extends Expr { override val tpe: PType = PUnit }
 
     case class Block(body: List[Expr], override val tpe: PType = Nit) extends Expr
 
@@ -50,6 +50,8 @@ object Ast {
     // Constants
     case class IntConst(value: Long) extends Expr { override val tpe: PType = PInt }
 
+    case class ByteConst(value: Byte) extends Expr { override val tpe: PType = PByte }
+
     case class Str(value: String) extends Expr { override val tpe: PType = PString }
 
     case class Collection(elts: List[Expr], override val tpe: PType = Nit) extends Expr
@@ -77,7 +79,7 @@ object Ast {
   sealed trait SliceOp
   object SliceOp {
 
-    case class Slice(lower: Option[Expr], upper: Option[Expr], step: Option[Expr]) extends SliceOp
+    case class Slice(lower: Option[Expr], upper: Option[Expr]) extends SliceOp
 
     case class Index(value: Expr) extends SliceOp
   }
@@ -146,7 +148,6 @@ object Ast {
     case class SimpleType(id: Ident, typeParams: List[TypeDescriptor]) extends TypeDescriptor
 
     case class ProductType(fields: List[Field]) extends TypeDescriptor
-
   }
 
   case class Ident(name: String)

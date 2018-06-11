@@ -10,6 +10,8 @@ object Arith {
   def add[T](op1: Any, op2: Any): T = {
     (op1, op2) match {
       case (o1: Long, o2: Long) => checkType[T](o1 + o2)
+      case (o1: Byte, o2: Long) => checkType[T](o1 + o2)
+      case (o1: Long, o2: Byte) => checkType[T](o1 + o2)
       case (o1: String, o2: String) => checkType[T](o1 + o2)
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Add` operation")
     }
@@ -18,6 +20,8 @@ object Arith {
   def sub[T](op1: Any, op2: Any): T = {
     (op1, op2) match {
       case (o1: Long, o2: Long) => checkType[T](o1 - o2)
+      case (o1: Byte, o2: Long) => checkType[T](o1 - o2)
+      case (o1: Long, o2: Byte) => checkType[T](o1 - o2)
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Sub` operation")
     }
   }
@@ -25,6 +29,8 @@ object Arith {
   def mul[T](op1: Any, op2: Any): T = {
     (op1, op2) match {
       case (o1: Long, o2: Long) => checkType[T](o1 * o2)
+      case (o1: Byte, o2: Long) => checkType[T](o1 * o2)
+      case (o1: Long, o2: Byte) => checkType[T](o1 * o2)
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Mul` operation")
     }
   }
@@ -32,6 +38,8 @@ object Arith {
   def div[T](op1: Any, op2: Any): T = {
     (op1, op2) match {
       case (o1: Long, o2: Long) => checkType[T](o1 / o2)
+      case (o1: Byte, o2: Long) => checkType[T](o1 / o2)
+      case (o1: Long, o2: Byte) => checkType[T](o1 / o2)
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Div` operation")
     }
   }
@@ -39,6 +47,8 @@ object Arith {
   def mod[T](op1: Any, op2: Any): T = {
     (op1, op2) match {
       case (o1: Long, o2: Long) => checkType[T](o1 % o2)
+      case (o1: Byte, o2: Long) => checkType[T](o1 % o2)
+      case (o1: Long, o2: Byte) => checkType[T](o1 % o2)
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Mod` operation")
     }
   }

@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.evaluator
 
-import org.encryfoundation.prismlang.compiler.ExprCompiler
+import org.encryfoundation.prismlang.compiler.TestCompiler
 import org.encryfoundation.prismlang.core.Ast.Expr.{Compare, _}
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.Types
@@ -8,7 +8,7 @@ import org.scalatest.{Matchers, PropSpec}
 
 import scala.util.Try
 
-class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEvaluator {
+class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEvaluator {
 
   property("BinOp") {
 
@@ -18,7 +18,7 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
       IntConst(4)
     )
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
 
     resultTry.isSuccess shouldBe true
 
@@ -33,7 +33,41 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
       List(IntConst(0))
     )
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe true
+  }
+
+  property("Int to Byte") {
+
+    val expr: Expr = Attribute(
+      IntConst(7),
+      Ident("toByte"),
+      Types.Nit
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldEqual 7.toByte
+  }
+
+  property("Compare Byte/Int") {
+
+    val expr: Expr = Expr.Compare(
+      Attribute(
+        IntConst(7),
+        Ident("toByte"),
+        Types.Nit
+      ),
+      List(CompOp.Gt),
+      List(IntConst(5))
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
 
     resultTry.isSuccess shouldBe true
 
@@ -71,7 +105,7 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
       Types.Nit
     )
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
 
     resultTry.isSuccess shouldBe true
 
@@ -90,7 +124,7 @@ class EvaluatorSpec extends PropSpec with Matchers with ExprCompiler with ExprEv
       Block(List(False))
     )
 
-    val resultTry: Try[Any] = eval(compile(expr).get)
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
 
     resultTry.isSuccess shouldBe true
 

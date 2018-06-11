@@ -21,6 +21,10 @@ object Transformer {
     /** Rule: Attribute(coll, "sum") -> Sum(coll) */
     case Ast.Expr.Attribute(value, attr, _) if attr.name == "sum" => Some(Ast.Expr.Sum(value))
 
+    /** Rule: Attribute(IntConst(v:Long), "toByte") -> ByteConst(v:Byte) */
+    case Ast.Expr.Attribute(Ast.Expr.IntConst(v), attr, _)
+      if attr.name == "toByte" && v <= Byte.MaxValue && v >= Byte.MinValue => Some(Ast.Expr.ByteConst(v.toByte))
+
 //    // Rule: Attribute(option, "isDefined") -> IsDefined(option)
 //    case EXPR.Attribute(value, attr, _)
 //      if value.tipe.isOption && attr.name == "isDefined" =>

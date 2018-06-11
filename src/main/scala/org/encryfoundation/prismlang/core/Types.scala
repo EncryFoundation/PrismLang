@@ -21,9 +21,13 @@ object Types {
     val isNit: Boolean = false
 
     def isSubtypeOf(thatT: PType): Boolean = thatT match {
-      case _: PAny.type => true
+      case PAny => true
       case _ => false
     }
+
+    def canBeDerivedTo(thatT: PType): Boolean = false
+
+    def deriveValue(v: Underlying, thatT: PType): Option[thatT.Underlying] = None
 
     override def equals(obj: scala.Any): Boolean = obj match {
       case s: Primitive => s.ident == this.ident
@@ -57,6 +61,16 @@ object Types {
   case object PByte extends PType with Primitive {
     override type Underlying = Byte
     override val ident: String = "Byte"
+
+    override def canBeDerivedTo(thatT: PType): Boolean = thatT match {
+      case PInt => true
+      case _ => false
+    }
+
+    override def deriveValue(v: Byte, thatT: PType): Option[thatT.Underlying] = thatT match {
+      case PInt => Some(v.toLong.asInstanceOf[thatT.Underlying])
+      case _ => None
+    }
   }
   case object PString extends PType with Primitive {
     override type Underlying = String
@@ -123,6 +137,21 @@ object Types {
     override val ident: String = "Nit"
   }
 
+  /** User-defined data structure tag */
+  case class StructTag(override val ident: String, underlyingType: PType) extends PType {
+    override type Underlying = underlyingType.Underlying
+
+    override val isNumeric: Boolean = underlyingType.isNumeric
+    override val isCollection: Boolean = underlyingType.isCollection
+    override val isProduct: Boolean = underlyingType.isProduct
+    override val isOption: Boolean = underlyingType.isOption
+
+    override def equals(obj: Any): Boolean = obj match {
+      case tag: StructTag => tag.underlyingType == this.underlyingType
+      case _ => false
+    }
+  }
+
   /** Base trait all complex type-classes inherit
     * (complex - means types which have properties). */
   sealed trait Product extends PType {
@@ -144,15 +173,16 @@ object Types {
     }
   }
 
-  case class PTuple(valT: PType, eltsQty: Int) extends PType with Product with Parametrized {
-    override type Underlying = List[valT.Underlying]
+  case class PTuple(eltsT: List[PType]) extends PType with Product with Parametrized {
+    override type Underlying = List[Any]
     override val isTuple: Boolean = true
-    override val ident: String = "Tuple"
+    override val ident: String = s"Tuple${eltsT.size}"
 
-    override def fields: Map[String, PType] = (1 to eltsQty).map(i => s"_$i" -> valT).toMap
+    override def fields: Map[String, PType] = (1 to eltsT.size).map(i => s"_$i" -> eltsT(i-1)).toMap
 
     override def equals(obj: Any): Boolean = obj match {
-      case tuple: PTuple => tuple.valT == this.valT
+      case tuple: PTuple if tuple.eltsT.size == this.eltsT.size =>
+        tuple.eltsT.zip(this.eltsT).forall { case (thatT, thisT) => thatT == thisT }
       case _ => false
     }
   }
@@ -162,10 +192,17 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "Object"
     override val fields: Map[String, PType] = Map.empty
+
+    override def getAttrType(n: String): Option[PType] = None
+
+    override def isSubtypeOf(thatT: PType): Boolean = thatT match {
+      case _: PAny.type => true
+      case _ => false
+    }
   }
 
-  /** Used to describe dynamic data structures */
-  case class Struct(override val ident: String, props: List[(String, PType)]) extends PType with Product {
+  /** Used to describe user-defined arbitrary product type */
+  case class ArbitraryProduct(override val ident: String, props: List[(String, PType)]) extends PType with Product {
     override type Underlying = PObject
     override val fields: Map[String, PType] = props.toMap
   }
@@ -319,12 +356,10 @@ object Types {
 
   val parametrizedTypes: Seq[Parametrized] = Seq(
     PCollection(Nit),
-    PTuple(Nit, 0),
-    POption(Nit)
-  )
+    POption(Nit),
+  ) ++ (1 to Constants.TupleMaxDim).map(i => PTuple((1 to i).map(_ => Nit).toList))  // Tuple instances of all possible dimensions.
 
   val productTypes: Seq[Product] = Seq(
-    PTuple(Nit, 0),
     EncryTransaction,
     EncryProof,
     EncryProposition,
@@ -351,20 +386,4 @@ object Types {
     case _: Array[Boolean] => PCollection.ofBool
     case _: Array[String] => PCollection.ofString
   }
-}
-
-case class TypeSystem(externalTypes: Seq[Types.Struct]) {
-
-  import Types._
-
-  lazy val allTypes: Seq[PType] = primitiveTypes ++ productTypes ++ parametrizedTypes ++ externalTypes :+ PFunc(List.empty, Nit)
-
-  lazy val typesMap: Map[String, PType] = allTypes.map(t => t.ident -> t).toMap
-
-  def typeByIdent(id: String): Option[PType] = typesMap.get(id)
-}
-
-object TypeSystem {
-
-  def default: TypeSystem = TypeSystem(Seq.empty)
 }

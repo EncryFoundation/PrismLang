@@ -4,9 +4,10 @@ import scala.collection.immutable.TreeMap
 
 case class ScopedSymbolTable(scopeLevel: Int,
                              parentalScopeOpt: Option[ScopedSymbolTable] = None,
+                             initialMembers: List[Symbol] = List.empty,
                              isFunc: Boolean = false) {
 
-  var symbols: TreeMap[String, Symbol] = TreeMap(PredefinedScope.members.map(m => m.name -> m):_*)
+  var symbols: TreeMap[String, Symbol] = TreeMap(initialMembers.map(m => m.name -> m):_*)
 
   def insert(sym: Symbol): Unit = {
     symbols.get(sym.name).map(_ => throw new Exception(s"${sym.name} is already defined in scope"))
@@ -18,13 +19,10 @@ case class ScopedSymbolTable(scopeLevel: Int,
       if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookup(name)) else None
     )
 
+  def nested(members: List[Symbol], isFunc: Boolean = false): ScopedSymbolTable =
+    ScopedSymbolTable(this.scopeLevel + 1, Some(this), members, isFunc)
+
+  def nested(isFunc: Boolean): ScopedSymbolTable = nested(List.empty, isFunc)
+
   override def toString: String = s"L$scopeLevel ${this.symbols}"
-}
-
-object ScopedSymbolTable {
-
-  def initial: ScopedSymbolTable = ScopedSymbolTable(scopeLevel = 1)
-
-  def nested(oldScope: ScopedSymbolTable, isFunc: Boolean = false): ScopedSymbolTable =
-    ScopedSymbolTable( oldScope.scopeLevel + 1, Some(oldScope), isFunc)
 }

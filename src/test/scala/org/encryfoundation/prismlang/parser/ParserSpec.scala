@@ -335,6 +335,28 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
+  property("Attribute on constant") {
+
+    val source =
+      """
+        |(1).toByte
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Attribute(
+        IntConst(1),
+        Ident("toByte"),
+        Types.Nit
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
   property("Collection constant") {
 
     val source =
@@ -378,7 +400,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       """
         |struct CustomerBox:Object(
         |  person:Object(name:String; age:Int);
-        |  orders:List[Object(product_id:Long; amount:Long;)];
+        |  orders:Array[Object(product_id:Long; amount:Long;)];
         |  id:Long;
         |)
         |
@@ -417,12 +439,31 @@ class ParserSpec extends PropSpec with Matchers with Parser {
         )
       ),
       List(
-        Schema(
+        Struct(
           Ident("CustomerBox"),
           ProductType(
             List(
-              (Ident("person"), ProductType(List((Ident("name"), SimpleType(Ident("String"),List())), (Ident("age"),SimpleType(Ident("Int"), List()))))),
-              (Ident("orders"), SimpleType(Ident("List"), List(ProductType(List((Ident("product_id"), SimpleType(Ident("Long"), List())), (Ident("amount"), SimpleType(Ident("Long"), List()))))))),
+              (
+                Ident("person"),
+                ProductType(
+                  List(
+                    (Ident("name"), SimpleType(Ident("String"),List())),
+                    (Ident("age"),SimpleType(Ident("Int"), List()))))
+              ),
+              (
+                Ident("orders"),
+                SimpleType(
+                  Ident("Array"),
+                  List(
+                    ProductType(
+                      List(
+                        (Ident("product_id"), SimpleType(Ident("Long"), List())),
+                        (Ident("amount"), SimpleType(Ident("Long"), List()))
+                      )
+                    )
+                  )
+                )
+              ),
               (Ident("id"), SimpleType(Ident("Long"),List()))
             )
           )

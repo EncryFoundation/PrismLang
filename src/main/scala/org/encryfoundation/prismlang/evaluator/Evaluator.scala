@@ -42,11 +42,11 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         addToEnv(name.name, PValue(valT)(eval[valT.Underlying](value)))
 
       /** Just construct `PFunction` instance with resolved `args`. */
-      case Expr.Lambda(args, body, tpe) => PFunction(resolveArgs(args), tpe, body)
+      case Expr.Lambda(args, body, tpe) => PFunction(types.resolveArgs(args), tpe, body)
 
       /** Resolve args, construct `PFunction` and add it to the scope. */
       case Expr.Def(name, args, body, _) =>
-        addToEnv(name.name, PFunction(resolveArgs(args), body.tpe, body))
+        addToEnv(name.name, PFunction(types.resolveArgs(args), body.tpe, body))
 
       /** Evaluate `test`, then evaluate either `body` or `orelse` depending on test result. */
       case Expr.If(test, body, orelse, tpe) =>
@@ -59,8 +59,9 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       /** Check whether evaluated value of `target` can be cast to required type, if it
         * can create nested scope, put `local` there and evaluate `body`, else do the same
         * for `orelse` branch. */
+      // TODO: Schema matching handling.
       case Expr.IfLet(local, typeIdent, target, body, orelse, tpe) =>
-        val requiredT: Types.PType = resolveType(typeIdent)
+        val requiredT: Types.PType = types.resolveType(typeIdent)
         val targetR: target.tpe.Underlying = eval[target.tpe.Underlying](target)
         environments = currentEnvironment.emptyChild :: environments
         val result: tpe.Underlying = targetR match {
@@ -161,7 +162,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         eval[value.tpe.Underlying](value) match {
           case coll: List[_] if value.tpe.isCollection => op match {
             case SliceOp.Index(idx) => coll(eval[Long](idx).toInt)
-            case SliceOp.Slice(lower, upper, _) =>
+            case SliceOp.Slice(lower, upper) =>
               val lowerR: Long = lower.map(idx => eval[Long](idx)).getOrElse(0)
               val upperR: Long = upper.map(idx => eval[Long](idx)).getOrElse(coll.size)
               //val stepR = step.map(i => eval[i.tpe.Underlying](i)).getOrElse(0)
@@ -189,6 +190,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 
       /** For simple constants just return their value. */
       case Expr.IntConst(value) => value
+      case Expr.ByteConst(value) => value
       case Expr.Str(value) => value
       case Expr.True => true
       case Expr.False => false
@@ -202,22 +204,6 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
   def addToEnv(name: String, member: PWrappedMember): Unit = {
     val updatedEnv: ScopedRuntimeEnvironment = environments.head.updated(name, member)
     environments = environments.updated(0, updatedEnv)
-  }
-
-  def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] =
-    args.map { case (id, typeId) => id.name -> resolveType(typeId) }
-
-  /** Resolves the type from its string representation
-    * (including type parameters). */
-  def resolveType(ident: TypeIdent): Types.PType = {
-    val typeParams: List[Types.PType] = ident.typeParams.map(p => types.typeByIdent(p)
-      .getOrElse(error(s"Type '$p' is undefined.")))
-    types.typeByIdent(ident.name).map {
-      case Types.PCollection(_) => Types.PCollection(typeParams.head)
-      case Types.PTuple(_, dim) => Types.PTuple(typeParams.head, dim)
-      case Types.POption(_) => Types.POption(typeParams.head)
-      case otherT: Types.PType => otherT
-    }.getOrElse(error(s"Type '${ident.name}' is undefined."))
   }
 
   def error(msg: String) = throw new PRuntimeException(msg)
