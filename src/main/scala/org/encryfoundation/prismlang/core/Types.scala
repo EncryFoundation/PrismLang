@@ -1,6 +1,9 @@
 package org.encryfoundation.prismlang.core
 
+import org.encryfoundation.prismlang.codec.PNodeCodec
 import org.encryfoundation.prismlang.core.wrapped.{PFunction, PObject}
+import scorex.crypto.encode.Base58
+import scorex.crypto.hash.Blake2b256
 
 object Types {
 
@@ -127,10 +130,9 @@ object Types {
 
   /** Special type to represent untyped values.
     * Interpreter raises an error when encounter a Value with this type.
-    * All Value nodes with this type should be elimitanted during typing.
+    * All nodes with this type should be eliminated during typing.
     * If no specific type can be assigned statically during typing,
-    * then either error should be raised or type SAny should be assigned
-    * which is interpreted as dynamic typing. */
+    * then either error should be raised or type PAny should be assigned */
   case object Nit extends PType {
     override type Underlying = Nothing
     override val isNit: Boolean = true
@@ -148,22 +150,31 @@ object Types {
 
     override def equals(obj: Any): Boolean = obj match {
       case tag: StructTag => tag.underlyingType == this.underlyingType
+      case otherT: PType => otherT == underlyingType
       case _ => false
     }
+
+    def fingerprint: String = Base58.encode(
+      Blake2b256.hash(PNodeCodec.typeCodec.encode(underlyingType).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
+    )
+  }
+  object StructTag {
+    val TypeCode: Byte = 15.toByte
   }
 
   /** Base trait all complex type-classes inherit
     * (complex - means types which have properties). */
   sealed trait Product extends PType {
     override val isProduct: Boolean = true
-    val superType: Product = BaseObject
-    def fields: Map[String, PType] = superType.fields
+
+    val ancestor: Option[Product] = None
+    def fields: Map[String, PType] = ancestor.map(_.fields).getOrElse(Map.empty)
 
     def getAttrType(n: String): Option[PType] = fields.get(n)
-      .orElse(superType.getAttrType(n))
+      .orElse(ancestor.flatMap(_.getAttrType(n)))
 
     override def isSubtypeOf(thatT: PType): Boolean =
-      superType == thatT || superType.isSubtypeOf(thatT)
+      ancestor.contains(thatT) || ancestor.exists(_.isSubtypeOf(thatT))
 
     override def equals(obj: Any): Boolean = obj match {
       case p: Product =>
@@ -175,8 +186,9 @@ object Types {
 
   case class PTuple(eltsT: List[PType]) extends PType with Product with Parametrized {
     override type Underlying = List[Any]
-    override val isTuple: Boolean = true
     override val ident: String = s"Tuple${eltsT.size}"
+
+    override val isTuple: Boolean = true
 
     override def fields: Map[String, PType] = (1 to eltsT.size).map(i => s"_$i" -> eltsT(i-1)).toMap
 
@@ -187,24 +199,14 @@ object Types {
     }
   }
 
-  /** Abstract type each product type inherits */
-  case object BaseObject extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Object"
-    override val fields: Map[String, PType] = Map.empty
-
-    override def getAttrType(n: String): Option[PType] = None
-
-    override def isSubtypeOf(thatT: PType): Boolean = thatT match {
-      case _: PAny.type => true
-      case _ => false
-    }
-  }
-
   /** Used to describe user-defined arbitrary product type */
   case class ArbitraryProduct(override val ident: String, props: List[(String, PType)]) extends PType with Product {
     override type Underlying = PObject
     override val fields: Map[String, PType] = props.toMap
+
+    def fingerprint: String = Base58.encode(
+      Blake2b256.hash(PNodeCodec.typeCodec.encode(this).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
+    )
   }
 
   case object EncryContract extends PType with Product {
@@ -231,7 +233,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "Signature25519"
 
-    override val superType: Product = EncryProof
+    override val ancestor: Option[Product] = Some(EncryProof)
 
     override val fields: Map[String, PType] = Map(
       "sigBytes" -> PCollection.ofByte
@@ -243,7 +245,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "MultiSig"
 
-    override val superType: Product = EncryProof
+    override val ancestor: Option[Product] = Some(EncryProof)
 
     override val fields: Map[String, PType] = Map(
       "proofs" -> PCollection(Signature25519)
@@ -277,7 +279,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "AssetBox"
 
-    override val superType: Product = EncryBox
+    override val ancestor: Option[Product] = Some(EncryBox)
 
     override val fields: Map[String, PType] = Map(
       "amount" -> PInt,
@@ -290,7 +292,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "AssetIssuingBox"
 
-    override val superType: Product = EncryBox
+    override val ancestor: Option[Product] = Some(EncryBox)
 
     override val fields: Map[String, PType] = Map(
       "amount" -> PInt
@@ -302,7 +304,7 @@ object Types {
     override type Underlying = PObject
     override val ident: String = "DataBox"
 
-    override val superType: Product = EncryBox
+    override val ancestor: Option[Product] = Some(EncryBox)
 
     override val fields: Map[String, PType] = Map(
       "data" -> PCollection.ofByte

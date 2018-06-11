@@ -27,6 +27,8 @@ object Ast {
     case class If(test: Expr, body: Expr, orelse: Expr, override val tpe: PType = Nit) extends Expr
 
     case class IfLet(name: Ident, typeIdent: TypeIdent, target: Expr, body: Expr, orelse: Expr, override val tpe: PType = Nit) extends Expr
+    /** `IfLet` variant for shallow struct matching not by type itself but by its fingerprint. */
+    case class IfLetR(name: Ident, typeFingerprint: String, target: Expr, body: Expr, orelse: Expr, override val tpe: PType = Nit) extends Expr
 
     // Operations
     case class Bool(op: BooleanOp, values: List[Expr]) extends Expr { override val tpe: PType = PBoolean }

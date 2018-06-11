@@ -8,12 +8,12 @@ import scala.util.Try
 
 object PCompiler {
 
-  /** Parser -> Transformer -> StaticAnalyser -> TypeBinder */
+  /** Parser -> Transformer -> StaticAnalyser */
   def compile(source: String): Try[CompiledContract] = Parser.parseModule(source).map { module =>
     val schemas: List[Types.StructTag] = module.schemas.map(StructDescriptorInterpreter.interpretStruct)
     val contractArgs: List[(String, Types.PType)] = TypeSystem.default.resolveArgs(module.contract.args)
     val analyser: StaticAnalyser = StaticAnalyser(contractArgs ++ PredefinedScope.members, schemas)
     val compiledScript: Ast.Expr = analyser.scan(Transformer.transform(module.contract.body))
-    CompiledContract(contractArgs, TypeBinder.bind(compiledScript, schemas))
+    CompiledContract(contractArgs, compiledScript)
   }
 }

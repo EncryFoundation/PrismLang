@@ -57,9 +57,8 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         result
 
       /** Check whether evaluated value of `target` can be cast to required type, if it
-        * can create nested scope, put `local` there and evaluate `body`, else do the same
+        * can, create nested scope, put `local` there and evaluate `body`, else do the same
         * for `orelse` branch. */
-      // TODO: Schema matching handling.
       case Expr.IfLet(local, typeIdent, target, body, orelse, tpe) =>
         val requiredT: Types.PType = types.resolveType(typeIdent)
         val targetR: target.tpe.Underlying = eval[target.tpe.Underlying](target)
@@ -67,6 +66,21 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         val result: tpe.Underlying = targetR match {
           case obj: PObject if obj.isInstanceOf(requiredT) =>
             addToEnv(local.name, PValue(requiredT)(obj))
+            eval[tpe.Underlying](body)
+          case _ => eval[tpe.Underlying](orelse)
+        }
+        environments = environments.tail
+        result
+
+      /** Acts much like `IfLet`, but performs shallow type matching by
+        * type fingerprint when type descriptor is unavailable (in case
+        * of user-defined struct matching). */
+      case Expr.IfLetR(local, typeFingerprint, target, body, orelse, tpe) =>
+        val targetR: target.tpe.Underlying = eval[target.tpe.Underlying](target)
+        environments = currentEnvironment.emptyChild :: environments
+        val result: tpe.Underlying = targetR match {
+          case obj: PObject if obj.hasSameFingerprint(typeFingerprint) =>
+            addToEnv(local.name, PValue(obj.tpe)(obj))
             eval[tpe.Underlying](body)
           case _ => eval[tpe.Underlying](orelse)
         }

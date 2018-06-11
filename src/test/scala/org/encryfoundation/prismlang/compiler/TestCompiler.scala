@@ -15,6 +15,6 @@ trait TestCompiler {
     val contractArgs: List[(String, Types.PType)] = TypeSystem.default.resolveArgs(module.contract.args)
     val analyser: StaticAnalyser = StaticAnalyser(contractArgs ++ PredefinedScope.members, schemas)
     val compiledScript = analyser.scan(Transformer.transform(module.contract.body))
-    CompiledContract(contractArgs, TypeBinder.bind(compiledScript, schemas))
+    CompiledContract(contractArgs, compiledScript)
   }
 }

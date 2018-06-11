@@ -88,7 +88,8 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       ifExp.copy(testS, bodyS, orelseS, computeType(ifExp))
     /** Scan the target to be assigned, ensure that its type
       * can be cast to the declared local type, then scan
-      * bodies of each branch. */
+      * bodies of each branch. If required type is `StructTag`
+      * then return special `IfLetR` node. */
     case letIf @ Expr.IfLet(local, typeIdent, target, body, orelse, _) =>
       val targetS: Expr = scan(target)
       val localT: Types.PType = types.resolveType(typeIdent)
@@ -101,7 +102,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       scopes = elseScope :: scopes
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
-      letIf.copy(local, typeIdent, targetS, bodyS, orelseS, computeType(letIf))
+      localT match {
+        case tag: Types.StructTag => Expr.IfLetR(local, tag.fingerprint, targetS, bodyS, orelseS, computeType(letIf))
+        case _ => letIf.copy(local, typeIdent, targetS, bodyS, orelseS, computeType(letIf))
+      }
   }
 
   def scanBlock: Scan = {
@@ -301,8 +305,11 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
     else if (t2.isSubtypeOf(t1)) t1
     else if (t1.isSubtypeOf(t2)) t2
     else (t1, t2) match {
-      case (p1: Types.Product, p2: Types.Product) => findCommonType(p1.superType, p2.superType)
-      case (_, _) => Types.PAny
+      case (p1: Types.Product, p2: Types.Product) => (p1.ancestor, p2.ancestor) match {
+        case (Some(a1), Some(a2)) => findCommonType(a1, a2)
+        case _ => Types.PAny
+      }
+      case _ => Types.PAny
     }
   }
 
