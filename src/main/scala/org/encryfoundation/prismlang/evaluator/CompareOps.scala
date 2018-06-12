@@ -10,7 +10,8 @@ object CompareOps {
       case (o1: Byte, o2: Long) => o1 == o2
       case (o1: Long, o2: Byte) => o1 == o2
       case (o1: Boolean, o2: Boolean) => o1 == o2
-      case (o1: Array[Byte], o2: Array[Byte]) => o1 sameElements o2
+      case (o1: String, o2: String) => o1 == o2
+      case (o1: Array[_], o2: Array[_]) => o1 sameElements o2
       case (o1: PObject, o2: PObject) => o1 == o2
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Eq` operation")
     }

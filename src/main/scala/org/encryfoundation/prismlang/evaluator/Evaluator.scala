@@ -131,10 +131,13 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         val leftV: left.tpe.Underlying = eval[left.tpe.Underlying](left)
         ops.zip(comps).forall {
           case (CompOp.Eq, comp) => CompareOps.eq(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.NotEq, comp) => !CompareOps.eq(leftV, eval[comp.tpe.Underlying](comp))
           case (CompOp.Gt, comp) => CompareOps.gt(leftV, eval[comp.tpe.Underlying](comp))
           case (CompOp.GtE, comp) => CompareOps.gte(leftV, eval[comp.tpe.Underlying](comp))
           case (CompOp.Lt, comp) => CompareOps.lt(leftV, eval[comp.tpe.Underlying](comp))
           case (CompOp.LtE, comp) => CompareOps.lte(leftV, eval[comp.tpe.Underlying](comp))
+          case (CompOp.In, comp) => eval[List[_]](comp).exists(elt => CompareOps.eq(elt, leftV))
+          case (CompOp.NotIn, comp) => !eval[List[_]](comp).exists(elt => CompareOps.eq(elt, leftV))
         }
 
       /** Get referenced name from environment. */
@@ -186,7 +189,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         }
       case Expr.Map(coll, func, _) => applyFunction(coll, func)
       case Expr.Exists(coll, func) => applyFunction(coll, func) match {
-        case bools: List[Boolean] => bools.contains(true)
+        case bools: List[Boolean@unchecked] => bools.contains(true)
         case _ => error("Illegal operation")
       }
       case Expr.SizeOf(coll) => eval[coll.tpe.Underlying](coll) match {
@@ -194,7 +197,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         case _ => error("Illegal operation")
       }
       case Expr.Sum(coll) => eval[coll.tpe.Underlying](coll) match {
-        case list: List[Long] => list.sum
+        case list: List[Long@unchecked] => list.sum
         case _ => error("Illegal operation")
       }
       case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))

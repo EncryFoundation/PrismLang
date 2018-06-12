@@ -118,28 +118,48 @@ object Ast {
     case object Not extends UnaryOp
   }
 
-  sealed trait CompOp
+  sealed trait CompOp { val leftTypeResolution: List[Types.PType]; val rightTypeResolution: List[Types.PType] }
   object CompOp {
 
-    case object Eq extends CompOp
+    case object Eq extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Types.regularTypes
+      lazy val rightTypeResolution: List[Types.PType] = Types.regularTypes
+    }
 
-    case object NotEq extends CompOp
+    case object NotEq extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Eq.leftTypeResolution
+      lazy val rightTypeResolution: List[Types.PType] = Eq.leftTypeResolution
+    }
 
-    case object Lt extends CompOp
+    case object Lt extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Types.numericTypes
+      lazy val rightTypeResolution: List[Types.PType] = Types.numericTypes
+    }
 
-    case object LtE extends CompOp
+    case object LtE extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Lt.leftTypeResolution
+      lazy val rightTypeResolution: List[Types.PType] = Lt.rightTypeResolution
+    }
 
-    case object Gt extends CompOp
+    case object Gt extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Lt.leftTypeResolution
+      lazy val rightTypeResolution: List[Types.PType] = Lt.rightTypeResolution
+    }
 
-    case object GtE extends CompOp
+    case object GtE extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Lt.leftTypeResolution
+      lazy val rightTypeResolution: List[Types.PType] = Lt.rightTypeResolution
+    }
 
-    case object Is extends CompOp
+    case object In extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Types.regularTypes
+      lazy val rightTypeResolution: List[Types.PType] = Types.regularTypes.map(PCollection.apply)
+    }
 
-    case object IsNot extends CompOp
-
-    case object In extends CompOp
-
-    case object NotIn extends CompOp
+    case object NotIn extends CompOp {
+      lazy val leftTypeResolution: List[Types.PType] = Types.regularTypes
+      lazy val rightTypeResolution: List[Types.PType] = Types.regularTypes.map(PCollection.apply)
+    }
   }
 
   sealed trait TypeDescriptor

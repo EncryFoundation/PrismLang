@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.core
 
-import org.encryfoundation.prismlang.codec.PNodeCodec
+import org.encryfoundation.prismlang.codec.PCodec
 import org.encryfoundation.prismlang.core.wrapped.{PFunction, PObject}
 import scorex.crypto.encode.Base58
 import scorex.crypto.hash.Blake2b256
@@ -155,7 +155,7 @@ object Types {
     }
 
     def fingerprint: String = Base58.encode(
-      Blake2b256.hash(PNodeCodec.typeCodec.encode(underlyingType).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
+      Blake2b256.hash(PCodec.typeCodec.encode(underlyingType).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
     )
   }
   object StructTag {
@@ -205,7 +205,7 @@ object Types {
     override val fields: Map[String, PType] = props.toMap
 
     def fingerprint: String = Base58.encode(
-      Blake2b256.hash(PNodeCodec.typeCodec.encode(this).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
+      Blake2b256.hash(PCodec.typeCodec.encode(this).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
     )
   }
 
@@ -347,7 +347,7 @@ object Types {
     )
   }
 
-  val primitiveTypes: Seq[Primitive] = Seq(
+  val primitiveTypes: List[Primitive] = List(
     PAny,
     PUnit,
     PBoolean,
@@ -356,17 +356,20 @@ object Types {
     PString
   )
 
-  val parametrizedTypes: Seq[Parametrized] = Seq(
+  /** All types with type parameters including `PTuple` instances
+    * of all possible dimensions. */
+  val parametrizedTypes: List[Parametrized] = List(
     PCollection(Nit),
     POption(Nit),
-  ) ++ (1 to Constants.TupleMaxDim).map(i => PTuple((1 to i).map(_ => Nit).toList))  // Tuple instances of all possible dimensions.
+  ) ++ (1 to Constants.TupleMaxDim).map(i => PTuple((1 to i).map(_ => Nit).toList))
 
-  val productTypes: Seq[Product] = Seq(
+  val productTypes: List[Product] = List(
     EncryTransaction,
     EncryProof,
     EncryProposition,
     EncryBox,
     EncryState,
+    EncryUnlocker,
     Signature25519,
     MultiSig,
     AssetBox,
@@ -374,9 +377,13 @@ object Types {
     DataBox
   )
 
-  val numericTypes: Seq[PType] = Seq(
-    PInt
+  val numericTypes: List[PType] = List(
+    PInt,
+    PByte
   )
+
+  /** All types except `Nit` and `PFunc` */
+  val regularTypes: List[PType] = primitiveTypes ++ parametrizedTypes ++ productTypes
 
   def liftType(d: Any): PType = d match {
     case _: Int => PInt

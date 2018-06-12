@@ -74,6 +74,56 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
     resultTry.get shouldBe true
   }
 
+  property("Compare.In") {
+
+    val expr: Expr = Compare(
+      IntConst(2),
+      List(CompOp.In),
+      List(
+        Collection(
+          List(
+            IntConst(1),
+            IntConst(2),
+            IntConst(3),
+            IntConst(4)
+          ),
+          Types.Nit
+        )
+      )
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe true
+  }
+
+  property("Compare.NotIn") {
+
+    val expr: Expr = Compare(
+      IntConst(2),
+      List(CompOp.NotIn),
+      List(
+        Collection(
+          List(
+            IntConst(1),
+            IntConst(2),
+            IntConst(3),
+            IntConst(4)
+          ),
+          Types.Nit
+        )
+      )
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe false
+  }
+
   property("Map") {
 
     val expr: Expr = Call(

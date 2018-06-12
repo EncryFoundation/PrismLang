@@ -5,7 +5,7 @@ import org.encryfoundation.prismlang.core.Ast._
 import scodec.Codec
 import scodec.codecs.{Discriminated, uint2, uint4, uint8}
 
-object PNodeCodec {
+object PCodec {
 
   import scodec.codecs.implicits._
 
@@ -98,10 +98,8 @@ object PNodeCodec {
   implicit def dLtE = dCompare.bind[CompOp.LtE.type](3)
   implicit def dGt = dCompare.bind[CompOp.Gt.type](4)
   implicit def dGtE = dCompare.bind[CompOp.GtE.type](5)
-  implicit def dIs = dCompare.bind[CompOp.Is.type](6)
-  implicit def dIsNot = dCompare.bind[CompOp.IsNot.type](7)
-  implicit def dIn = dCompare.bind[CompOp.In.type](8)
-  implicit def dNotIn = dCompare.bind[CompOp.NotIn.type](9)
+  implicit def dIn = dCompare.bind[CompOp.In.type](6)
+  implicit def dNotIn = dCompare.bind[CompOp.NotIn.type](7)
 
   implicit def dTypeDesc = Discriminated[TypeDescriptor, Int](uint2)
   implicit def dSimpleT = dTypeDesc.bind[TypeDescriptor.SimpleType](0)

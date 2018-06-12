@@ -135,11 +135,13 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val operandS: Expr = scan(operand)
       matchType(Types.PInt, operandS.tpe, Some(s"${operandS.tpe} does not support '$op'"))
       unary.copy(op, operandS)
-    /** Scan operands ensuring it supports `op`. */
+    /** Scan operands ensuring they all support `op`. */
     case compare @ Expr.Compare(left, ops, comparators) =>
-      // TODO: Check whether all operands support `op`.
       val leftS: Expr = scan(left)
       val comparatorsS: List[Expr] = comparators.map(scan)
+      ops.foreach { op => if (!op.leftTypeResolution.exists(t => rightType(t, leftS.tpe))) error(s"$op is not supported on ${leftS.tpe}") }
+      if (!ops.zip(comparatorsS).forall { case (op, comp) => op.rightTypeResolution.exists(t => rightType(t, comp.tpe)) })
+        error(s"Comparison between unsupported types")
       compare.copy(leftS, ops, comparatorsS)
   }
 
@@ -295,9 +297,11 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
     currentScope.insert(Symbol(ident.name, tpe))
 
+  def rightType(required: Types.PType, actual: Types.PType): Boolean =
+    required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
+
   def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
-    if (!(required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)))
-      error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
+    if (!rightType(required, actual)) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 
   /** Find common type for `t1` and `t2`. */
   def findCommonType(t1: Types.PType, t2: Types.PType): Types.PType = {

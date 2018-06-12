@@ -7,7 +7,7 @@ import org.scalatest.{Matchers, PropSpec}
 import scodec.bits.BitVector
 import scodec.{Attempt, DecodeResult}
 
-class PNodeCodecSpec extends PropSpec with Matchers {
+class PCodecSpec extends PropSpec with Matchers {
 
   property("Encode/decode") {
 
@@ -35,9 +35,9 @@ class PNodeCodecSpec extends PropSpec with Matchers {
         Types.Nit
       )
 
-    val exprEncoded: BitVector = PNodeCodec.exprCodec.encode(expr).require
+    val exprEncoded: BitVector = PCodec.exprCodec.encode(expr).require
 
-    val exprDecoded: Attempt[DecodeResult[Expr]] = PNodeCodec.exprCodec.decode(exprEncoded)
+    val exprDecoded: Attempt[DecodeResult[Expr]] = PCodec.exprCodec.decode(exprEncoded)
 
     exprDecoded.isSuccessful shouldBe true
 

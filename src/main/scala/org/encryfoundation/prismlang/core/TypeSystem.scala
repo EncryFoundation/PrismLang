@@ -8,7 +8,7 @@ case class TypeSystem(additionalTypes: Seq[Types.PType]) {
 
   case class TypeSystemException(msg: String) extends Exception(msg)
 
-  lazy val allTypes: Seq[PType] = primitiveTypes ++ productTypes ++ parametrizedTypes ++ additionalTypes :+ PFunc(List.empty, Nit)
+  lazy val allTypes: List[PType] = regularTypes ++ additionalTypes :+ PFunc(List.empty, Nit)
 
   lazy val typesMap: Map[String, PType] = allTypes.map(t => t.ident -> t).toMap
 
