@@ -15,9 +15,7 @@ case class ScopedSymbolTable(scopeLevel: Int,
   }
 
   def lookup(name: String, currentScopeOnly: Boolean = false): Option[Symbol] =
-    symbols.get(name).orElse(
-      if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookup(name)) else None
-    )
+    symbols.get(name).orElse(if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookup(name)) else None)
 
   def nested(members: List[Symbol], isFunc: Boolean = false): ScopedSymbolTable =
     ScopedSymbolTable(this.scopeLevel + 1, Some(this), members, isFunc)

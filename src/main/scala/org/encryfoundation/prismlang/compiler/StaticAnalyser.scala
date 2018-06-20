@@ -1,9 +1,8 @@
 package org.encryfoundation.prismlang.compiler
 
-import org.encryfoundation.prismlang.compiler.scope.ScopedSymbolTable
+import org.encryfoundation.prismlang.compiler.scope.{PredefinedScope, ScopedSymbolTable, Symbol}
 import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
-import org.encryfoundation.prismlang.compiler.scope.Symbol
 import scorex.crypto.encode.{Base16, Base58}
 
 case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
@@ -68,7 +67,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
       scopes = scopes.tail
-      lamb.copy(args, bodyS, computeType(lamb))
+      lamb.copy(args, bodyS, computeType(lamb.copy(args, bodyS)))
   }
 
   def scanIf: Scan = {
@@ -76,7 +75,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       * then scan bodies of each branch. */
     case ifExp @ Expr.If(test, body, orelse, _) =>
       val testS: Expr = scan(test)
-      matchType(test.tpe, Types.PBoolean)
+      matchType(testS.tpe, Types.PBoolean)
       val bodyScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
@@ -85,7 +84,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       scopes = elseScope :: scopes
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
-      ifExp.copy(testS, bodyS, orelseS, computeType(ifExp))
+      ifExp.copy(testS, bodyS, orelseS, computeType(ifExp.copy(testS, bodyS, orelseS)))
     /** Scan the target to be assigned, ensure that its type
       * can be cast to the declared local type, then scan
       * bodies of each branch. If required type is `StructTag`
@@ -114,8 +113,9 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val bodyScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = bodyScope :: scopes
       val bodyS: List[Expr] = body.map(scan)
+      val blockType: Types.PType = computeType(block.copy(bodyS))
       scopes = scopes.tail
-      block.copy(bodyS, computeType(block))
+      block.copy(bodyS, blockType)
   }
 
   def scanSimpleExpr: Scan = {
@@ -131,10 +131,13 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val valuesS: List[Expr] = values.map(scan)
       bool.copy(op, valuesS)
     /** Scan operand ensuring it is of `PInt` type. */
-    case unary @ Expr.Unary(op, operand) =>
+    case unary @ Expr.Unary(op, operand, _) =>
       val operandS: Expr = scan(operand)
-      matchType(Types.PInt, operandS.tpe, Some(s"${operandS.tpe} does not support '$op'"))
-      unary.copy(op, operandS)
+      op match {
+        case UnaryOp.Not => matchType(Types.PBoolean, operandS.tpe, Some(s"${operandS.tpe} does not support '$op'"))
+        case UnaryOp.Invert => matchType(Types.PInt, operandS.tpe, Some(s"${operandS.tpe} does not support '$op'"))
+      }
+      unary.copy(op, operandS, computeType(unary.copy(operand = operandS)))
     /** Scan operands ensuring they all support `op`. */
     case compare @ Expr.Compare(left, ops, comparators) =>
       val leftS: Expr = scan(left)
@@ -262,7 +265,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       * corresponding field of the object. */
     case Expr.Attribute(value, attr, _) => computeType(value) match {
       case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
-      case Types.StructTag(_, realType: Types.Product) => realType.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${realType.ident}"))
+      case tag: Types.TaggedType if tag.isProduct => tag.underlyingType.asInstanceOf[Types.Product].getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${tag.underlyingType.ident}"))
       case other => error(s"${other.ident} is not an object")
     }
     /** Infer type for the `value`, ensure it is of type `Collection`,
@@ -276,6 +279,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       }
       case otherT => error(s"$otherT does not support subscription")
     }
+    case Expr.Unary(_, operand, _) => computeType(operand)
     case Expr.If(_, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
     case Expr.IfLet(_, _, _, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
     case Expr.Lambda(args, body, _) => Types.PFunc(types.resolveArgs(args), computeType(body))
@@ -327,5 +331,5 @@ object StaticAnalyser {
   def apply(initialMembers: List[(String, Types.PType)], types: List[Types.PType]): StaticAnalyser =
     StaticAnalyser(ScopedSymbolTable(1, None, initialMembers.map(m => Symbol(m._1, m._2))), TypeSystem(types))
 
-  def default: StaticAnalyser = StaticAnalyser(ScopedSymbolTable(1), TypeSystem.default)
+  def default: StaticAnalyser = StaticAnalyser(ScopedSymbolTable(1, None, PredefinedScope.members.map(m => Symbol(m._1, m._2))), TypeSystem.default)
 }

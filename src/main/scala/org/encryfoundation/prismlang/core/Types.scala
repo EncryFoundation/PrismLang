@@ -21,6 +21,7 @@ object Types {
     val isProduct: Boolean = false
     val isFunc: Boolean = false
     val isNumeric: Boolean = false
+    val isTag: Boolean = false
     val isNit: Boolean = false
 
     def isSubtypeOf(thatT: PType): Boolean = thatT match {
@@ -33,8 +34,9 @@ object Types {
     def deriveValue(v: Underlying, thatT: PType): Option[thatT.Underlying] = None
 
     override def equals(obj: scala.Any): Boolean = obj match {
-      case s: Primitive => s.ident == this.ident
-      case p: Product => p == this
+      case prim: Primitive => prim.ident == this.ident
+      case prod: Product => prod == this
+      case tag: TaggedType => tag.underlyingType == this
       case _ => false
     }
   }
@@ -93,6 +95,7 @@ object Types {
 
     override def equals(obj: Any): Boolean = obj match {
       case coll: PCollection => coll.valT == this.valT
+      case tag: TaggedType if tag.isCollection => tag.underlyingType == this
       case _ => false
     }
   }
@@ -139,8 +142,20 @@ object Types {
     override val ident: String = "Nit"
   }
 
+  sealed trait TaggedType extends PType {
+    val underlyingType: PType
+
+    override val isTag: Boolean = true
+
+    override def equals(obj: Any): Boolean = obj match {
+      case tag: TaggedType => tag.underlyingType == this.underlyingType
+      case otherT: PType => otherT == underlyingType
+      case _ => false
+    }
+  }
+
   /** User-defined data structure tag */
-  case class StructTag(override val ident: String, underlyingType: PType) extends PType {
+  case class StructTag(ident: String, underlyingType: PType) extends PType with TaggedType {
     override type Underlying = underlyingType.Underlying
 
     override val isNumeric: Boolean = underlyingType.isNumeric
@@ -148,22 +163,29 @@ object Types {
     override val isProduct: Boolean = underlyingType.isProduct
     override val isOption: Boolean = underlyingType.isOption
 
-    override def equals(obj: Any): Boolean = obj match {
-      case tag: StructTag => tag.underlyingType == this.underlyingType
-      case otherT: PType => otherT == underlyingType
-      case _ => false
-    }
-
     def fingerprint: String = Base58.encode(
       Blake2b256.hash(PCodec.typeCodec.encode(underlyingType).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
     )
   }
-  object StructTag {
-    val TypeCode: Byte = 15.toByte
+
+  case object Signature25519 extends PType with TaggedType {
+    override type Underlying = underlyingType.Underlying
+    override val ident: String = "Signature25519"
+    override val underlyingType: PType = PCollection.ofByte
+
+    override val isCollection: Boolean = true
+  }
+
+  case object MultiSig extends PType with TaggedType {
+    override type Underlying = underlyingType.Underlying
+    override val ident: String = "MultiSig"
+    override val underlyingType: PType = PCollection(PCollection.ofByte)
+
+    override val isCollection: Boolean = true
   }
 
   /** Base trait all complex type-classes inherit
-    * (complex - means types which have properties). */
+    * (types which have properties). */
   sealed trait Product extends PType {
     override val isProduct: Boolean = true
 
@@ -209,67 +231,14 @@ object Types {
     )
   }
 
-  case object EncryContract extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Contract"
-
-    override val fields: Map[String, PType] = Map(
-      "fingerprint" -> PCollection.ofByte
-    )
-  }
-
-  // Abstract type
-  case object EncryProof extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Proof"
-
-    override val fields: Map[String, PType] = Map(
-      "typeId" -> PInt
-    )
-  }
-
-  // ESProof impl
-  case object Signature25519 extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Signature25519"
-
-    override val ancestor: Option[Product] = Some(EncryProof)
-
-    override val fields: Map[String, PType] = Map(
-      "sigBytes" -> PCollection.ofByte
-    )
-  }
-
-  // ESProof impl
-  case object MultiSig extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "MultiSig"
-
-    override val ancestor: Option[Product] = Some(EncryProof)
-
-    override val fields: Map[String, PType] = Map(
-      "proofs" -> PCollection(Signature25519)
-    )
-  }
-
-  case object EncryProposition extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Proposition"
-
-    override val fields: Map[String, PType] = Map(
-      "typeId" -> PInt,
-      "fingerprint" -> PCollection.ofByte
-    )
-  }
-
   // Abstract type
   case object EncryBox extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Box"
 
     override val fields: Map[String, PType] = Map(
-      "proposition" -> EncryProposition,
-      "typeId" -> PInt,
+      "contractHash" -> PCollection.ofByte,
+      "typeId" -> PByte,
       "id" -> PCollection.ofByte
     )
   }
@@ -311,26 +280,12 @@ object Types {
     )
   }
 
-  case object EncryUnlocker extends PType with Product {
-    override type Underlying = PObject
-    override val ident: String = "Unlocker"
-
-    override val fields: Map[String, PType] = Map(
-      "boxId" -> EncryTransaction,
-      "proofOpt" -> POption(EncryProof)
-    )
-  }
-
   case object EncryTransaction extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Transaction"
 
     override val fields: Map[String, PType] = Map(
-      "accountPubKey" -> PCollection.ofByte,
-      "fee" -> PInt,
-      "timestamp" -> PInt,
-      "signature" -> PCollection.ofByte,
-      "unlockers" -> PCollection(EncryUnlocker),
+      "inputs" -> PCollection(PCollection.ofByte),
       "outputs" -> PCollection(EncryBox),
       "messageToSign" -> PCollection.ofByte
     )
@@ -365,16 +320,16 @@ object Types {
 
   val productTypes: List[Product] = List(
     EncryTransaction,
-    EncryProof,
-    EncryProposition,
     EncryBox,
     EncryState,
-    EncryUnlocker,
-    Signature25519,
-    MultiSig,
     AssetBox,
     AssetIssuingBox,
     DataBox
+  )
+
+  val taggedTypes: List[TaggedType] = List(
+    Signature25519,
+    MultiSig
   )
 
   val numericTypes: List[PType] = List(
@@ -383,7 +338,7 @@ object Types {
   )
 
   /** All types except `Nit` and `PFunc` */
-  val regularTypes: List[PType] = primitiveTypes ++ parametrizedTypes ++ productTypes
+  val regularTypes: List[PType] = primitiveTypes ++ parametrizedTypes ++ productTypes ++ taggedTypes
 
   def liftType(d: Any): PType = d match {
     case _: Int => PInt

@@ -12,16 +12,14 @@ object CheckSig extends BuiltInFunctionHolder {
 
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
-  val args = IndexedSeq("sig" -> Types.PCollection.ofByte, "msg" -> Types.PCollection.ofByte, "pubKey" -> Types.PCollection.ofByte)
+  val args: IndexedSeq[(String, Types.PCollection)] = IndexedSeq("sig" -> Types.PCollection.ofByte, "msg" -> Types.PCollection.ofByte, "pubKey" -> Types.PCollection.ofByte)
 
   val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (args: Seq[(String, PValue)]) => {
-    val validNumberOfArgs = args.size == 3
-    val validArgTypes = args.forall { case (_, v) => v.tpe == Types.PCollection.ofByte }
+    val validNumberOfArgs: Boolean = args.size == 3
+    val validArgTypes: Boolean = args.forall { case (_, v) => v.tpe == Types.PCollection.ofByte }
     if (validNumberOfArgs && validArgTypes) {
-      val fnArgs = args.map(_._2.value.asInstanceOf[Array[Byte]])
+      val fnArgs: Seq[Array[Byte]] = args.map(_._2.value.asInstanceOf[List[Byte]].toArray)
       Right(Curve25519.verify(Signature @@ fnArgs.head, fnArgs(1), PublicKey @@ fnArgs.last))
-    } else {
-      Left(PredefFunctionExecFailure)
-    }
+    } else Left(PredefFunctionExecFailure)
   }
 }

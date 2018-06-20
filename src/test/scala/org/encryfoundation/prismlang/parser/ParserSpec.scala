@@ -394,6 +394,53 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
+  property("Direct function call on collection") {
+
+    val source =
+      """
+        |allOf(Array(2 > 1, 1 == 1, 3 != 4, 10 < 100, true))
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Call(
+        Name(Ident("allOf"), Types.Nit),
+        List(
+          Collection(
+            List(
+              Compare(
+                IntConst(2),
+                List(CompOp.Gt),
+                List(IntConst(1))
+              ),
+              Compare(
+                IntConst(1),
+                List(CompOp.Eq),
+                List(IntConst(1))
+              ),
+              Compare(
+                IntConst(3),
+                List(CompOp.NotEq),
+                List(IntConst(4))
+              ),
+              Compare(
+                IntConst(10),
+                List(CompOp.Lt),
+                List(IntConst(100))
+              ),
+              True
+            ), Types.Nit
+          )
+        ), Types.Nit
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
   property("CompOp.In") {
 
     val source =

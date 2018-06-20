@@ -1,9 +1,8 @@
 package org.encryfoundation.prismlang.core
 
-import org.encryfoundation.prismlang.core.wrapped.{PObject, PValue}
+import org.encryfoundation.prismlang.core.wrapped.PValue
 
 trait PConvertible {
-  val esType: Types.Product
+  val tpe: Types.Product
   def asVal: PValue
-  def convert: PObject
 }

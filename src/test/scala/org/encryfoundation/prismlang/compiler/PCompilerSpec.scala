@@ -20,7 +20,7 @@ class PCompilerSpec extends PropSpec with Matchers {
         |
         |contract (signature: Signature25519, tx: Transaction) = {
         |  let ownerPubKey = base58"GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew"
-        |  checkSig(tx.messageToSign, ownerPubKey, signature.sigBytes)
+        |  checkSig(tx.messageToSign, ownerPubKey, signature)
         |}
       """.stripMargin
 
@@ -54,11 +54,7 @@ class PCompilerSpec extends PropSpec with Matchers {
                 PCollection(PByte)
               ),
               Name(Ident("ownerPubKey"),PCollection(PByte)),
-              Attribute(
-                Name(Ident("signature"),Signature25519),
-                Ident("sigBytes"),
-                PCollection(PByte)
-              )
+              Name(Ident("signature"),Signature25519)
             ),
             PBoolean
           )

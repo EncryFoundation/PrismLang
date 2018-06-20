@@ -180,4 +180,85 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
 
     resultTry.get shouldBe false
   }
+
+  property("allOf()") {
+
+    val expr: Expr = Call(
+      Name(Ident("allOf"), Types.Nit),
+      List(
+        Collection(
+          List(
+            Compare(
+              IntConst(2),
+              List(CompOp.Gt),
+              List(IntConst(1))
+            ),
+            Compare(
+              IntConst(1),
+              List(CompOp.Eq),
+              List(IntConst(1))
+            ),
+            Compare(
+              IntConst(3),
+              List(CompOp.NotEq),
+              List(IntConst(4))
+            ),
+            Compare(
+              IntConst(10),
+              List(CompOp.Lt),
+              List(IntConst(100))
+            ),
+            True
+          ), Types.Nit
+        )
+      ), Types.Nit
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe true
+  }
+
+
+  property("anyOf()") {
+
+    val expr: Expr = Call(
+      Name(Ident("anyOf"), Types.Nit),
+      List(
+        Collection(
+          List(
+            Compare(
+              IntConst(2),
+              List(CompOp.Gt),
+              List(IntConst(1))
+            ),
+            Compare(
+              IntConst(1),
+              List(CompOp.NotEq),
+              List(IntConst(1))
+            ),
+            Compare(
+              IntConst(3),
+              List(CompOp.NotEq),
+              List(IntConst(4))
+            ),
+            Compare(
+              IntConst(10),
+              List(CompOp.Gt),
+              List(IntConst(100))
+            ),
+            True
+          ), Types.Nit
+        )
+      ), Types.Nit
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe true
+  }
 }

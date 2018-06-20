@@ -18,7 +18,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
     def invoke(func: PFunction, args: Any*): func.body.tpe.Underlying = {
       environments = currentEnvironment.emptyChild :: environments
       if (args.size != func.args.size) error(s"Wrong number of arguments, ${func.args.size} required, ${args.size} given.")
-      args.zip(func.args).foreach { case (value, (id, argT)) => addToEnv(id, PValue(argT)(value)) }
+      args.zip(func.args).foreach { case (value, (id, argT)) => addToEnv(id, PValue(value, argT)) }
       val result: func.body.tpe.Underlying = eval[func.body.tpe.Underlying](func.body)
       environments = environments.tail
       result
@@ -39,7 +39,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       /** Evaluate `value`, wrap it with `PValue` and add to the scope */
       case Expr.Let(name, value, _) =>
         val valT: Types.PType = value.tpe
-        addToEnv(name.name, PValue(valT)(eval[valT.Underlying](value)))
+        addToEnv(name.name, PValue(eval[valT.Underlying](value), valT))
 
       /** Just construct `PFunction` instance with resolved `args`. */
       case Expr.Lambda(args, body, tpe) => PFunction(types.resolveArgs(args), tpe, body)
@@ -65,7 +65,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         environments = currentEnvironment.emptyChild :: environments
         val result: tpe.Underlying = targetR match {
           case obj: PObject if obj.isInstanceOf(requiredT) =>
-            addToEnv(local.name, PValue(requiredT)(obj))
+            addToEnv(local.name, PValue(obj, requiredT))
             eval[tpe.Underlying](body)
           case _ => eval[tpe.Underlying](orelse)
         }
@@ -80,7 +80,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         environments = currentEnvironment.emptyChild :: environments
         val result: tpe.Underlying = targetR match {
           case obj: PObject if obj.hasSameFingerprint(typeFingerprint) =>
-            addToEnv(local.name, PValue(obj.tpe)(obj))
+            addToEnv(local.name, PValue(obj, obj.tpe))
             eval[tpe.Underlying](body)
           case _ => eval[tpe.Underlying](orelse)
         }
@@ -119,7 +119,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
           bool || eval[Boolean](operand)
         }
       }
-      case Expr.Unary(op, operand) =>
+      case Expr.Unary(op, operand, _) =>
         op match {
           case UnaryOp.Not => !eval[Boolean](operand)
           case UnaryOp.Invert => eval[Long](operand) * (-1)
@@ -157,7 +157,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
           case func: PFunction => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)))
           case PFunctionPredef(varargs, body) =>
             val argsR: List[(String, PValue)] = args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs)
-              .map { case (value, (id, argT)) => id -> PValue(argT)(value) }
+              .map { case (value, (id, argT)) => id -> PValue(value, argT) }
             body(argsR).getOrElse(error("Predef function execution failed"))
         }
 
@@ -166,7 +166,8 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         * corresponding element from underlying collection. */
       case Expr.Attribute(value, attr, _) =>
         eval[value.tpe.Underlying](value) match {
-          case obj: PObject => obj.getAttr(attr.name).getOrElse(error(s"No such attribute '${obj.tpe.ident}.${attr.name}'"))
+          case obj: PObject => obj.getAttr(attr.name).map(_.value)
+            .getOrElse(error(s"No such attribute '${obj.tpe.ident}.${attr.name}'"))
           case tuple: List[_] if value.tpe.isTuple => tuple(attr.name.stripPrefix("_").toInt)
           case _ => error("Illegal expression")
         }
@@ -182,7 +183,6 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
             case SliceOp.Slice(lower, upper) =>
               val lowerR: Long = lower.map(idx => eval[Long](idx)).getOrElse(0)
               val upperR: Long = upper.map(idx => eval[Long](idx)).getOrElse(coll.size)
-              //val stepR = step.map(i => eval[i.tpe.Underlying](i)).getOrElse(0)
               coll.slice(lowerR.toInt, upperR.toInt)
           }
           case _ => error("Illegal operation")
@@ -202,8 +202,8 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       }
       case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
       case Expr.Tuple(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
-      case Expr.Base58Str(value) => Base58.decode(value).getOrElse(error("Base58 string decoding failed"))
-      case Expr.Base16Str(value) => Base16.decode(value).getOrElse(error("Base16 string decoding failed"))
+      case Expr.Base58Str(value) => Base58.decode(value).map(_.toList).getOrElse(error("Base58 string decoding failed"))
+      case Expr.Base16Str(value) => Base16.decode(value).map(_.toList).getOrElse(error("Base16 string decoding failed"))
 
       /** For simple constants just return their value. */
       case Expr.IntConst(value) => value
@@ -230,5 +230,8 @@ object Evaluator {
 
   case object OutOfFuelException extends Exception("Out of fuel")
 
-  def default: Evaluator = Evaluator(ScopedRuntimeEnvironment.empty(1), TypeSystem.default)
+  def default: Evaluator = Evaluator(ScopedRuntimeEnvironment.initialized(1, Map.empty), TypeSystem.default)
+
+  def initializedWith(args: List[(String, PWrappedMember)]): Evaluator =
+    Evaluator(ScopedRuntimeEnvironment.initialized(1, args.toMap), TypeSystem.default)
 }

@@ -1,21 +1,24 @@
 package org.encryfoundation.prismlang.compiler.scope
 
 import org.encryfoundation.prismlang.core.Types
-import org.encryfoundation.prismlang.lib.predefined.decode.Base58decode
-import org.encryfoundation.prismlang.lib.predefined.hash._
-import org.encryfoundation.prismlang.lib.predefined.signature.CheckSig
-import org.encryfoundation.prismlang.lib.predefined.time.Str2Time
+
 
 object PredefinedScope {
 
+  import org.encryfoundation.prismlang.lib.predefined._
+
   val members: List[(String, Types.PType)] = List(
-    (CheckSig.name, Types.PFunc(CheckSig.args.toList, Types.PBoolean)),
-    (Blake2b256Hash.name, Types.PFunc(Blake2b256Hash.args.toList, Types.PCollection.ofByte)),
-    (Blake2b512Hash.name, Types.PFunc(Blake2b512Hash.args.toList, Types.PCollection.ofByte)),
-    (Keccak256Hash.name, Types.PFunc(Keccak256Hash.args.toList, Types.PCollection.ofByte)),
-    (Keccak512Hash.name, Types.PFunc(Keccak512Hash.args.toList, Types.PCollection.ofByte)),
-    (Sha256Hash.name, Types.PFunc(Sha256Hash.args.toList, Types.PCollection.ofByte)),
-    (Str2Time.name, Types.PFunc(Str2Time.args.toList, Types.PInt)),
-    (Base58decode.name, Types.PFunc(Base58decode.args.toList, Types.POption(Types.PCollection.ofByte)))
+    (signature.CheckSig.name, Types.PFunc(signature.CheckSig.args.toList, Types.PBoolean)),
+    (hash.Blake2b256Hash.name, Types.PFunc(hash.Blake2b256Hash.args.toList, Types.PCollection.ofByte)),
+    (hash.Blake2b512Hash.name, Types.PFunc(hash.Blake2b512Hash.args.toList, Types.PCollection.ofByte)),
+    (hash.Keccak256Hash.name, Types.PFunc(hash.Keccak256Hash.args.toList, Types.PCollection.ofByte)),
+    (hash.Keccak512Hash.name, Types.PFunc(hash.Keccak512Hash.args.toList, Types.PCollection.ofByte)),
+    (hash.Sha256Hash.name, Types.PFunc(hash.Sha256Hash.args.toList, Types.PCollection.ofByte)),
+    (time.Str2Time.name, Types.PFunc(time.Str2Time.args.toList, Types.PInt)),
+    (decode.Base58decode.name, Types.PFunc(decode.Base58decode.args.toList, Types.POption(Types.PCollection.ofByte))),
+    (math.Min.name, Types.PFunc(math.Min.args.toList, Types.PInt)),
+    (math.Max.name, Types.PFunc(math.Max.args.toList, Types.PInt)),
+    (collection.AnyOf.name, Types.PFunc(collection.AnyOf.args.toList, Types.PBoolean)),
+    (collection.AllOf.name, Types.PFunc(collection.AllOf.args.toList, Types.PBoolean)),
   )
 }

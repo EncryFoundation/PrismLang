@@ -18,8 +18,8 @@ class StructDescriptorInterpreterSpec extends PropSpec with Matchers {
             Ident("person"),
             ProductType(
               List(
-                (Ident("name"), SimpleType(Ident("String"),List())),
-                (Ident("age"),SimpleType(Ident("Int"), List()))))
+                (Ident("name"), SimpleType(Ident("String"), List())),
+                (Ident("age"), SimpleType(Ident("Int"), List()))))
           ),
           (
             Ident("orders"),
@@ -35,7 +35,7 @@ class StructDescriptorInterpreterSpec extends PropSpec with Matchers {
               )
             )
           ),
-          (Ident("id"), SimpleType(Ident("Int"),List()))
+          (Ident("id"), SimpleType(Ident("Int"), List()))
         )
       )
     )

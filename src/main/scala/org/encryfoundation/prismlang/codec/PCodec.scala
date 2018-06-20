@@ -2,6 +2,7 @@ package org.encryfoundation.prismlang.codec
 
 import org.encryfoundation.prismlang.core.Types._
 import org.encryfoundation.prismlang.core.Ast._
+import org.encryfoundation.prismlang.core.wrapped.BoxedValue
 import scodec.Codec
 import scodec.codecs.{Discriminated, uint2, uint4, uint8}
 
@@ -22,19 +23,15 @@ object PCodec {
   implicit def dTuple = dT.bind[PTuple](9)
   implicit def dObj = dT.bind[ArbitraryProduct](10)
   implicit def dStructTag = dT.bind[StructTag](11)
-  implicit def dEncryProof = dT.bind[EncryProof.type](12)
-  implicit def dEncryContract = dT.bind[EncryContract.type](13)
-  implicit def dSig = dT.bind[Signature25519.type](14)
-  implicit def dProp = dT.bind[EncryProposition.type](15)
-  implicit def dMulSig = dT.bind[MultiSig.type](16)
-  implicit def dEncryBox = dT.bind[EncryBox.type](17)
-  implicit def dAssetBox = dT.bind[AssetBox.type](18)
-  implicit def dAiBox = dT.bind[AssetIssuingBox.type](19)
-  implicit def dDBox = dT.bind[DataBox.type](20)
-  implicit def dUnlocker = dT.bind[EncryUnlocker.type](21)
-  implicit def dTransact = dT.bind[EncryTransaction.type](22)
-  implicit def dState = dT.bind[EncryState.type](23)
-  implicit def dNit = dT.bind[Nit.type](24)
+  implicit def dSig = dT.bind[Signature25519.type](12)
+  implicit def dMulSig = dT.bind[MultiSig.type](13)
+  implicit def dEncryBox = dT.bind[EncryBox.type](14)
+  implicit def dAssetBox = dT.bind[AssetBox.type](15)
+  implicit def dAiBox = dT.bind[AssetIssuingBox.type](16)
+  implicit def dDBox = dT.bind[DataBox.type](17)
+  implicit def dTransact = dT.bind[EncryTransaction.type](18)
+  implicit def dState = dT.bind[EncryState.type](19)
+  implicit def dNit = dT.bind[Nit.type](20)
 
   implicit def dExp = Discriminated[Expr, Int](uint8)
   implicit def dBlc = dExp.bind[Expr.Block](0)
@@ -105,7 +102,16 @@ object PCodec {
   implicit def dSimpleT = dTypeDesc.bind[TypeDescriptor.SimpleType](0)
   implicit def dProdT = dTypeDesc.bind[TypeDescriptor.ProductType](1)
 
+  implicit def dBoxedVal = Discriminated[BoxedValue, Int](uint4)
+  implicit def dIntVal = dBoxedVal.bind[BoxedValue.IntValue](0)
+  implicit def dBoolVal = dBoxedVal.bind[BoxedValue.BoolValue](1)
+  implicit def dStringVal = dBoxedVal.bind[BoxedValue.StringValue](2)
+  implicit def dByteVal = dBoxedVal.bind[BoxedValue.ByteValue](3)
+  implicit def dByteCollVal = dBoxedVal.bind[BoxedValue.ByteCollectionValue](4)
+  implicit def dSigVal = dBoxedVal.bind[BoxedValue.Signature25519Value](5)
+
   val exprCodec: Codec[Expr] = Codec[Expr]
   val nodeCodec: Codec[Node] = Codec[Node]
   val typeCodec: Codec[PType] = Codec[PType]
+  val boxedValCodec: Codec[BoxedValue] = Codec[BoxedValue]
 }
