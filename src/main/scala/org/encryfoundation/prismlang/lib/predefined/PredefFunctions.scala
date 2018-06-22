@@ -15,8 +15,7 @@ object PredefFunctions {
     hash.Sha256Hash
   )
   val decodeF: Seq[BuiltInFunctionHolder] = Seq(
-    decode.Base58decode,
-    decode.SchemaDecode
+    decode.Base58decode
   )
   val mathF: Seq[BuiltInFunctionHolder] = Seq(
     math.Max,

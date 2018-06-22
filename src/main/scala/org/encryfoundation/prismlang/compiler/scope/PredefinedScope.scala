@@ -7,6 +7,21 @@ object PredefinedScope {
 
   import org.encryfoundation.prismlang.lib.predefined._
 
+  val all: List[BuiltInFunctionHolder] = List(
+    signature.CheckSig,
+    hash.Blake2b256Hash,
+    hash.Blake2b512Hash,
+    hash.Keccak256Hash,
+    hash.Keccak512Hash,
+    hash.Sha256Hash,
+    time.Str2Time,
+    decode.Base58decode,
+    math.Min,
+    math.Max,
+    collection.AnyOf,
+    collection.AllOf
+  )
+
   val members: List[(String, Types.PType)] = List(
     (signature.CheckSig.name, Types.PFunc(signature.CheckSig.args.toList, Types.PBoolean)),
     (hash.Blake2b256Hash.name, Types.PFunc(hash.Blake2b256Hash.args.toList, Types.PCollection.ofByte)),

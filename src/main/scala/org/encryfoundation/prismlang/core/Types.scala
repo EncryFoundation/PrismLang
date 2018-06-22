@@ -13,6 +13,7 @@ object Types {
   sealed trait PType {
     type Underlying
     val ident: String
+    val dataCost: Int
 
     val isPrimitive: Boolean = false
     val isCollection: Boolean = false
@@ -49,23 +50,28 @@ object Types {
   case object PAny extends PType with Primitive {
     override type Underlying = Any
     override val ident: String = "Any"
+    override val dataCost: Int = 100
   }
   case object PUnit extends PType with Primitive {
     override type Underlying = Unit
     override val ident: String = "Unit"
+    override val dataCost: Int = 0
   }
   case object PBoolean extends PType with Primitive {
     override type Underlying = Boolean
     override val ident: String = "Bool"
+    override val dataCost: Int = 1
   }
   case object PInt extends PType with Primitive {
     override type Underlying = Int
     override val ident: String = "Int"
     override val isNumeric: Boolean = true
+    override val dataCost: Int = 8
   }
   case object PByte extends PType with Primitive {
     override type Underlying = Byte
     override val ident: String = "Byte"
+    override val dataCost: Int = 4
 
     override def canBeDerivedTo(thatT: PType): Boolean = thatT match {
       case PInt => true
@@ -80,6 +86,7 @@ object Types {
   case object PString extends PType with Primitive {
     override type Underlying = String
     override val ident: String = "String"
+    override val dataCost: Int = 5
   }
 
   /** Trait each type that have type-parameters inherits. */
@@ -89,6 +96,7 @@ object Types {
     override type Underlying = List[valT.Underlying]
     override val ident: String = "Array"
     override val isCollection: Boolean = true
+    override val dataCost: Int = 10 * valT.dataCost
 
     def isApplicable(func: Types.PFunc): Boolean =
       func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
@@ -110,6 +118,7 @@ object Types {
     override type Underlying = Option[inT.Underlying]
     override val ident: String = "Option"
     override val isOption: Boolean = true
+    override val dataCost: Int = 10
 
     override def equals(obj: Any): Boolean = obj match {
       case option: POption => option.inT == this.inT
@@ -121,6 +130,7 @@ object Types {
     override type Underlying = PFunction
     override val ident: String = "Func"
     override val isFunc: Boolean = true
+    override val dataCost: Int = 20
 
     override def equals(obj: Any): Boolean = obj match {
       case f: PFunc =>
@@ -140,6 +150,7 @@ object Types {
     override type Underlying = Nothing
     override val isNit: Boolean = true
     override val ident: String = "Nit"
+    override val dataCost: Int = 0
   }
 
   sealed trait TaggedType extends PType {
@@ -157,6 +168,7 @@ object Types {
   /** User-defined data structure tag */
   case class StructTag(ident: String, underlyingType: PType) extends PType with TaggedType {
     override type Underlying = underlyingType.Underlying
+    override val dataCost: Int = 10
 
     override val isNumeric: Boolean = underlyingType.isNumeric
     override val isCollection: Boolean = underlyingType.isCollection
@@ -172,6 +184,7 @@ object Types {
     override type Underlying = underlyingType.Underlying
     override val ident: String = "Signature25519"
     override val underlyingType: PType = PCollection.ofByte
+    override val dataCost: Int = 15
 
     override val isCollection: Boolean = true
   }
@@ -180,6 +193,7 @@ object Types {
     override type Underlying = underlyingType.Underlying
     override val ident: String = "MultiSig"
     override val underlyingType: PType = PCollection(PCollection.ofByte)
+    override val dataCost: Int = 35
 
     override val isCollection: Boolean = true
   }
@@ -209,6 +223,7 @@ object Types {
   case class PTuple(eltsT: List[PType]) extends PType with Product with Parametrized {
     override type Underlying = List[Any]
     override val ident: String = s"Tuple${eltsT.size}"
+    override val dataCost: Int = 10
 
     override val isTuple: Boolean = true
 
@@ -225,6 +240,7 @@ object Types {
   case class ArbitraryProduct(override val ident: String, props: List[(String, PType)]) extends PType with Product {
     override type Underlying = PObject
     override val fields: Map[String, PType] = props.toMap
+    override val dataCost: Int = 100
 
     def fingerprint: String = Base58.encode(
       Blake2b256.hash(PCodec.typeCodec.encode(this).require.toByteArray).sliding(1, 8).reduce(_ ++ _)
@@ -235,6 +251,7 @@ object Types {
   case object EncryBox extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Box"
+    override val dataCost: Int = 10
 
     override val fields: Map[String, PType] = Map(
       "contractHash" -> PCollection.ofByte,
@@ -247,6 +264,7 @@ object Types {
   case object AssetBox extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "AssetBox"
+    override val dataCost: Int = 10
 
     override val ancestor: Option[Product] = Some(EncryBox)
 
@@ -260,6 +278,7 @@ object Types {
   case object AssetIssuingBox extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "AssetIssuingBox"
+    override val dataCost: Int = 10
 
     override val ancestor: Option[Product] = Some(EncryBox)
 
@@ -272,6 +291,7 @@ object Types {
   case object DataBox extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "DataBox"
+    override val dataCost: Int = 10
 
     override val ancestor: Option[Product] = Some(EncryBox)
 
@@ -283,6 +303,7 @@ object Types {
   case object EncryTransaction extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "Transaction"
+    override val dataCost: Int = 20
 
     override val fields: Map[String, PType] = Map(
       "inputs" -> PCollection(PCollection.ofByte),
@@ -294,6 +315,7 @@ object Types {
   case object EncryState extends PType with Product {
     override type Underlying = PObject
     override val ident: String = "State"
+    override val dataCost: Int = 30
 
     override val fields: Map[String, PType] = Map(
       "height" -> PInt,

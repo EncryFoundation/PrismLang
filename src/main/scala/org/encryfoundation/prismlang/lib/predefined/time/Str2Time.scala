@@ -11,6 +11,8 @@ object Str2Time extends BuiltInFunctionHolder {
 
   val name = "unixTime"
 
+  val cost: Int = 2
+
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("input" -> Types.PString)

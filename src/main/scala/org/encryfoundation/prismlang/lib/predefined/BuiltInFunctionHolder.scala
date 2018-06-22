@@ -4,5 +4,6 @@ import org.encryfoundation.prismlang.core.wrapped.PFunctionPredef
 
 trait BuiltInFunctionHolder {
   val name: String
+  val cost: Int
   def asFunc: PFunctionPredef
 }

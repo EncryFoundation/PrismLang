@@ -11,6 +11,42 @@ class ParserSpec extends PropSpec with Matchers with Parser {
   import org.encryfoundation.prismlang.core.Ast.Expr._
   import org.encryfoundation.prismlang.core.Ast._
 
+  property("BoolOp parsing (&&)") {
+
+    val source = "true && true"
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Bool(
+        BooleanOp.And,
+        List(True, True)
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
+  property("BoolOp parsing (||)") {
+
+    val source = "true || true"
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Bool(
+        BooleanOp.Or,
+        List(True, True)
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
   property("Lambda parsing") {
 
     val source = "lamb (a: Int, b: Int) = a + b"

@@ -2,17 +2,14 @@ package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.wrapped._
-import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
-import org.encryfoundation.prismlang.evaluator.Evaluator.OutOfFuelException
+import org.encryfoundation.prismlang.core.{TypeSystem, Types}
 import scorex.crypto.encode.{Base16, Base58}
 
 case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 
-  var environments: List[ScopedRuntimeEnvironment] = List(initialEnv)
-  var fuel: Int = Constants.InitialFuelLimit
+  private var environments: List[ScopedRuntimeEnvironment] = List(initialEnv)
 
-  def eval[T](expr: Expr): T = if (fuel > 0) {
-    fuel = fuel - 1
+  def eval[T](expr: Expr): T = {
 
     /** Invokes user-defined function. */
     def invoke(func: PFunction, args: Any*): func.body.tpe.Underlying = {
@@ -213,7 +210,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       case Expr.False => false
       case _ => error("Illegal operation")
     }
-  }.asInstanceOf[T] else throw OutOfFuelException
+  }.asInstanceOf[T]
 
   def currentEnvironment: ScopedRuntimeEnvironment = environments.head
 
@@ -227,8 +224,6 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 }
 
 object Evaluator {
-
-  case object OutOfFuelException extends Exception("Out of fuel")
 
   def default: Evaluator = Evaluator(ScopedRuntimeEnvironment.initialized(1, Map.empty), TypeSystem.default)
 

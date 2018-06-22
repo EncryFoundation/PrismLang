@@ -9,6 +9,8 @@ object AllOf extends BuiltInFunctionHolder {
 
   val name: String = "allOf"
 
+  val cost: Int = 10
+
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args: IndexedSeq[(String, Types.PCollection)] = IndexedSeq("coll" -> Types.PCollection.ofBool)

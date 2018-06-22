@@ -36,7 +36,7 @@ object Expressions {
     P( "{" ~ Semis.? ~ expr.rep(min=1, sep=Semi) ~ end ).map(exps => Ast.Expr.Block(exps.toList))
   }
 
-  def expr: P[Ast.Expr] = P( comparison | arithExpr | test | lambdef | funcdef | constdef | ifLetExpr | ifExpr | block )
+  def expr: P[Ast.Expr] = P( test | comparison | arithExpr | lambdef | funcdef | constdef | ifLetExpr | ifExpr | block )
   def arithExpr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
   def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 

@@ -9,6 +9,8 @@ object Max extends BuiltInFunctionHolder {
 
   val name = "max"
 
+  val cost: Int = 20
+
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("a" -> Types.PInt, "b" -> Types.PInt)

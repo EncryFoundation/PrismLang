@@ -8,6 +8,8 @@ import org.encryfoundation.prismlang.lib.predefined.hash.Sha256Hash.body
 
 trait HashFunctionHolder extends BuiltInFunctionHolder {
 
+  val cost: Int = 25
+
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args = IndexedSeq("input" -> Types.PCollection.ofByte)
