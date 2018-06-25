@@ -5,13 +5,18 @@ import java.nio.charset.Charset
 import org.encryfoundation.prismlang.codec.PCodec
 import org.encryfoundation.prismlang.core.{Ast, Types}
 import scodec.bits.BitVector
+import scorex.crypto.hash.Blake2b256
 
 import scala.util.Try
 
 case class CompiledContract(args: List[(String, Types.PType)], script: Ast.Expr, cost: Int) {
 
   lazy val bytes: Array[Byte] = CompiledContractSerializer.toBytes(this)
+
+  lazy val hash: CompiledContract.ContractHash = Blake2b256.hash(bytes)
 }
+
+object CompiledContract { type ContractHash = Array[Byte] }
 
 object CompiledContractSerializer {
 
