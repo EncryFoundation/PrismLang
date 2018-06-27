@@ -51,7 +51,7 @@ class CompiledContractSerializerSpec extends PropSpec with Matchers {
           )
         ),
         PBoolean
-      ), 0
+      )
     )
 
     val contactSerialized: Array[Byte] = contract.bytes

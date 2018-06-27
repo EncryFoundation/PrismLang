@@ -14,8 +14,7 @@ trait TestCompiler {
     val schemas: List[Types.StructTag] = module.schemas.map(StructDescriptorInterpreter.interpretStruct)
     val contractArgs: List[(String, Types.PType)] = TypeSystem.default.resolveArgs(module.contract.args)
     val analyser: StaticAnalyser = StaticAnalyser(contractArgs ++ PredefinedScope.members, schemas)
-    val compiledScript = analyser.scan(Transformer.transform(module.contract.body))
-    val cost: Int = CostEstimator.default.costOf(compiledScript) + contractArgs.map(_._2.dataCost).sum
-    CompiledContract(contractArgs, compiledScript, cost)
+    val compiledScript: Expr = analyser.scan(Transformer.transform(module.contract.body))
+    CompiledContract(contractArgs, compiledScript)
   }
 }

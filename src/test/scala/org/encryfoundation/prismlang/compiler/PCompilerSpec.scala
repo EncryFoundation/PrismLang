@@ -60,7 +60,7 @@ class PCompilerSpec extends PropSpec with Matchers {
           )
         ),
         PBoolean
-      ), 206
+      )
     )
 
     val compiledTry: Try[CompiledContract] = PCompiler.compile(source)

@@ -14,7 +14,6 @@ object PCompiler {
     val contractArgs: List[(String, Types.PType)] = TypeSystem.default.resolveArgs(module.contract.args)
     val analyser: StaticAnalyser = StaticAnalyser(contractArgs ++ PredefinedScope.members, schemas)
     val compiledScript: Ast.Expr = analyser.scan(Transformer.transform(module.contract.body))
-    val cost: Int = CostEstimator.default.costOf(compiledScript) + contractArgs.map(_._2.dataCost).sum
-    CompiledContract(contractArgs, compiledScript, cost)
+    CompiledContract(contractArgs, compiledScript)
   }
 }
