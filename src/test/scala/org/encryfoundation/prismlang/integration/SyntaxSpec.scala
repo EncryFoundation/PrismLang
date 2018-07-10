@@ -40,7 +40,7 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
         |let c : Int = 5
         |let d : Int = 7
         |let g = sum(c,d)}""".stripMargin
-//FIXME variable reassignment works inside if-else statement
+    //FIXME variable reassignment works inside if-else statement
     val ifElseStatementReassignment =
       """{let a : Int = 7
         |let b : Int = 8
@@ -65,7 +65,7 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
   }
 
   property(testName = "stack overflow") {
-    val constraintArray = getArrayString(List.range(1,300))
+    val constraintArray = getArrayString(List.range(1, 300))
     val bigArray = getArrayString(List.range(1, 100000))
 
     val declareConstraintArray =
@@ -106,13 +106,15 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
         }
       """.stripMargin
 
-    val intDivisionRight = """
+    val intDivisionRight =
+      """
         {let b = 20
         |let c = 5
         |let d = b/c}
       """.stripMargin
 
-    val intDivisionWrong = """
+    val intDivisionWrong =
+      """
         {let b = 20
         |let c = 3
         |let d = b/c}
@@ -123,7 +125,8 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
       """{let G : Array[Int] = Array(1,2,5,true)}
       """.stripMargin
 
-    val arrayAddInt = """
+    val arrayAddInt =
+      """
         {let V : Array[Int] = Array(1,2,3)
         |let w : Int = 7
         |let Z = V + w}
@@ -151,7 +154,7 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
     val toByteCast = "let b : Byte = (101).toByte"
     val longMin = Long.MinValue
     val longMax = Long.MaxValue
-//FIXME Long.MinValue assignment throws exception
+    //FIXME Long.MinValue assignment throws exception
     val letLongMinNumber =
       s"""{let a : Int = $longMin}""".stripMargin
 
@@ -166,7 +169,7 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
         |false
         | }
         |}""".stripMargin
-//FIXME Python ternary operator works like let g : Int = 47
+    //FIXME Python ternary operator works like let g : Int = 47
     val wrongConditionalVariable = "{let g : Int = 47 if (5<2) else 22}"
 
     val ifElseStatementTypeResolving =
