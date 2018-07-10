@@ -34,16 +34,16 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
       """{def sum(a: Int, b: Int): Int = {
         |        a + b
         |    }
-        |let a : Int = 5
-        |let b : Int = 7
-        |let g = sum(a,b)}""".stripMargin
+        |let c : Int = 5
+        |let d : Int = 7
+        |let g = sum(c,d)}""".stripMargin
 
     val successMusk = Seq(true, false, false, false, true)
-//    val tries = Seq(correctOrder, doubleAssignment, variableBeforeAssignment, functionBeforeAssignment, functionCorrectOrder)
-//      .map(e =>compileExpr(parse(e).get.head))
-//      .zip(successMusk).
-//      map(e => e._1.isSuccess shouldBe e._2)
-    compileExpr(parse(functionCorrectOrder).get.head).isSuccess shouldBe true
+    val tries = Seq(correctOrder, doubleAssignment, variableBeforeAssignment,
+      functionBeforeAssignment, functionCorrectOrder)
+      .map(e =>compileExpr(parse(e).get.head))
+      .zip(successMusk).
+      map(e => e._1.isSuccess shouldBe e._2)
   }
 
   property (testName = "Infinite Loop"){
@@ -51,7 +51,7 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
   }
 
   property (testName = "stack overflow"){
-    val hugeArrayRepresent = getArrayString(List.range(1,320))//.map(e => e.toLong))
+    val hugeArrayRepresent = getArrayString(List.range(1,100000))
     val light =
       s"""{let a : Array[Int] = $hugeArrayRepresent}""".stripMargin
     val successMusk = Seq(false)
@@ -100,9 +100,37 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
   }
 
   property(testName = "syntax constructions"){
-    val ifElseStatement = """{}"""
-    val worongIfElse = """{}"""
-    val conditionalVariableDeclaration = """{}"""
+
+    val toByteCast = "let b : Byte = (144).toByte"
+
+    val longMax = Long.MaxValue
+    val letLongMaxNumber =
+      s"""{let a : Int = $longMax}""".stripMargin
+
+    val conditionalVariableDeclaration =
+      """{let f : Bool = if (7==7){
+          |true} else {
+          |false}}""".stripMargin
+
+    val wrongConditionalVariable = "{let g : Int = 47 if (5<2) else 22}"
+
+    val ifElseStatementTypeResolving  =
+      """{let a : Int = 7
+        |let c : Byte = (177).toByte
+        |if (c > a){
+        |  let b = c
+        |} else {
+        |   let b = a
+        |   }
+        |}""".stripMargin
+
+    val successMusk = Seq(true, false, true, false, false)
+
+    val tries = Seq(toByteCast, letLongMaxNumber, conditionalVariableDeclaration,
+      wrongConditionalVariable, ifElseStatementTypeResolving)
+      .map(e => compileExpr(parse(e).get.head))
+      .zip(successMusk).
+      map(e => e._1.isSuccess shouldBe e._2)
   }
 
   def getArrayString(sample : List[Any]) : String = sample.mkString("Array(", ", ", ")")
