@@ -1,6 +1,6 @@
 name := "prism"
 
-version := "0.2.3"
+version := "0.2.4"
 
 scalaVersion := "2.12.6"
 
@@ -13,8 +13,7 @@ libraryDependencies ++= Seq(
   "com.google.guava" % "guava" % "21.+",
   "org.scorexfoundation" %% "scrypto" % "2.1.+",
   "org.scodec" %% "scodec-core" % "1.10.3",
-  "org.scalatest" %% "scalatest" % "3.0.3" % "test",
-  "org.bitbucket.inkytonik.kiama" %% "kiama" % "2.1.0",
+  "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
 
 licenses in ThisBuild := Seq("GNU GPL 3.0" -> url("https://github.com/EncryFoundation/PrismLang/blob/master/LICENSE"))
