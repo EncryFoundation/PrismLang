@@ -1,10 +1,10 @@
 name := "prism"
 
-version := "0.2.2"
+version := "0.2.3"
 
 scalaVersion := "2.12.6"
 
-organization := "com.github.oskin1"
+organization := "org.encry"
 
 resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositories/releases/"
 
