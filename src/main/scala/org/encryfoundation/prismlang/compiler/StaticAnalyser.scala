@@ -53,7 +53,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val bodyScope: ScopedSymbolTable = currentScope.nested(params.map(p => Symbol(p._1, p._2)), isFunc = true)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
-      matchType(declaredReturnType, body.tpe)
+      matchType(declaredReturnType, bodyS.tpe)
       scopes = scopes.tail
       func.copy(ident, args, bodyS, returnTypeIdent)
   }
