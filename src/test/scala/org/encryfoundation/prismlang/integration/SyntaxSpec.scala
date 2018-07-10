@@ -51,7 +51,7 @@ class SyntaxSpec extends PropSpec with Matchers with Parser with TestCompiler {
   }
 
   property (testName = "stack overflow"){
-    val hugeArrayRepresent = getArrayString(List.range(1,320))
+    val hugeArrayRepresent = getArrayString(List.range(1,100000))
     val light =
       s"""{let a : Array[Int] = $hugeArrayRepresent}""".stripMargin
     val successMusk = Seq(false)
