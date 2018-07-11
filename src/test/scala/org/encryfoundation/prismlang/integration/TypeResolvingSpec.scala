@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.integration
 import org.scalatest.{Matchers, PropSpec}
 
 class TypeResolvingSpec extends PropSpec with Matchers with Utils {
-  property(testName = "Array declaration") {
+  property("Array declaration") {
     val arrayDeclaration =
       """
                 {
@@ -14,7 +14,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
     compiled(arrayDeclaration).isSuccess shouldBe true
   }
 
-  property(testName = "Sum Boolean and Int") {
+  property("Sum Boolean and Int") {
     val sumBoolAndInt =
       """
                 {
@@ -27,7 +27,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
     compiled(sumBoolAndInt).isSuccess shouldBe false
   }
 
-  property(testName = "Division Int on byte") {
+  property("Division Int on byte") {
     val byte_num = 101.toByte
 
     val divideIntOnByte =
@@ -42,7 +42,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
     compiled(divideIntOnByte).isSuccess shouldBe false
   }
 
-  property(testName = "Int division without mod") {
+  property("Int division without mod") {
     val intDivisionRight =
       """
                 {
@@ -54,7 +54,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
     compiled(intDivisionRight).isSuccess shouldBe true
   }
 
-  property(testName = "Int division with mod") {
+  property("Int division with mod") {
     val intDivisionWrong =
       """
                 {
@@ -67,7 +67,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
     compiled(intDivisionWrong).isSuccess shouldBe true
   }
 
-  property(testName = "Array with variable of another type") {
+  property("Array with variable of another type") {
     val mixedTypesInArray =
       """
                 {
@@ -77,7 +77,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(mixedTypesInArray).isSuccess shouldBe false
   }
-  property(testName = "Sum Array and Int") {
+  property("Sum Array and Int") {
     val arrayAddInt =
       """
                 {
@@ -89,7 +89,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(arrayAddInt).isSuccess shouldBe false
   }
-  property(testName = "Sum of two arrays") {
+  property("Sum of two arrays") {
     val arrayConcatenation =
       """
                 {
@@ -102,7 +102,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
     compiled(arrayConcatenation).isSuccess shouldBe false
   }
 
-  property(testName = "Resolving in conditional statement") {
+  property("Resolving in conditional statement") {
     val ifElseStatementTypeResolving =
       """
                 {

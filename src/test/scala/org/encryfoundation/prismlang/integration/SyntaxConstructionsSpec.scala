@@ -4,7 +4,7 @@ import org.scalatest.{Matchers, PropSpec}
 
 class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
 
-  property(testName = "Byte Cast") {
+  property("Byte Cast") {
     val toByteCast =
       """
                 {
@@ -14,7 +14,7 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
 
     compiled(toByteCast).isSuccess shouldBe true
   }
-  property(testName = "Int Upper Boundary check") {
+  property("Int Upper Boundary check") {
     val longMin = Long.MinValue
     val letLongMinNumber =
       s"""
@@ -26,7 +26,7 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
     compiled(letLongMinNumber).isSuccess shouldBe true
   }
 
-  property(testName = "Int Lower Boundary check") {
+  property("Int Lower Boundary check") {
     val longMax = Long.MaxValue
 
     val letLongMaxNumber =
@@ -39,7 +39,7 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
     compiled(letLongMaxNumber).isSuccess shouldBe true
   }
 
-  property(testName = "Conditional variable declaration") {
+  property("Conditional variable declaration") {
     val conditionalVariableDeclaration =
       """
                 {
@@ -54,7 +54,7 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
     compiled(conditionalVariableDeclaration).isSuccess shouldBe true
   }
 
-  property(testName = "Wrong conditional variable declaration") {
+  property("Wrong conditional variable declaration") {
     val wrongConditionalVariable =
       """
                 {

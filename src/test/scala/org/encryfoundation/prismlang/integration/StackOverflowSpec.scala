@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.integration
 import org.scalatest.{Matchers, PropSpec}
 
 class StackOverflowSpec extends PropSpec with Matchers with Utils {
-  property(testName = "Array size under collection size condition") {
+  property("Array size under collection size condition") {
     val constraintArray = getArrayString(List.range(1, 300))
     val declareConstraintArray =
       s"""
@@ -13,7 +13,7 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
         """.stripMargin
     compiled(declareConstraintArray).isSuccess shouldBe true
   }
-  property(testName = "Array size bigger than collection size condition") {
+  property("Array size bigger than collection size condition") {
     val bigArray = getArrayString(List.range(1, 100000))
     val declareBigArray =
       s"""
@@ -24,7 +24,7 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
 
     compiled(declareBigArray).isSuccess shouldBe false
   }
-  property(testName = "Array size way bigger than collection size condition") {
+  property("Array size way bigger than collection size condition") {
     //FIXME Out of memory (heap space) with 100M array size
     val hugeArray = getArrayString(List.range(1, 1000000))
     val declareHugeArray =
