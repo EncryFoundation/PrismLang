@@ -40,13 +40,7 @@ object Expressions {
   def arithExpr: P[Ast.Expr] = P( Chain(term, Add | Sub) )
   def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
-  val test: P[Ast.Expr] = {
-    val ternary = P(orTest ~ (kwd("if") ~ orTest ~ kwd("else") ~ test).?).map {
-      case (x, None) => x
-      case (x, Some((t, neg))) => x
-    }
-    P( ternary | lambdef )
-  }
+  def test: P[Ast.Expr] = P( orTest | lambdef )
   val orTest: core.Parser[Ast.Expr, Char, String] = P( andTest.rep(1, kwd("or") | "||") ).map {
     case Seq(x) => x
     case xs => Ast.Expr.Bool(Ast.BooleanOp.Or, xs.toList)
