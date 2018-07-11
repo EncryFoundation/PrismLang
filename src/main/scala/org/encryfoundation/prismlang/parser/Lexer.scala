@@ -61,12 +61,10 @@ object Lexer {
   val LineComment: Parser[Unit] = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
   lazy val Comment: P0 = P( MultilineComment | LineComment )
 
-  def negatable[T](p: P[T])(implicit ev: Numeric[T]): core.Parser[T, Char, String] = (("+" | "-").?.! ~ p).map {
-    case ("-", i) => ev.negate(i)
-    case (_, i) => i
+  val integer: core.Parser[Long, Char, String] = P( ("+" | "-").?.! ~ CharIn('0' to '9').rep(min = 1).! ).map {
+    case ("-", i) => ("-" + i).toLong
+    case (_, i) => i.toLong
   }
-
-  val integer: core.Parser[Long, Char, String] = negatable[Long](P( CharIn('0' to '9').rep(min = 1).!.map(_.toLong) ))
 
   lazy val stringliteral: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
   lazy val stringprefix: P0 = P(
