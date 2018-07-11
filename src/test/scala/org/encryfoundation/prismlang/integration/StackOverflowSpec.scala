@@ -13,6 +13,7 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
         """.stripMargin
     compiled(declareConstraintArray).isSuccess shouldBe true
   }
+
   property("Array size bigger than collection size condition") {
     val bigArray = getArrayString(List.range(1, 100000))
     val declareBigArray =
@@ -24,6 +25,7 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
 
     compiled(declareBigArray).isSuccess shouldBe false
   }
+
   property("Array size way bigger than collection size condition") {
     //FIXME Out of memory (heap space) with 100M array size
     val hugeArray = getArrayString(List.range(1, 1000000))

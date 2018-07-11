@@ -77,6 +77,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(mixedTypesInArray).isSuccess shouldBe false
   }
+
   property("Sum Array and Int") {
     val arrayAddInt =
       """
@@ -89,6 +90,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(arrayAddInt).isSuccess shouldBe false
   }
+
   property("Sum of two arrays") {
     val arrayConcatenation =
       """
