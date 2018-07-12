@@ -9,10 +9,15 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
       """
                 {
                   let b : Byte = (101).toByte
+                  b
                 }
       """.stripMargin
 
-    compiled(toByteCast).isSuccess shouldBe true
+    val tryToByteCast = compiled(toByteCast)
+    tryToByteCast.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryToByteCast.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 101.toByte
   }
   property("Int Upper Boundary check") {
     val longMin = Long.MinValue
@@ -20,10 +25,15 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
       s"""
                 {
                   let a : Int = $longMin
+                  a
                 }
         """.stripMargin
 
-    compiled(letLongMinNumber).isSuccess shouldBe true
+    val tryLongMin = compiled(letLongMinNumber)
+    tryLongMin.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryLongMin.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual longMin
   }
 
   property("Int Lower Boundary check") {
@@ -33,10 +43,15 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
       s"""
                 {
                   let a : Int = $longMax
+                  a
                 }
         """.stripMargin
 
-    compiled(letLongMaxNumber).isSuccess shouldBe true
+    val tryLongMax = compiled(letLongMaxNumber)
+    tryLongMax.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryLongMax.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual longMax
   }
 
   property("Conditional variable declaration") {
@@ -48,10 +63,15 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
                   } else {
                     false
                   }
+                  f
                 }
       """.stripMargin
 
-    compiled(conditionalVariableDeclaration).isSuccess shouldBe true
+    val tryConditionalDeclaration = compiled(conditionalVariableDeclaration)
+    tryConditionalDeclaration.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryConditionalDeclaration.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
   }
 
   property("Wrong conditional variable declaration") {
@@ -94,10 +114,15 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
                 {
                   let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
                   let b = A[5]
+                  b
                 }
       """.stripMargin
 
-    compiled(arrayDeclaration).isSuccess shouldBe true
+    val tryGetElement = compiled(arrayDeclaration)
+    tryGetElement.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryGetElement.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 6
   }
 
   property("String declaration correct length") {
@@ -106,10 +131,15 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
       s"""
                 {
                   let a : String = "$string"
+                  a
                 }
         """.stripMargin
 
-    compiled(stringDeclaration).isSuccess shouldBe true
+    val tryString = compiled(stringDeclaration)
+    tryString.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryString.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual string
   }
 
   property("String declaration incorrect length") {
@@ -135,5 +165,43 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
         """.stripMargin
 
     compiled(stringDeclaration).isSuccess shouldBe false
+  }
+
+  property("Correct recursion ") {
+    val factorialRecursive =
+      s"""
+                {
+                  def factorial(n: Int): Int = if (n==0){
+                      1
+                    } else {
+                      n * factorial(n-1)
+                    }
+
+                  let a = factorial(5)
+                  a
+                }
+        """.stripMargin
+
+    val tryFactorial = compiled(factorialRecursive)
+    tryFactorial.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryFactorial.get)
+    evaluatedExpression.isSuccess shouldBe false
+  }
+
+  property("Lambda test") {
+    val mapCollection =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  let B = A.map(lamb(x : Int) = x + 1)
+                  B.size
+                }
+      """.stripMargin
+
+    val tryMapCollection = compiled(mapCollection)
+    tryMapCollection.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryMapCollection.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 9
   }
 }

@@ -26,7 +26,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(sumBoolAndInt).isSuccess shouldBe false
   }
-
+  //FIXME Int on byte division not working
   property("Division Int on byte") {
     val byte_num = 101.toByte
 
@@ -34,12 +34,17 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
       s"""
                 {
                   let v : Byte = $byte_num
-                  let a : Int = 77
+                  let a : Int = 1010
                   let w = a/v
+                  w
                 }
       """.stripMargin
 
-    compiled(divideIntOnByte).isSuccess shouldBe false
+    val tryInByteDivision = compiled(divideIntOnByte)
+    tryInByteDivision.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryInByteDivision.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 10
   }
 
   property("Int division without mod") {
@@ -49,22 +54,60 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                   let b = 20
                   let c = 5
                   let d = b/c
+                  d
                 }
       """.stripMargin
-    compiled(intDivisionRight).isSuccess shouldBe true
+
+    val tryIntDivision = compiled(intDivisionRight)
+    tryIntDivision.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryIntDivision.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 4
   }
 
   property("Int division with mod") {
-    val intDivisionWrong =
+    val intDivisionMod =
       """
                 {
                   let b = 20
                   let c = 3
                   let d = b/c
+                  d
                 }
       """.stripMargin
 
-    compiled(intDivisionWrong).isSuccess shouldBe true
+    val tryIntDivision = compiled(intDivisionMod)
+    tryIntDivision.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryIntDivision.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 6
+  }
+  //FIXME Zero division somehow compiles successfully
+  property("Zero Division") {
+    val zeroDivision =
+      """
+                {
+                  let b = 21
+                  let c = 0
+                  let d = b/c
+                  d
+                }
+      """.stripMargin
+
+    compiled(zeroDivision).isSuccess shouldBe false
+  }
+
+  property("Division int on string(number)") {
+    val intDivisionWrong =
+      """
+                {
+                  let b = 20
+                  let c = "3"
+                  let d = b/c
+                }
+      """.stripMargin
+
+    compiled(intDivisionWrong).isSuccess shouldBe false
   }
 
   property("Array with variable of another type") {
@@ -115,6 +158,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                   } else {
                     let b = a
                   }
+                  b
                 }
       """.stripMargin
 

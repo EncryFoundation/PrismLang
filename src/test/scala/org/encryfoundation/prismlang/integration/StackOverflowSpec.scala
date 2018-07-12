@@ -50,4 +50,37 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
 
     compiled(stringDeclaration).isSuccess shouldBe false
   }
+
+  //TODO rewrite Prism using Array[Any] after Any type resolving fix
+  //FIXME falls with exception in parser because of inner composite type
+  property("Lambda increasing collection depth") {
+    val constraintArray = getArrayString(List.range(1, 301))
+    val mapCollection =
+      s"""
+                {
+                  def toArray(x : Int, array : Array[Int]) : Array[Int] = {
+                    array
+                  }
+
+                  def toArray2(x : Int, array : Array[Array[Int]]) : Array[Array[Int]] = {
+                    array
+                  }
+                  def toArray3(x : Int, array : Array[Array[Array[Int]]]) : Array[Array[Array[Int]]] = {
+                    array
+                  }
+                  def toArray4(x : Int, array : Array[Array[Array[Array[Int]]]]) : Array[Array[Array[Array[Int]]]] = {
+                    array
+                  }
+
+                  let A : Array[Int] = $constraintArray
+                  let B = A.map(lamb(x : Int) = toArray(x, A))
+                  let C = A.map(lamb(x : Int) = toArray2(x, B))
+                  let D = A.map(lamb(x : Int) = toArray3(x, C))
+                  let E = A.map(lamb(x : Int) = toArray4(x, D))
+                }
+      """.stripMargin
+
+    val tryMapCollection = compiled(mapCollection)
+    tryMapCollection.isSuccess shouldBe true
+  }
 }
