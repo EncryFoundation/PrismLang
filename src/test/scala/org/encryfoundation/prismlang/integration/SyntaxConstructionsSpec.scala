@@ -64,4 +64,76 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
 
     compiled(wrongConditionalVariable).isSuccess shouldBe false
   }
+  //FIXME array out of bounds case below lower bound
+  property("Array lower boundary violation") {
+    val arrayDeclaration =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  let b = A[-1]
+                }
+      """.stripMargin
+
+    compiled(arrayDeclaration).isSuccess shouldBe false
+  }
+  //FIXME array out of bounds case above upper bound
+  property("Array upper boundary violation") {
+    val arrayDeclaration =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  let b = A[10]
+                }
+      """.stripMargin
+    compiled(arrayDeclaration).isSuccess shouldBe false
+  }
+
+  property("Array access in boundaries") {
+    val arrayDeclaration =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  let b = A[5]
+                }
+      """.stripMargin
+
+    compiled(arrayDeclaration).isSuccess shouldBe true
+  }
+
+  property("String declaration correct length") {
+    val string = generateRandomString(90)
+    val stringDeclaration =
+      s"""
+                {
+                  let a : String = "$string"
+                }
+        """.stripMargin
+
+    compiled(stringDeclaration).isSuccess shouldBe true
+  }
+
+  property("String declaration incorrect length") {
+    val string = generateRandomString(109)
+    val stringDeclaration =
+      s"""
+                {
+                  let a : String= "$string"
+                }
+        """.stripMargin
+
+    compiled(stringDeclaration).isSuccess shouldBe false
+  }
+
+  property("String subscription") {
+    val string = generateRandomString(90)
+    val stringDeclaration =
+      s"""
+                {
+                  let a : String = "$string"
+                  let b : String = a[1]
+                }
+        """.stripMargin
+
+    compiled(stringDeclaration).isSuccess shouldBe false
+  }
 }

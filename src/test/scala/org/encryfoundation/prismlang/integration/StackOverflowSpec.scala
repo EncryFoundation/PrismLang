@@ -38,4 +38,16 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
 
     compiled(declareHugeArray).isSuccess shouldBe false
   }
+
+  property("String causing overflow") {
+    val string = generateRandomString(1000000)
+    val stringDeclaration =
+      s"""
+                {
+                  let a = "$string"
+                }
+        """.stripMargin
+
+    compiled(stringDeclaration).isSuccess shouldBe false
+  }
 }
