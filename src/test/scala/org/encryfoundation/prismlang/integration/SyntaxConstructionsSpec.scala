@@ -3,6 +3,71 @@ package org.encryfoundation.prismlang.integration
 import org.scalatest.{Matchers, PropSpec}
 
 class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
+  property("Logical or") {
+    val logicalOr =
+      """
+                {
+                  let a = true || false
+                  a
+                }
+      """.stripMargin
+
+    val tryLogicalOr = compiled(logicalOr)
+    tryLogicalOr.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryLogicalOr.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
+  }
+
+  property("Logical and") {
+    val logicalAnd =
+      """
+                {
+                  let a = true && false
+                  a
+                }
+      """.stripMargin
+
+    val tryLogicalAnd = compiled(logicalAnd)
+    tryLogicalAnd.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryLogicalAnd.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual false
+  }
+
+  property("Logical negation") {
+    val negation =
+      """
+                {
+                  let a = not true
+                  let b = !a
+                  b
+                }
+      """.stripMargin
+
+    val tryNegation = compiled(negation)
+    tryNegation.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryNegation.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
+  }
+
+  property("Logical expression") {
+    val negation =
+      """
+                {
+                  let a = !(false && true)
+                  let b = !false || !true
+                  a == b
+                }
+      """.stripMargin
+
+    val tryNegation = compiled(negation)
+    tryNegation.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryNegation.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
+  }
 
   property("Byte Cast") {
     val toByteCast =
@@ -38,7 +103,6 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
 
   property("Int Lower Boundary check") {
     val longMax = Long.MaxValue
-
     val letLongMaxNumber =
       s"""
                 {
@@ -84,6 +148,25 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
 
     compiled(wrongConditionalVariable).isSuccess shouldBe false
   }
+
+  property("Conditional variable in one line") {
+    val shortConditionalVariable =
+      """
+                {
+                  let b = 7
+                  let c = 5
+                  let a = if (c>b) c else b
+                  a
+                }
+      """.stripMargin
+
+    val tryShortConditionalVariable = compiled(shortConditionalVariable)
+    tryShortConditionalVariable.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryShortConditionalVariable.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual 7
+  }
+
   //FIXME array out of bounds case below lower bound
   property("Array lower boundary violation") {
     val arrayDeclaration =
@@ -188,7 +271,7 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
     evaluatedExpression.isSuccess shouldBe false
   }
 
-  property("Lambda test") {
+  property("Lambda map") {
     val mapCollection =
       """
                 {
@@ -203,5 +286,70 @@ class SyntaxConstructionsSpec extends PropSpec with Matchers with Utils {
     val evaluatedExpression = eval(tryMapCollection.get)
     evaluatedExpression.isSuccess shouldBe true
     evaluatedExpression.get shouldEqual 9
+  }
+
+  property("Lambda exists") {
+    val existsInCollection =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  let f = A.exists(lamb(x : Int) = x > 8)
+                  f
+                }
+      """.stripMargin
+
+    val tryExistsInCollection = compiled(existsInCollection)
+    tryExistsInCollection.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryExistsInCollection.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
+  }
+
+  property("In collection") {
+    val inCollection =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  9 in A
+                }
+      """.stripMargin
+
+    val tryInCollection = compiled(inCollection)
+    tryInCollection.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryInCollection.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
+  }
+
+  property("Not in collection") {
+    val notInCollection =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  11 in A
+                }
+      """.stripMargin
+
+    val tryNotInCollection = compiled(notInCollection)
+    tryNotInCollection.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryNotInCollection.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual false
+  }
+
+  property("All of Collection") {
+    val allOf =
+      """
+                {
+                  let A : Array[Int] = Array(1,2,3,4)
+                  allOf(Array(2 > 1, 1 == 1, 3 != 4, 10 < 100, 3 in A,true))
+                }
+      """.stripMargin
+
+    val tryAllOf = compiled(allOf)
+    tryAllOf.isSuccess shouldBe true
+    val evaluatedExpression = eval(tryAllOf.get)
+    evaluatedExpression.isSuccess shouldBe true
+    evaluatedExpression.get shouldEqual true
   }
 }

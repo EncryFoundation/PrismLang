@@ -26,6 +26,45 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(sumBoolAndInt).isSuccess shouldBe false
   }
+  //Fixme compiler allows logical operations between Int and Boolean
+  property("Logical And Boolean and Int") {
+    val boolAndInt =
+      """
+                {
+                  let b = 200
+                  let c = true
+                  let d = b && c
+                }
+      """.stripMargin
+
+    compiled(boolAndInt).isSuccess shouldBe false
+  }
+  //Fixme compiler allows logical operations between String and Boolean
+  property("Logical And Boolean and String") {
+    val boolAndString =
+      """
+                {
+                  let b = "true"
+                  let c = true
+                  let d = c && b
+                }
+      """.stripMargin
+
+    compiled(boolAndString).isSuccess shouldBe false
+  }
+  //Fixme compiler allows logical operations between both non Boolean types
+  property("Logical Or Int and String") {
+    val intOrString =
+      """
+                {
+                  let b = "true"
+                  let c = 100
+                  let d = c && b
+                }
+      """.stripMargin
+
+    compiled(intOrString).isSuccess shouldBe true
+  }
   //FIXME Int on byte division not working
   property("Division Int on byte") {
     val byte_num = 101.toByte
@@ -158,11 +197,52 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                   } else {
                     let b = a
                   }
-                  b
                 }
       """.stripMargin
 
     compiled(ifElseStatementTypeResolving).isSuccess shouldBe true
+  }
+
+  property("Sum bytes exceed byte boundaries") {
+    val sumOfBytes =
+      """
+                {
+                  let a : Byte = (120).toByte
+                  let b : Byte = (101).toByte
+                  let c : Byte = a + b
+                  c
+                }
+      """.stripMargin
+
+    compiled(sumOfBytes).isSuccess shouldBe false
+  }
+
+  property("Int multiplication exceeds upper boundary") {
+    val longMax = Long.MaxValue
+    val longMultiplication =
+      s"""
+                {
+                  let a = $longMax * $longMax
+                  a
+                }
+        """.stripMargin
+
+    compiled(longMultiplication).isSuccess shouldBe false
+  }
+  //FIXME Long multiplication exceeds boundary
+  property("Int multiplication exceeds lower boundary") {
+    val longMax = Long.MaxValue
+    val longMin = Long.MinValue
+
+    val longMultiplication =
+      s"""
+                {
+                  let a = $longMax * $longMin
+                  a
+                }
+        """.stripMargin
+
+    compiled(longMultiplication).isSuccess shouldBe false
   }
 
   property("Sum String and Int") {
