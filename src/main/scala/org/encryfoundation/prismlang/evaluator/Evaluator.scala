@@ -151,7 +151,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         * is called, just call body passing to it list of resolved arguments. */
       case Expr.Call(name: Expr.Name, args, _) =>
         eval[name.tpe.Underlying](name) match {
-          case func: PFunction => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)))
+          case func: PFunction => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)):_*)
           case PFunctionPredef(varargs, body) =>
             val argsR: List[(String, PValue)] = args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs)
               .map { case (value, (id, argT)) => id -> PValue(value, argT) }

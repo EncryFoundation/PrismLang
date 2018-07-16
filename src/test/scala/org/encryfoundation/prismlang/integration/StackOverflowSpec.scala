@@ -68,6 +68,7 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
     val tryMapCollection = compiled(mapCollection)
     tryMapCollection.isSuccess shouldBe true
     val evaluatedExpression = eval(tryMapCollection.get)
+    evaluatedExpression.get
     evaluatedExpression.isSuccess shouldBe true
   }
 }
