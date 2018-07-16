@@ -59,15 +59,9 @@ class StackOverflowSpec extends PropSpec with Matchers with Utils {
                     array
                   }
 
-                  def toArray2(x : Int, array : Array[Any]) : Array[Any] = {
-                    array
-                  }
-
+                  let J : Array[Int] = $constraintArray
                   let A : Array[Int] = $constraintArray
-                  let B = A.map(lamb(x : Int) = toArray(x, A))
-                  let C = A.map(lamb(x : Int) = toArray2(x, B))
-                  let D = A.map(lamb(x : Int) = toArray2(x, C))
-                  let E = A.map(lamb(x : Int) = toArray2(x, D))
+                  let B = A.map(lamb(x : Int) = toArray(x, J))
                 }
       """.stripMargin
 
