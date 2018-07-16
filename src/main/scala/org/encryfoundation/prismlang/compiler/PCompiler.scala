@@ -3,7 +3,6 @@ package org.encryfoundation.prismlang.compiler
 import org.encryfoundation.prismlang.compiler.scope.PredefinedScope
 import org.encryfoundation.prismlang.core.{Ast, TypeSystem, Types}
 import org.encryfoundation.prismlang.parser.Parser
-
 import scala.util.Try
 
 object PCompiler {

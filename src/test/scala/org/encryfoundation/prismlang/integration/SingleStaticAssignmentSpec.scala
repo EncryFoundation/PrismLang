@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.integration
 import org.scalatest.{Matchers, PropSpec}
 
 class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
-  property(testName = "Correct variable order") {
+  property("Correct variable order") {
     val correctOrder =
       """
                 {
@@ -16,7 +16,7 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
     compiled(correctOrder).isSuccess shouldBe true
   }
 
-  property(testName = "Variable reassignment") {
+  property("Variable reassignment") {
 
     val doubleAssignment =
       """
@@ -28,7 +28,7 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
 
     compiled(doubleAssignment).isSuccess shouldBe false
   }
-  property(testName = "Reference variable before assignment") {
+  property("Reference variable before assignment") {
     val variableBeforeAssignment =
       """
                 {
@@ -39,7 +39,7 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
 
     compiled(variableBeforeAssignment).isSuccess shouldBe false
   }
-  property(testName = "Reference function before assignment") {
+  property("Reference function before assignment") {
     val functionBeforeAssignment =
       """
                 {
@@ -52,7 +52,7 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
 
     compiled(functionBeforeAssignment).isSuccess shouldBe false
   }
-  property(testName = "Reference function in correct order") {
+  property("Reference function in correct order") {
     val functionCorrectOrder =
       """
                 {
@@ -69,7 +69,7 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
     compiled(functionCorrectOrder).isSuccess shouldBe true
   }
 
-  property(testName = "Conditional Statement with reassignment") {
+  property("Conditional Statement with reassignment") {
 
     val ifElseStatementReassignment =
       """
