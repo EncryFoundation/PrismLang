@@ -26,7 +26,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(sumBoolAndInt).isSuccess shouldBe false
   }
-  //Fixme compiler allows logical operations between Int and Boolean
+
   property("Logical And Boolean and Int") {
     val boolAndInt =
       """
@@ -39,7 +39,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(boolAndInt).isSuccess shouldBe false
   }
-  //Fixme compiler allows logical operations between String and Boolean
+
   property("Logical And Boolean and String") {
     val boolAndString =
       """
@@ -52,7 +52,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(boolAndString).isSuccess shouldBe false
   }
-  //Fixme compiler allows logical operations between both non Boolean types
+
   property("Logical Or Int and String") {
     val intOrString =
       """
@@ -63,7 +63,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(intOrString).isSuccess shouldBe true
+    compiled(intOrString).isSuccess shouldBe false
   }
   //FIXME Int on byte division not working
   property("Division Int on byte") {
@@ -287,8 +287,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
 
     compiled(sumStringAndString).isSuccess shouldBe true
   }
-
-  //FIXME falls with Exception PCollection(PAny) != PCollection(PInt)
+  
   property("Array of Any") {
     val arrayOfAnyUpCast =
       """
