@@ -10,10 +10,12 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
                   let a = 10
                   let b = 10
                   let c = a + b
+                  c
                 }
       """.stripMargin
 
-    compiled(correctOrder).isSuccess shouldBe true
+    testCompiledExpressionWithOptionalEvaluation(correctOrder, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(20))
   }
 
   property("Variable reassignment") {
@@ -26,8 +28,9 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(doubleAssignment).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(doubleAssignment, compilationSuccess = false)
   }
+
   property("Reference variable before assignment") {
     val variableBeforeAssignment =
       """
@@ -37,8 +40,9 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(variableBeforeAssignment).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(variableBeforeAssignment, compilationSuccess = false)
   }
+
   property("Reference function before assignment") {
     val functionBeforeAssignment =
       """
@@ -50,7 +54,7 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
                 }
                """.stripMargin
 
-    compiled(functionBeforeAssignment).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(functionBeforeAssignment, compilationSuccess = false)
   }
   property("Reference function in correct order") {
     val functionCorrectOrder =
@@ -63,10 +67,12 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
                   let c : Int = 5
                   let d : Int = 7
                   let g = sum(c,d)
+                  g
                 }
       """.stripMargin
 
-    compiled(functionCorrectOrder).isSuccess shouldBe true
+    testCompiledExpressionWithOptionalEvaluation(functionCorrectOrder, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(12))
   }
 
   property("Conditional Statement with reassignment") {
@@ -85,6 +91,6 @@ class SingleStaticAssignmentSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(ifElseStatementReassignment).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(ifElseStatementReassignment, compilationSuccess = false)
   }
 }

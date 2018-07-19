@@ -102,7 +102,8 @@ object Types {
       func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
 
     override def equals(obj: Any): Boolean = obj match {
-      case coll: PCollection => coll.valT == this.valT
+      case coll: PCollection =>
+        coll.valT == this.valT || coll.valT.isSubtypeOf(this.valT) || coll.valT.canBeDerivedTo(this.valT)
       case tag: TaggedType if tag.isCollection => tag.underlyingType == this
       case _ => false
     }

@@ -1,17 +1,20 @@
 package org.encryfoundation.prismlang.integration
 
-import org.scalatest.{Matchers, PropSpec}
+import org.scalatest.PropSpec
 
-class TypeResolvingSpec extends PropSpec with Matchers with Utils {
+
+class TypeResolvingSpec extends PropSpec with Utils {
   property("Array declaration") {
     val arrayDeclaration =
       """
                 {
                   let a : Array[Int] = Array(1, 2, 3, 4, 5, 6, 7, 8, 9)
+                  a[6]
                 }
       """.stripMargin
 
-    compiled(arrayDeclaration).isSuccess shouldBe true
+    testCompiledExpressionWithOptionalEvaluation(arrayDeclaration, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(7))
   }
 
   property("Sum Boolean and Int") {
@@ -24,22 +27,61 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(sumBoolAndInt).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(sumBoolAndInt, compilationSuccess = false)
   }
 
-  property("Division Int on byte") {
-    val byte_num = 101.toByte
-
-    val divideIntOnByte =
-      s"""
+  property("Logical And Boolean and Int") {
+    val boolAndInt =
+      """
                 {
-                  let v : Byte = $byte_num
-                  let a : Int = 77
-                  let w = a/v
+                  let b = 200
+                  let c = true
+                  let d = b && c
                 }
       """.stripMargin
 
-    compiled(divideIntOnByte).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(boolAndInt, compilationSuccess = false)
+  }
+
+  property("Logical And Boolean and String") {
+    val boolAndString =
+      """
+                {
+                  let b = "true"
+                  let c = true
+                  let d = c && b
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(boolAndString, compilationSuccess = false)
+  }
+
+  property("Logical Or Int and String") {
+    val intOrString =
+      """
+                {
+                  let b = "true"
+                  let c = 100
+                  let d = c && b
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(intOrString, compilationSuccess = false)
+  }
+
+  property("Division Int on byte") {
+    val divideIntOnByte =
+      s"""
+                {
+                  let v : Byte = (101).toByte
+                  let a : Int = 1010
+                  let w = a/v
+                  w
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(divideIntOnByte, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(10))
   }
 
   property("Int division without mod") {
@@ -49,22 +91,66 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                   let b = 20
                   let c = 5
                   let d = b/c
+                  d
                 }
       """.stripMargin
-    compiled(intDivisionRight).isSuccess shouldBe true
+
+    testCompiledExpressionWithOptionalEvaluation(intDivisionRight, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(4))
   }
 
   property("Int division with mod") {
-    val intDivisionWrong =
+    val intDivisionMod =
       """
                 {
                   let b = 20
                   let c = 3
                   let d = b/c
+                  d
                 }
       """.stripMargin
 
-    compiled(intDivisionWrong).isSuccess shouldBe true
+    testCompiledExpressionWithOptionalEvaluation(intDivisionMod, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(6))
+  }
+
+  property("Zero Division Const") {
+    val zeroDivision =
+      """
+                {
+                  let b = 21 / 0
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(zeroDivision, compilationSuccess = false)
+  }
+
+  property("Zero Division Reference") {
+    val zeroDivision =
+      """
+                {
+                  let b = 21
+                  let c = 0
+                  let d = b/c
+                  d
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(zeroDivision, compilationSuccess = true,
+      evaluationSuccess = Option(false))
+  }
+
+  property("Division int on string(number)") {
+    val intDivisionWrong =
+      """
+                {
+                  let b = 20
+                  let c = "3"
+                  let d = b/c
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(intDivisionWrong, compilationSuccess = false)
   }
 
   property("Array with variable of another type") {
@@ -75,7 +161,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(mixedTypesInArray).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(mixedTypesInArray, compilationSuccess = false)
   }
 
   property("Sum Array and Int") {
@@ -88,7 +174,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(arrayAddInt).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(arrayAddInt, compilationSuccess = false)
   }
 
   property("Sum of two arrays") {
@@ -101,7 +187,7 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                 }
       """.stripMargin
 
-    compiled(arrayConcatenation).isSuccess shouldBe false
+    testCompiledExpressionWithOptionalEvaluation(arrayConcatenation, compilationSuccess = false)
   }
 
   property("Resolving in conditional statement") {
@@ -111,13 +197,112 @@ class TypeResolvingSpec extends PropSpec with Matchers with Utils {
                   let a : Int = 7
                   let c : Byte = (120).toByte
                   if (c > a){
-                    let b = c
+                    c
                   } else {
-                    let b = a
+                    a
                   }
                 }
       """.stripMargin
 
-    compiled(ifElseStatementTypeResolving).isSuccess shouldBe true
+    testCompiledExpressionWithOptionalEvaluation(ifElseStatementTypeResolving, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(120.toByte))
+  }
+
+  property("Sum bytes exceed byte boundaries") {
+    val sumOfBytes =
+      """
+                {
+                  let a : Byte = (120).toByte
+                  let b : Byte = (101).toByte
+                  let c : Byte = a + b
+                  c
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(sumOfBytes, compilationSuccess = false)
+  }
+
+  property("Int multiplication exceeds upper boundary") {
+    val longMax = Long.MaxValue
+    val longMultiplication =
+      s"""
+                {
+                  let a = $longMax * $longMax
+                  a
+                }
+        """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(longMultiplication, compilationSuccess = false)
+  }
+
+  property("Int multiplication exceeds lower boundary") {
+    val longMax = Long.MaxValue
+    val longMin = Long.MinValue
+
+    val longMultiplication =
+      s"""
+                {
+                  let a = $longMax * $longMin
+                  a
+                }
+        """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(longMultiplication, compilationSuccess = false)
+  }
+
+  property("Sum String and Int") {
+    val string = generateRandomString(10)
+    val sumStringAndInt =
+      s"""
+                {
+                  let a = "$string"
+                  let b = 25
+                  let c = a + b
+                }
+        """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(sumStringAndInt, compilationSuccess = false)
+  }
+
+  property("Sum array and Int") {
+    val string = generateRandomString(10)
+    val sumStringAndInt =
+      s"""
+                {
+                  let a = "$string"
+                  let b = Array(1,2,3)
+                  let c = b + a
+                }
+        """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(sumStringAndInt, compilationSuccess = false)
+  }
+
+  property("Sum of two strings should be string") {
+    val string = generateRandomString(15)
+    val string2 = generateRandomString(15)
+    val sumStringAndString =
+      s"""
+                {
+                  let a = "$string"
+                  let b = "$string2"
+                  let c = a + b
+                  c
+                }
+        """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(sumStringAndString, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(string + string2))
+  }
+
+  property("Array of Any not allowed") {
+    val arrayOfAnyUpCast =
+      """
+                {
+                  let a : Array[Any] = Array(1,2,3,5)
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(arrayOfAnyUpCast, compilationSuccess = false)
   }
 }

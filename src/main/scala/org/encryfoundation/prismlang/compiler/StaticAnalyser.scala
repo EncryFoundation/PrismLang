@@ -5,7 +5,7 @@ import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
 import scorex.crypto.encode.{Base16, Base58}
 
-case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
+case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) extends TypeMatching {
 
   import StaticAnalyser._
 
@@ -53,6 +53,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val bodyScope: ScopedSymbolTable = currentScope.nested(params.map(p => Symbol(p._1, p._2)), isFunc = true)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
+      if (bodyS.toString.contains(ident.name)) error("Recursion not allowed")
       matchType(declaredReturnType, bodyS.tpe)
       scopes = scopes.tail
       func.copy(ident, args, bodyS, returnTypeIdent)
@@ -85,6 +86,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
       ifExp.copy(testS, bodyS, orelseS, computeType(ifExp.copy(testS, bodyS, orelseS)))
+
     /** Scan the target to be assigned, ensure that its type
       * can be cast to the declared local type, then scan
       * bodies of each branch. If required type is `StructTag`
@@ -123,13 +125,15 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
     case bin @ Expr.Bin(left, op, right) =>
       val leftS: Expr = scan(left)
       val rightS: Expr = scan(right)
-      List(leftS, rightS).foreach(exp => matchType(Types.PInt, exp.tpe))
+      isValidBinaryOperation(leftS, rightS, op)
       bin.copy(leftS, op, rightS)
+
     /** Scan operands ensuring they support `op`. */
     case bool @ Expr.Bool(op, values) =>
-      // TODO: Check whether all operands support `op`.
       val valuesS: List[Expr] = values.map(scan)
+      valuesS.foreach(exp => matchType(Types.PBoolean, exp.tpe))
       bool.copy(op, valuesS)
+
     /** Scan operand ensuring it is of `PInt` type. */
     case unary @ Expr.Unary(op, operand, _) =>
       val operandS: Expr = scan(operand)
@@ -138,6 +142,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
         case UnaryOp.Invert => matchType(Types.PInt, operandS.tpe, Some(s"${operandS.tpe} does not support '$op'"))
       }
       unary.copy(op, operandS, computeType(unary.copy(operand = operandS)))
+
     /** Scan operands ensuring they all support `op`. */
     case compare @ Expr.Compare(left, ops, comparators) =>
       val leftS: Expr = scan(left)
@@ -151,6 +156,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
   def scanRef: Scan = {
     /** Compute type of the referenced name and return its modified copy. */
     case name @ Expr.Name(ident, _) => name.copy(ident, computeType(name))
+
     /** Case when some plain function is called. Scan each expr
       * in `args`, lookup name of the called function in the scope
       * ensuring it is of `PFunc` type, check that the type of each
@@ -166,10 +172,12 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
         }
       }
       call.copy(funcS, argsS, computeType(call))
+
     /** Scan value, its type will be checked in `computeType()` (should be Object). */
     case attr @ Expr.Attribute(value, attrName, _) =>
       val valueS: Expr = scan(value)
       attr.copy(valueS, attrName, computeType(attr.copy(valueS)))
+
     /** Scan value, its type will be checked in `computeType()` (should be Collection). */
     case slice @ Expr.Subscript(value, op, _) =>
       val valueS: Expr = scan(value)
@@ -201,23 +209,27 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       val eltsS: List[Expr] = elts.map(scan)
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Tuple is inconsistent, ${elt.tpe} stands out.")))
       tuple.copy(eltsS, computeType(tuple.copy(eltsS)))
+
     /** Has default type, check max length overflow and base58-string validity. */
     case base58 @ Expr.Base58Str(value) =>
       if (value.length > Constants.ByteStringMaxLength)
         error(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
       else if (Base58.decode(value).isFailure) error(s"Invalid Base58 string '$value'")
       base58
+
     /** Has default type, check max length overflow and base16-string validity. */
     case base16 @ Expr.Base16Str(value) =>
       if (value.length > Constants.ByteStringMaxLength)
         error(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
       else if (Base16.decode(value).isFailure) error(s"Invalid Base16 string '$value'")
       base16
+
     /** Has default type, check max length overflow. */
     case string @ Expr.Str(value) =>
       if (value.length > Constants.StringMaxLength)
         error(s"String max length overflow (${value.length} > ${Constants.StringMaxLength})")
       string
+
     /** Make sure given `value` does not overflow `Long.MaxSize`. */
     case int @ Expr.IntConst(value) =>
       if (value > Long.MaxValue) error(s"int64 max size overflow ($value > ${Long.MaxValue})")
@@ -234,6 +246,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       else if (!funcS.tpe.isFunc) error(s"'${funcS.tpe}' is not a function")
       else if (!isApplicableTo(collS, funcS)) error(s"${funcS.tpe} is inapplicable to ${collS.tpe}")
       map.copy(collS, funcS, computeType(map.copy(collS, funcS)))
+
     /** Ensure `coll` is of type `Collection` and `func` is of
       * type `Func`, check whether `func` can be applied to `coll`. */
     case exists @ Expr.Exists(coll, predicate) =>
@@ -252,8 +265,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
   def computeType(expr: Expr): Types.PType = if (!expr.tpe.isNit) expr.tpe else expr match {
     /** Type of the block is the type of its last expr. */
     case Expr.Block(body, _) => computeType(body.last)
+
     /** Type of the referenced name is looked up in the scope. */
     case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(error(s"$name is undefined"))
+
     /** In this case some referenced name is called, the type
       * is inferred from the return-type of the ref, which is
       * looked up in the scope. */
@@ -261,6 +276,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       case Types.PFunc(_, retT) => retT
       case _ => error(s"${ident.name} is not a function")
     }
+
     /** Type of attribute is inferred from the type of
       * corresponding field of the object. */
     case Expr.Attribute(value, attr, _) => computeType(value) match {
@@ -268,6 +284,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       case tag: Types.TaggedType if tag.isProduct => tag.underlyingType.asInstanceOf[Types.Product].getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${tag.underlyingType.ident}"))
       case other => error(s"${other.ident} is not an object")
     }
+
     /** Infer type for the `value`, ensure it is of type `Collection`,
       * in case of by-index subscription we infer resulted type as the
       * type of collection element, in case of slicing we have the same
@@ -301,12 +318,6 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
     currentScope.insert(Symbol(ident.name, tpe))
 
-  def rightType(required: Types.PType, actual: Types.PType): Boolean =
-    required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
-
-  def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
-    if (!rightType(required, actual)) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
-
   /** Find common type for `t1` and `t2`. */
   def findCommonType(t1: Types.PType, t2: Types.PType): Types.PType = {
     if (t1 == t2) t1
@@ -320,8 +331,6 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) {
       case _ => Types.PAny
     }
   }
-
-  def error(msg: String) = throw new SemanticAnalysisException(msg)
 }
 
 object StaticAnalyser {
