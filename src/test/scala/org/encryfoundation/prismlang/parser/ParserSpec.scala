@@ -393,6 +393,44 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
+  property("Nested parametrized type annotation") {
+
+    val source =
+      """
+        |let coll: Array[Array[Int]] = Array(Array(1), Array(1))
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Let(
+        Ident("coll"),
+        Collection(
+          List(
+            Collection(
+              List(
+                IntConst(1)
+              ),
+              Types.Nit
+            ),
+            Collection(
+              List(
+                IntConst(1)
+              ),
+              Types.Nit
+            )
+          ),
+          Types.Nit
+        ),
+        Some(TypeIdent("Array", List(TypeIdent("Array", List(TypeIdent("Int"))))))
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
   property("Collection constant") {
 
     val source =
@@ -419,7 +457,65 @@ class ParserSpec extends PropSpec with Matchers with Parser {
           ),
           Types.Nit
         ),
-        Some(TypeIdent("Array", List("Int")))
+        Some(TypeIdent("Array", List(TypeIdent("Int"))))
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
+  property("Nested collection constant") {
+
+    val source =
+      """
+        |let coll = Array(Array(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024), Array(1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024))
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Let(
+        Ident("coll"),
+        Collection(
+          List(
+            Collection(
+              List(
+                IntConst(1),
+                IntConst(2),
+                IntConst(4),
+                IntConst(8),
+                IntConst(16),
+                IntConst(32),
+                IntConst(64),
+                IntConst(128),
+                IntConst(256),
+                IntConst(512),
+                IntConst(1024)
+              ),
+              Types.Nit
+            ),
+            Collection(
+              List(
+                IntConst(1),
+                IntConst(2),
+                IntConst(4),
+                IntConst(8),
+                IntConst(16),
+                IntConst(32),
+                IntConst(64),
+                IntConst(128),
+                IntConst(256),
+                IntConst(512),
+                IntConst(1024)
+              ),
+              Types.Nit
+            )
+          ),
+          Types.Nit
+        ),
+        None
       )
     )
 

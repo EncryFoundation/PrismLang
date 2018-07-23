@@ -119,9 +119,9 @@ object Expressions {
     P( inits ~ ",".? )
   }
 
-  val typeParams: P[Seq[String]] = P( "[" ~ NAME.rep(sep = ",") ~ "]" ).map(_.map(_.name))
+  def typeParams: P[Seq[Ast.TypeIdent]] = P( "[" ~ typeIdent.rep(sep = ",") ~ "]" )
 
-  val typeIdent: P[Ast.TypeIdent] = P( NAME ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
+  def typeIdent: P[Ast.TypeIdent] = P( NAME ~ typeParams.? ).map { case (tpeN, tpsOpt) =>
     Ast.TypeIdent(tpeN.name, tpsOpt.map(_.toList).getOrElse(List.empty))
   }
 

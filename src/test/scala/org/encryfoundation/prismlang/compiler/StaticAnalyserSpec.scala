@@ -99,7 +99,7 @@ class StaticAnalyserSpec extends PropSpec with Matchers with Parser {
         ),
         Types.Nit
       ),
-      Some(TypeIdent("Array", List("Int")))
+      Some(TypeIdent("Array", List(TypeIdent("Int"))))
     )
 
     val analyseTry = Try(analyser.scan(expr))

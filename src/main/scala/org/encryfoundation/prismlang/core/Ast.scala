@@ -174,5 +174,5 @@ object Ast {
 
   case class Ident(name: String)
 
-  case class TypeIdent(name: String, typeParams: List[String])
+  case class TypeIdent(name: String, typeParams: List[TypeIdent] = List.empty)
 }
