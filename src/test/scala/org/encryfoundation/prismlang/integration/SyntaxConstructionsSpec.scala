@@ -305,4 +305,34 @@ class SyntaxConstructionsSpec extends PropSpec with Utils {
     testCompiledExpressionWithOptionalEvaluation(allOf, compilationSuccess = true,
       evaluationSuccess = Option(true), expectedValue = Option(true))
   }
+
+  property("Array depth 2") {
+    val collectionDepth2 =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5)
+                  let B : Array[Int] = Array(6, 7, 8, 9)
+                  let C : Array[Array[Int]] = Array(A,B)
+                  C[0][2]
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(collectionDepth2, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(3))
+  }
+
+  property("Array depth 3") {
+    val collectionDepth2 =
+      """
+                {
+                  let A : Array[Int] = Array(1, 2, 3, 4, 5)
+                  let B : Array[Int] = Array(6, 7, 8, 9)
+                  let C : Array[Array[Int]] = Array(A,B)
+                  let D : Array[Array[Array[Int]]] = Array(C,C,C)
+                  D[2][2][1]
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(collectionDepth2, compilationSuccess = false)
+  }
 }
