@@ -115,18 +115,6 @@ object Types {
     val ofString: PCollection = PCollection(PString)
   }
 
-  case class POption(inT: PType) extends PType with Parametrized {
-    override type Underlying = Option[inT.Underlying]
-    override val ident: String = "Option"
-    override val isOption: Boolean = true
-    override val dataCost: Int = 10
-
-    override def equals(obj: Any): Boolean = obj match {
-      case option: POption => option.inT == this.inT
-      case _ => false
-    }
-  }
-
   case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
     override type Underlying = PFunction
     override val ident: String = "Func"
@@ -271,7 +259,7 @@ object Types {
 
     override val fields: Map[String, PType] = Map(
       "amount" -> PInt,
-      "tokenIdOpt" -> POption(PCollection.ofByte)
+      "tokenId" -> PCollection.ofByte
     )
   }
 
@@ -337,8 +325,7 @@ object Types {
   /** All types with type parameters including `PTuple` instances
     * of all possible dimensions. */
   val parametrizedTypes: List[Parametrized] = List(
-    PCollection(Nit),
-    POption(Nit),
+    PCollection(Nit)
   ) ++ (1 to Constants.TupleMaxDim).map(i => PTuple((1 to i).map(_ => Nit).toList))
 
   val productTypes: List[Product] = List(

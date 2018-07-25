@@ -25,9 +25,6 @@ case class TypeSystem(additionalTypes: Seq[Types.PType]) {
       case Types.PTuple(types) =>
         if (typeParams.size == types.size) Types.PTuple(typeParams)
         else throw TypeSystemException(s"'Tuple${types.size}' takes exactly ${types.size} type parameters")
-      case Types.POption(_) =>
-        if (typeParams.size == 1) Types.POption(typeParams.head)
-        else throw TypeSystemException("'Option[T]' takes exactly one type parameter")
       case otherT: Types.PType =>
         if (typeParams.isEmpty) otherT
         else throw TypeSystemException(s"'$otherT' does not take type parameters")
