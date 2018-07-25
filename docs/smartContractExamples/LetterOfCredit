@@ -1,8 +1,16 @@
 # Аккредитив
 # Транзакция предоставляет MultiSignature
+
 contract (signature: MultiSig, transaction: Transaction) = {
     let ownerPubKey = base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
     let garantPubKey = base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
     let receiverPubKey = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
-    
+    let keys = Array(ownerPubKey, garantPubKey, receiverPubKey)
+    let sum = keys(lamb(x: Array[Byte]) = if(checkSig(signature, transaction.messageToSign, x)) 1 else 0).sum
+    sum > 1
 }
+
+# В более общем случае, когда больше одного гаранта:
+# 	1) в тело добавляются garant2, garant3 публичные ключи
+# 	2) эти ключчи включаются в массив keys 
+# 	3) условие открытия sum > numOfGarants

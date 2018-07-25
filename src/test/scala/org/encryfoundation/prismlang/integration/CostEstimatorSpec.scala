@@ -61,6 +61,7 @@ class CostEstimatorSpec extends PropSpec with Utils with TimeLimits {
       """.stripMargin
 
     val tryContract: Try[CompiledContract] = PCompiler.compile(contractString)
+    tryContract.get
     tryContract.isSuccess shouldBe true
     tryContract match {
       case Success(contract) => estimateCost(contract.script) match {
