@@ -6,6 +6,7 @@ object CostTable {
   val FuncDeclarationC: Int  = 20
   val LambDeclarationC: Int  = 5
   val BlockDeclarationC: Int = 5
+  val NestedBlockPenalty: Double = 1.2
 
   val NameRefC: Int          = 2
   val CallC: Int             = 4

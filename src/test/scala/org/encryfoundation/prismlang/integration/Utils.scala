@@ -1,6 +1,6 @@
 package org.encryfoundation.prismlang.integration
 
-import org.encryfoundation.prismlang.compiler.TestCompiler
+import org.encryfoundation.prismlang.compiler.{CostEstimator, TestCompiler}
 import org.encryfoundation.prismlang.core.Ast
 import org.encryfoundation.prismlang.evaluator.ExprEvaluator
 import org.encryfoundation.prismlang.parser.Parser
@@ -15,6 +15,8 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
     case Success(parsed) => compileExpr(parsed.head)
     case Failure(e) => Failure[Ast.Expr](e)
   }
+
+  def estimateCost(ast: Ast.Expr): Try[Int] = Try(CostEstimator.default.costOf(ast))
 
   def testCompiledExpressionWithOptionalEvaluation(prismSource: String, compilationSuccess: Boolean,
                                                    evaluationSuccess: Option[Boolean] = None,
@@ -41,5 +43,8 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
     }
   }
 
-  def generateRandomString(length: Int): String = (Random.alphanumeric take length).mkString
+  def generateRandomString(length: Int): String = Random.alphanumeric.dropWhile(_.isDigit).take(length).mkString
+
+  def generateRandomNumber: Int = Random.nextInt
+
 }
