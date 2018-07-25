@@ -1,2 +1,35 @@
 # Обмен одних токенов на другие
-#
+# Курс первоначального обмена(rate) выбирается инициатором эмиссии
+# lessBase - монета выхода дешевле в rate раз базовой
+# YourRegularContractHash пользователь берёт из Walet'a
+
+сontract (signature: Signature25519, transaction: Transaction) = {
+  let rate = 2
+  let lessBase = true
+  let acceptableTokenId = Array((101).toByte, (100).toByte)
+
+  def getNumToExchange(amount: Int, rate: Int, lessBase: Bool): Int = {
+    if(lessBase) {
+      if (amount%rate==0) amount/rate else amount/rate + 1
+    } else {
+      amount * rate
+    }
+  }
+
+  def amAbleToOpen(assetBox: AssetBox): Bool = {
+    assetBox.contractHash == YourRegularContractHash
+  }
+
+  def toAssetBox(box : Box): AssetBox = {
+    if(let assetBox : AssetBox = box) assetBox else box
+  }
+
+  if (transaction.outputs.exists(lamb (x: AssetBox) = x.tokenId == acceptableTokenId)){
+    let buyAmount = transaction.outputs.map(lamb(x: AssetBox) = if (x.tokenId == acceptableTokenId) x.amount else 0).sum
+    let wantBuyOurs = getNumToExchange(buyAmount, rate, lessBase)
+    if (transaction.outputs.exists(lamb (x: AssetBox) = (x.tokenId == self.tokenId) && amAbleToOpen(x))){
+      let declaredChangeAmount = transaction.outputs.map(lamb(x: AssetBox) = if (x.tokenId == self.tokenId) x.amount else 0).sum
+      if (self.amount - wantBuyOurs == declaredChangeAmount) true else false
+    } else false 
+  } else false
+}
