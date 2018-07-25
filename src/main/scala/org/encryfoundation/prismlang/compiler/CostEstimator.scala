@@ -7,16 +7,22 @@ import org.encryfoundation.prismlang.core.CostTable
 case class CostEstimator(initialEnv: Map[String, Int]) {
 
   import CostTable._
-  import CostEstimator._
+  type Cost = PartialFunction[Expr, Int]
 
   private var env: Map[String, Int] = initialEnv
+  private val blockDepthController: RestrictedStack = RestrictedStack.default
+  private val scriptLengthController: RestrictedStack = RestrictedStack.default
 
-  def costOf: Cost =
-    costOfSyntacticalConstr orElse
-      costOfTransformer orElse
-      costOfConst orElse
-      costOfRef orElse
-      costOfOp
+  def costOf: Cost = {
+    case exp => scriptLengthController.pushNext()
+      costOfExpr(exp)
+  }
+
+  def costOfExpr: Cost = costOfSyntacticalConstr orElse
+    costOfTransformer orElse
+    costOfConst orElse
+    costOfRef orElse
+    costOfOp
 
   def costOfSyntacticalConstr: Cost = {
     case Expr.Def(Ident(name), _, body, _) =>
@@ -24,9 +30,15 @@ case class CostEstimator(initialEnv: Map[String, Int]) {
       FuncDeclarationC
     case Expr.Lambda(_, body, _) => LambDeclarationC + costOf(body)
     case Expr.Let(_, value, _) => ConstDeclarationC + costOf(value)
-    case Expr.Block(body, _) => BlockDeclarationC + body.map(costOf).sum
-    case Expr.If(test, body, orelse, _) => IfC + costOf(test) + Math.max(costOf(body), costOf(orelse))
-    case Expr.IfLetR(_, _, target, body, orelse, _) => IfLetC + costOf(target) + Math.max(costOf(body), costOf(orelse))
+    case Expr.Block(body, _) =>
+      blockDepthController.pushNext()
+      val cost: Int = BlockDeclarationC + body.map(costOf).sum +
+        math.ceil(blockDepthController.penalty * NestedBlockPenalty).round.toInt
+      blockDepthController.pop
+      cost
+    case Expr.If(test, body, orelse, _) => IfC + costOf(test) + math.max(costOf(body), costOf(orelse))
+    case Expr.IfLet(_, _, target, body, orelse, _) => IfLetC + costOf(target) + math.max(costOf(body), costOf(orelse))
+    case Expr.IfLetR(_, _, target, body, orelse, _) => IfLetC + costOf(target) + math.max(costOf(body), costOf(orelse))
   }
 
   def costOfRef: Cost = {
@@ -67,6 +79,5 @@ case class CostEstimator(initialEnv: Map[String, Int]) {
 }
 
 object CostEstimator {
-  type Cost = PartialFunction[Expr, Int]
   def default: CostEstimator = CostEstimator(PredefinedScope.all.map(m => m.name -> m.cost).toMap)
 }
