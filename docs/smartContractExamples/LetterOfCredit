@@ -1,0 +1,9 @@
+# Аккредитив
+# Собирает и предоставляет MultiSignature транзакция
+contract (signature: MultiSig, transaction: Transaction) = {
+    let ownerPubKey = base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
+    let garantPubKey = base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
+    let receiverPubKey = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
+
+    let
+}
