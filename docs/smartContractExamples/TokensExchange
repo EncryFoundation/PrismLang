@@ -17,19 +17,28 @@
   }
 
   def amAbleToOpen(assetBox: AssetBox): Bool = {
-    assetBox.contractHash == YourRegularContractHash
+    if(let assetBox : AssetBox = box) {
+      assetBox.contractHash == YourRegularContractHash
+    } else false
   }
 
-  def toAssetBox(box : Box): AssetBox = {
-    if(let assetBox : AssetBox = box) assetBox else box
+  def getAmountFromBox(tokenId: Array[Byte], box : Box) = {
+    if(let assetBox : AssetBox = box) {
+      if(assetBox.tokenId == tokenId).amount
+    } else 0
   }
 
-  if (transaction.outputs.exists(lamb (x: AssetBox) = x.tokenId == acceptableTokenId)){
-    let buyAmount = transaction.outputs.map(lamb(x: AssetBox) = if (x.tokenId == acceptableTokenId) x.amount else 0).sum
-    let wantBuyOurs = getNumToExchange(buyAmount, rate, lessBase)
-    if (transaction.outputs.exists(lamb (x: AssetBox) = (x.tokenId == self.tokenId) && amAbleToOpen(x))){
-      let declaredChangeAmount = transaction.outputs.map(lamb(x: AssetBox) = if (x.tokenId == self.tokenId) x.amount else 0).sum
-      if (self.amount - wantBuyOurs == declaredChangeAmount) true else false
-    } else false 
+  def hasTokenId(tokenId: Array[Byte], box : Box) = {
+    if(let assetBox : AssetBox = box) {
+      if(assetBox.tokenId == tokenId) true else false
+    } else false
+  }
+
+  let byuAmount = getAmountFromBox(transaction.outputs.filter(lamb(x: Box) = !hasTokenId(acceptableTokenId, x))[0])
+  let wantBuyOurs = getNumToExchange(buyAmount, rate, lessBase)
+  if (wantBuyOurs > 0){
+    let changeBox = transaction.outputs.filter(lamb(x: Box) = !hasTokenId(self.tokenId, x))[0]
+    declaredChangeAmount = getAmountFromBox(changeBox)
+    if ((self.amount - wantBuyOurs == declaredChangeAmount) && amAbleToOpen(changeBox)) true else false
   } else false
 }
