@@ -34,6 +34,8 @@ object Types {
 
     def deriveValue(v: Underlying, thatT: PType): Option[thatT.Underlying] = None
 
+    def isApplicable(func: Types.PFunc): Boolean = false
+
     override def equals(obj: scala.Any): Boolean = obj match {
       case prim: Primitive => prim.ident == this.ident
       case prod: Product => prod == this
@@ -98,7 +100,7 @@ object Types {
     override val isCollection: Boolean = true
     override val dataCost: Int = 10 * valT.dataCost
 
-    def isApplicable(func: Types.PFunc): Boolean =
+    override def isApplicable(func: Types.PFunc): Boolean =
       func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
 
     override def equals(obj: Any): Boolean = obj match {
@@ -110,6 +112,7 @@ object Types {
   }
   object PCollection {
     val ofByte: PCollection = PCollection(PByte)
+    val ofByteArrays: PCollection = PCollection(PCollection(PByte))
     val ofInt: PCollection = PCollection(PInt)
     val ofBool: PCollection = PCollection(PBoolean)
     val ofString: PCollection = PCollection(PString)
@@ -181,7 +184,7 @@ object Types {
   case object MultiSig extends PType with TaggedType {
     override type Underlying = underlyingType.Underlying
     override val ident: String = "MultiSig"
-    override val underlyingType: PType = PCollection(PCollection.ofByte)
+    override val underlyingType: PType = PCollection.ofByteArrays
     override val dataCost: Int = 35
 
     override val isCollection: Boolean = true

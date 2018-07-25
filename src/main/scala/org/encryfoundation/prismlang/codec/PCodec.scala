@@ -61,6 +61,7 @@ object PCodec {
   implicit def dExists = dExp.bind[Expr.Exists](25)
   implicit def dSum = dExp.bind[Expr.Sum](26)
   implicit def dMap = dExp.bind[Expr.Map](27)
+  implicit def dFilt = dExp.bind[Expr.Filter](28)
 
   implicit def dNode = Discriminated[Node, Int](uint2)
   implicit def dModule = dNode.bind[Module](0)

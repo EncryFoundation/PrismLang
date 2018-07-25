@@ -15,6 +15,10 @@ object Transformer {
       case Expr.Call(Expr.Attribute(value, attr, _), args, _)
         if attr.name == "map" && args.size == 1 => Expr.Map(value, args.head)
 
+      /** Rule: Call(Attribute(coll, "filter"), Func) -> Filter(coll, Func) */
+      case Expr.Call(Expr.Attribute(value, attr, _), args, _)
+        if attr.name == "filter" && args.size == 1 => Expr.Filter(value, args.head)
+
       /** Rule: Attribute(coll, "size") -> SizeOf(coll) */
       case Expr.Attribute(value, attr, _) if attr.name == "size" => Expr.SizeOf(value)
 

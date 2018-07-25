@@ -14,13 +14,15 @@ object CheckSig extends BuiltInFunctionHolder {
 
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
-  val args: IndexedSeq[(String, Types.PCollection)] = IndexedSeq("sig" -> Types.PCollection.ofByte, "msg" -> Types.PCollection.ofByte, "pubKey" -> Types.PCollection.ofByte)
+  val args: IndexedSeq[(String, Types.PType)] = IndexedSeq(
+    "sig"    -> Types.PCollection.ofByte,
+    "msg"    -> Types.PCollection.ofByte,
+    "pubKey" -> Types.PCollection.ofByte
+  )
 
-  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (args: Seq[(String, PValue)]) => {
-    val validNumberOfArgs: Boolean = args.size == 3
-    val validArgTypes: Boolean = args.forall { case (_, v) => v.tpe == Types.PCollection.ofByte }
-    if (validNumberOfArgs && validArgTypes) {
-      val fnArgs: Seq[Array[Byte]] = args.map(_._2.value.asInstanceOf[List[Byte]].toArray)
+  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (pArgs: Seq[(String, PValue)]) => {
+    if (checkArgs(args, pArgs)) runSafe {
+      val fnArgs: Seq[Array[Byte]] = pArgs.map(_._2.value.asInstanceOf[List[Byte]].toArray)
       Right(Curve25519.verify(Signature @@ fnArgs.head, fnArgs(1), PublicKey @@ fnArgs.last))
     } else Left(PredefFunctionExecFailure)
   }
