@@ -76,6 +76,8 @@ object Ast {
     case class Sum(coll: Expr) extends Expr { override val tpe: PType = PInt }
 
     case class Map(coll: Expr, func: Expr, override val tpe: PType = Nit) extends Expr
+
+    case class Filter(coll: Expr, func: Expr, override val tpe: PType = Nit) extends Expr
   }
 
   sealed trait SliceOp

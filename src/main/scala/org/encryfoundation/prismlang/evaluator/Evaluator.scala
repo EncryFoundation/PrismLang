@@ -189,6 +189,13 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         case bools: List[Boolean@unchecked] => bools.contains(true)
         case _ => error("Illegal operation")
       }
+      case Expr.Filter(coll, func, _) => applyFunction(coll, func) match {
+        case bools: List[Boolean@unchecked] => eval[coll.tpe.Underlying](coll) match {
+          case elts: List[_] => elts.zip(bools).foldLeft(List.empty[Any]) { case (acc, (elt, bool)) => if (bool) acc :+ elt else acc }
+          case _ => error("Illegal operation")
+        }
+        case _ => error("Illegal operation")
+      }
       case Expr.SizeOf(coll) => eval[coll.tpe.Underlying](coll) match {
         case list: List[_] => list.size.toLong
         case _ => error("Illegal operation")

@@ -256,6 +256,16 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       else if (!predicateS.tpe.isFunc) error(s"'${predicateS.tpe}' is not a function")
       else if (!isApplicableTo(collS, predicateS)) error(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
       exists.copy(collS, predicateS)
+
+    /** Ensure `coll` is of type `Collection` and `func` is of
+      * type `Func`, check whether `func` can be applied to `coll`. */
+    case filter @ Expr.Filter(coll, predicate, _) =>
+      val collS: Expr = scan(coll)
+      val predicateS: Expr = scan(predicate)
+      if (!collS.tpe.isCollection) error(s"'filter()' is inapplicable to ${collS.tpe}")
+      else if (!predicateS.tpe.isFunc) error(s"'${predicateS.tpe}' is not a function")
+      else if (!isApplicableTo(collS, predicateS)) error(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
+      filter.copy(collS, predicateS, computeType(filter.copy(collS, predicateS)))
   }
 
   def pass: Scan = {
@@ -306,13 +316,17 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       case Types.PFunc(_, retT) => Types.PCollection(retT)
       case otherT => error(s"$otherT is not a function")
     }
+    case Expr.Filter(coll, _, _) => computeType(coll)
   }
 
   def currentScope: ScopedSymbolTable = scopes.head
 
   def isApplicableTo(coll: Expr, func: Expr): Boolean = (coll.tpe, func.tpe) match {
     case (coll: Types.PCollection, func: Types.PFunc) => coll.isApplicable(func)
-    case _ => false
+    case (tag: Types.TaggedType, func: Types.PFunc) => tag.underlyingType.isApplicable(func)
+    case _ =>
+      println("here")
+      false
   }
 
   def addToScope(ident: Ident, tpe: Types.PType): Unit =
