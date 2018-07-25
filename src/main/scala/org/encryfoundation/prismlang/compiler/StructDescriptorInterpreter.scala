@@ -14,9 +14,6 @@ object StructDescriptorInterpreter {
           case Types.PCollection(_) =>
             if (typeParams.size == 1) Types.PCollection(typeParams.head)
             else throw StructDescriptorInterpretationException("'Array[T]' takes exactly one type parameter")
-          case Types.POption(_) =>
-            if (typeParams.size == 1) Types.POption(typeParams.head)
-            else throw StructDescriptorInterpretationException("'Option[T]' takes exactly one type parameter")
           case otherT: Types.PType =>
             if (typeParams.isEmpty) otherT
             else throw StructDescriptorInterpretationException(s"'$otherT' does not take type parameters")
