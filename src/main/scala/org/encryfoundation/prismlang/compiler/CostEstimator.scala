@@ -75,6 +75,7 @@ case class CostEstimator(initialEnv: Map[String, Int]) {
     case Expr.Sum(coll) => (costOf(coll) / CollEltC) * SumC
     case Expr.Map(coll, Expr.Name(Ident(name), _), _) => MapC + (costOf(coll) / CollEltC) * env.getOrElse(name, 0)
     case Expr.Map(coll, lamb: Expr.Lambda, _) => MapC + (costOf(coll) / CollEltC) * costOf(lamb)
+    case Expr.Filter(coll, lamb: Expr.Lambda, _) => FiltC + (costOf(coll) / CollEltC) * costOf(lamb)
   }
 }
 
