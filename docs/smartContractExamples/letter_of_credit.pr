@@ -6,7 +6,7 @@
 
 contract (signature: MultiSig, transaction: Transaction) = {
   def isValidSig(signature: MultiSig, message: Array[Byte], key: Array[Byte]): Bool = {
-    true in signature.map(lamb (x: Array[Byte]) = checkSig(x, message, key))
+    anyOf(signature.map(lamb (x: Array[Byte]) = checkSig(x, message, key)))
   }
 
   let ownerPubKey = base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
