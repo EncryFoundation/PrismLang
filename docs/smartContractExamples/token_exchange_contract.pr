@@ -1,8 +1,8 @@
 contract (signature: Signature25519, transaction: Transaction, self: AssetBox) = {
   let rate = 2
   let lessBase = true
-  let acceptableTokenId =    base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
-  let intrinsicTokenId =     base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
+  let acceptableTokenId    = base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
+  let intrinsicTokenId     = base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
   let requiredContractHash = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
 
   def isReturnBox(bx: Box): Bool = {
