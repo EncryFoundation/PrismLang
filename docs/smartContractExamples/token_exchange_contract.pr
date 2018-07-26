@@ -8,7 +8,7 @@ contract (signature: Signature25519, transaction: Transaction, self: AssetBox) =
   def isReturnBox(bx: Box): Bool = {
     if (let assetBx: AssetBox = bx) {
       assetBx.tokenId == acceptableTokenId &&
-      assetBx.contractHash == requiredContractHas
+      assetBx.contractHash == requiredContractHash
     } else false
   }
 

@@ -1,5 +1,8 @@
 # Аккредитив
-# Транзакция предоставляет MultiSignature
+# В более общем случае, когда больше одного гаранта:
+# 	1) в тело добавляются garant2, garant3 публичные ключи
+# 	2) эти ключчи включаются в массив keys
+# 	3) условие открытия sum > numOfGarants
 
 contract (signature: MultiSig, transaction: Transaction) = {
   def isValidSig(signature: MultiSig, message: Array[Byte], key: Array[Byte]): Bool = {
@@ -13,8 +16,3 @@ contract (signature: MultiSig, transaction: Transaction) = {
   let sum = keys.map(lamb(x: Array[Byte]) = if(isValidSig(signature, transaction.messageToSign, x)) 1 else 0).sum
   sum > 1
 }
-
-# В более общем случае, когда больше одного гаранта:
-# 	1) в тело добавляются garant2, garant3 публичные ключи
-# 	2) эти ключчи включаются в массив keys 
-# 	3) условие открытия sum > numOfGarants
