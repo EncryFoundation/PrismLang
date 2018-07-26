@@ -1,0 +1,22 @@
+contract (signature: Signature25519, transaction: Transaction, self: AssetBox) = {
+  let rate = 2
+  let lessBase = true
+  let acceptableTokenId = Array((101).toByte, (100).toByte)
+  let intrinsicTokenId = Array((101).toByte, (100).toByte)
+  let requiredContractHash = Array((101).toByte, (100).toByte)
+
+  def isReturnBox(bx: Box): Bool = {
+    if (let assetBx: AssetBox = bx) {
+      assetBx.tokenId == acceptableTokenId &&
+      assetBx.contractHash == requiredContractHas
+    } else false
+  }
+
+  let returnBox = transaction.outputs.filter(isReturnBox)[0]
+
+  transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
+    aseetBx.tokenId == intrinsicTokenId &&
+    assetBx.contractHash == requiredContractHash &&
+    ((self.amount - returnBox.amount) / rate) >= assetBx.amount
+  } else false)
+}
