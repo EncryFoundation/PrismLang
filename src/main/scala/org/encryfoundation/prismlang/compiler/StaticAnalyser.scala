@@ -91,7 +91,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       * can be cast to the declared local type, then scan
       * bodies of each branch. If required type is `StructTag`
       * then return special `IfLetR` node. */
-    case letIf @ Expr.IfLet(local, typeIdent, target, body, orelse, _) =>
+    case ifLet @ Expr.IfLet(local, typeIdent, target, body, orelse, _) =>
       val targetS: Expr = scan(target)
       val localT: Types.PType = types.resolveType(typeIdent)
       if (localT.isSubtypeOf(target.tpe)) error(s"${target.tpe} can not be cast to $localT")
@@ -103,9 +103,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       scopes = elseScope :: scopes
       val orelseS: Expr = scan(orelse)
       scopes = scopes.tail
+      val innerCopy: Expr = ifLet.copy(target = targetS, body = bodyS, orelse = orelseS)
       localT match {
-        case tag: Types.StructTag => Expr.IfLetR(local, tag.fingerprint, targetS, bodyS, orelseS, computeType(letIf))
-        case _ => letIf.copy(local, typeIdent, targetS, bodyS, orelseS, computeType(letIf))
+        case tag: Types.StructTag => Expr.IfLetR(local, tag.fingerprint, targetS, bodyS, orelseS, computeType(innerCopy))
+        case _ => ifLet.copy(local, typeIdent, targetS, bodyS, orelseS, computeType(innerCopy))
       }
   }
 

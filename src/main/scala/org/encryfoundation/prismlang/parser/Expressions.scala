@@ -41,11 +41,12 @@ object Expressions {
   def term: P[Ast.Expr] = P( Chain(factor, Mult | Div | Mod) )
 
   def test: P[Ast.Expr] = P( orTest | lambdef )
-  val orTest: core.Parser[Ast.Expr, Char, String] = P( andTest.rep(1, kwd("or") | "||") ).map {
+  def multiline(p: P[Unit]): P[Unit] = P( p ~ "\n".? )
+  val orTest: core.Parser[Ast.Expr, Char, String] = P( andTest.rep(1, multiline(kwd("or")) | multiline("||")) ).map {
     case Seq(x) => x
     case xs => Ast.Expr.Bool(Ast.BooleanOp.Or, xs.toList)
   }
-  lazy val andTest: core.Parser[Ast.Expr, Char, String] = P( notTest.rep(1, kwd("and") | "&&") ).map {
+  lazy val andTest: core.Parser[Ast.Expr, Char, String] = P( notTest.rep(1, multiline(kwd("and")) | multiline("&&")) ).map {
     case Seq(x) => x
     case xs => Ast.Expr.Bool(Ast.BooleanOp.And, xs.toList)
   }
