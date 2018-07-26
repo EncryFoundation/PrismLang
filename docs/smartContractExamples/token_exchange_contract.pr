@@ -12,11 +12,11 @@ contract (signature: Signature25519, transaction: Transaction, self: AssetBox) =
     } else false
   }
 
-  let returnBox = transaction.outputs.filter(isReturnBox)[0]
-
-  transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
-    aseetBx.tokenId == intrinsicTokenId &&
-    assetBx.contractHash == requiredContractHash &&
-    ((self.amount - returnBox.amount) / rate) >= assetBx.amount
-  } else false)
+  if (let returnBox: AssetBox = transaction.outputs.filter(isReturnBox)[0]) {
+    transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
+      assetBx.tokenId == intrinsicTokenId &&
+      assetBx.contractHash == requiredContractHash &&
+      ((self.amount - returnBox.amount) / rate) >= assetBx.amount
+    } else false)
+  } else false
 }
