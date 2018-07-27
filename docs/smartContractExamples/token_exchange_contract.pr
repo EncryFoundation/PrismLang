@@ -14,11 +14,12 @@ contract (signature: Signature25519, transaction: Transaction, self: AssetBox) =
     } else false
   }
 
+  checkSig(signature, transaction.messageToSign, recallPubKey) ||
   (if (let returnBox: AssetBox = transaction.outputs.filter(isReturnBox)[0]) {
     transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
       assetBx.tokenId == intrinsicTokenId &&
       assetBx.contractHash == requiredContractHash &&
-      ((self.amount - returnBox.amount) / exchangeRate) >= assetBx.amount
+      ((self.amount - returnBox.amount) / exchangeRate) <= assetBx.amount
     } else false)
-  } else false) || checkSig(signature, transaction.messageToSign, recallPubKey)
+  } else false)
 }
