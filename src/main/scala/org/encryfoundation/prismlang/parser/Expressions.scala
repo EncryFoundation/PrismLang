@@ -79,7 +79,7 @@ object Expressions {
 
   val atom: P[Ast.Expr] = {
     P(
-        "(" ~ (tuple | test) ~ ")" |
+        "(" ~ (tuple | expr) ~ ")" |
         "Array(" ~ list ~ ")" |
         BASE58STRING.rep(1).map(_.mkString).map(Ast.Expr.Base58Str) |
         BASE16STRING.rep(1).map(_.mkString).map(Ast.Expr.Base16Str) |

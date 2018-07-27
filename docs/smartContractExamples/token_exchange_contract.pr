@@ -5,6 +5,8 @@ contract (signature: Signature25519, transaction: Transaction, self: AssetBox) =
   let intrinsicTokenId     = base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
   let requiredContractHash = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
 
+  let recallPubKey         = base58'9ch4H7KMZqfPCAvqDqwZBY8dF7WkCfzj3voyS3UW9CqW'
+
   def isReturnBox(bx: Box): Bool = {
     if (let assetBx: AssetBox = bx) {
       assetBx.tokenId == acceptableTokenId &&
@@ -12,11 +14,11 @@ contract (signature: Signature25519, transaction: Transaction, self: AssetBox) =
     } else false
   }
 
-  if (let returnBox: AssetBox = transaction.outputs.filter(isReturnBox)[0]) {
+  (if (let returnBox: AssetBox = transaction.outputs.filter(isReturnBox)[0]) {
     transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
       assetBx.tokenId == intrinsicTokenId &&
       assetBx.contractHash == requiredContractHash &&
       ((self.amount - returnBox.amount) / exchangeRate) >= assetBx.amount
     } else false)
-  } else false
+  } else false) || checkSig(signature, transaction.messageToSign, recallPubKey)
 }

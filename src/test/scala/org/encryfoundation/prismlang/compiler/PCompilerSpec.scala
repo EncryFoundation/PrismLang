@@ -74,48 +74,28 @@ class PCompilerSpec extends PropSpec with Matchers {
     val source: String =
       """
         |contract (signature: Signature25519, transaction: Transaction, self: AssetBox) = {
-        |  let rate = 2
+        |  let exchangeRate = 2
         |  let lessBase = true
-        |  let acceptableTokenId = Array((101).toByte, (100).toByte)
-        |  let yourRegularContractHash = base58'GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew'
+        |  let acceptableTokenId    = base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
+        |  let intrinsicTokenId     = base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
+        |  let requiredContractHash = base58'75Gs7HHUNnoEzsPgRRVABzQaC3UZVcayw9NY457Kx5p'
         |
-        |  if (let flag : AssetBox = transaction) {
-        |    flag.contractHash == yourRegularContractHash
-        |  } else false
+        |  let recallPubKey         = base58'9ch4H7KMZqfPCAvqDqwZBY8dF7WkCfzj3voyS3UW9CqW'
         |
-        |  def getNumToExchange(amount: Int, rate: Int, lessBase: Bool): Int = {
-        |    if(lessBase) {
-        |      if (amount%rate==0) amount/rate else amount/rate + 1
-        |    } else {
-        |      amount * rate
-        |    }
-        |  }
-        |
-        |  def amAbleToOpen(box: Box, yourRegularContractHash: Array[Byte]): Bool = {
-        |    if (let assetBox : AssetBox = box) {
-        |      assetBox.contractHash == yourRegularContractHash
+        |  def isReturnBox(bx: Box): Bool = {
+        |    if (let assetBx: AssetBox = bx) {
+        |      assetBx.tokenId == acceptableTokenId &&
+        |      assetBx.contractHash == requiredContractHash
         |    } else false
         |  }
         |
-        |  def getAmountFromBox(tokenId: Array[Byte], box : Box): Int = {
-        |    if (let flag1: AssetBox = box) {
-        |      if (flag1.tokenId == tokenId) flag1.amount else 0
-        |    } else 0
-        |  }
-        |
-        |  def hasTokenId(tokenId: Array[Byte], box : Box): Bool = {
-        |    if(let assetBox : AssetBox = box) {
-        |      if(assetBox.tokenId == tokenId) true else false
-        |    } else false
-        |  }
-        |
-        |  let buyAmount = getAmountFromBox(transaction.outputs.filter(lamb(x: Box) = !hasTokenId(acceptableTokenId, x))[0])
-        |  let wantBuyOurs = getNumToExchange(buyAmount, rate, lessBase)
-        |  if (wantBuyOurs > 0){
-        |    let changeBox = transaction.outputs.filter(lamb(x: Box) = !hasTokenId(self.tokenId, x))[0]
-        |    let declaredChangeAmount = getAmountFromBox(changeBox)
-        |    if ((self.amount - wantBuyOurs == declaredChangeAmount) && amAbleToOpen(changeBox, yourRegularContractHash)) true else false
-        |  } else false
+        |  (if (let returnBox: AssetBox = transaction.outputs.filter(isReturnBox)[0]) {
+        |    transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
+        |      assetBx.tokenId == intrinsicTokenId &&
+        |      assetBx.contractHash == requiredContractHash &&
+        |      ((self.amount - returnBox.amount) / exchangeRate) >= assetBx.amount
+        |    } else false)
+        |  } else false) || checkSig(signature, transaction.messageToSign, recallPubKey)
         |}
       """.stripMargin
 
