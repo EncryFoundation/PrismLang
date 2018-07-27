@@ -3,7 +3,6 @@ package org.encryfoundation.prismlang.compiler
 import org.encryfoundation.prismlang.compiler.scope.PredefinedScope
 import org.encryfoundation.prismlang.core.Ast.{Expr, Module}
 import org.encryfoundation.prismlang.core.{TypeSystem, Types}
-
 import scala.util.Try
 
 trait TestCompiler {

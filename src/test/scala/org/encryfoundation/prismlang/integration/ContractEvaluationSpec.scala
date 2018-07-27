@@ -5,7 +5,6 @@ import org.encryfoundation.prismlang.integration.ContractEvaluation.{Box, Contex
 import org.scalatest.{Matchers, PropSpec, TryValues}
 import scorex.crypto.encode.Base16
 import scorex.crypto.hash.Digest32
-
 import scala.util.Try
 
 class ContractEvaluationSpec extends PropSpec with Matchers with ContractEvaluation with TryValues {
