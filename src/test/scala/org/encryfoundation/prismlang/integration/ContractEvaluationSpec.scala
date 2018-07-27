@@ -25,6 +25,21 @@ class ContractEvaluationSpec extends PropSpec with Matchers with ContractEvaluat
     canBeUnlocked(compiledContract.success.value)(dummyContext, Seq(proof), compiledContract.success.value.hash) shouldBe true
   }
 
+  property("PubKey lock (invalid sig case)") {
+
+    val contractSource: String =
+      s"""
+         |contract (sig: Signature25519, tx: Transaction) = {
+         |  let pubKey = base16'${Base16.encode(pair._2.reverse)}'
+         |  checkSig(sig, tx.messageToSign, pubKey)
+         |}
+      """.stripMargin
+
+    val compiledContract: Try[CompiledContract] = PCompiler.compile(contractSource)
+
+    canBeUnlocked(compiledContract.success.value)(dummyContext, Seq(proof), compiledContract.success.value.hash) shouldBe false
+  }
+
   property("Time window lock") {
 
     val contractSource: String =
