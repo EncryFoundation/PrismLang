@@ -1,5 +1,5 @@
 contract (signature: Signature25519, transaction: Transaction, self: AssetBox) = {
-  let rate = 2
+  let exchangeRate = 2
   let lessBase = true
   let acceptableTokenId    = base58'5QCPz4eZAgT8DLAoZDSeouLMk1Kcf6DjJzrURiSV9U9'
   let intrinsicTokenId     = base58'11NDaGfSWVg9qjjPc4QjGYJL8ErvGRrmKGEW5FSMq3i'
@@ -16,7 +16,7 @@ contract (signature: Signature25519, transaction: Transaction, self: AssetBox) =
     transaction.outputs.exists(lamb (bx: Box) = if (let assetBx: AssetBox = bx) {
       assetBx.tokenId == intrinsicTokenId &&
       assetBx.contractHash == requiredContractHash &&
-      ((self.amount - returnBox.amount) / rate) >= assetBx.amount
+      ((self.amount - returnBox.amount) / exchangeRate) >= assetBx.amount
     } else false)
   } else false
 }
