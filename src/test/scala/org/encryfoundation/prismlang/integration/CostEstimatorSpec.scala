@@ -3,10 +3,10 @@ package org.encryfoundation.prismlang.integration
 import org.scalatest.PropSpec
 import org.scalatest.concurrent.TimeLimits
 import org.scalatest.time.SpanSugar._
-
 import scala.util.Try
 
 class CostEstimatorSpec extends PropSpec with Utils with TimeLimits {
+
   property("Nested block attack") {
     val longMax: Long = Long.MaxValue
     val nestedCount: Int = 302
