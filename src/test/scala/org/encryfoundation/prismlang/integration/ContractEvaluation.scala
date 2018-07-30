@@ -61,13 +61,13 @@ object ContractEvaluation {
 
   case class Box(amount: Long, contractHash: ContractHash, tokenId: Array[Byte]) {
     def asPrism: PObject = {
-      val randomBytes: List[Byte] = Random.randomBytes(32).toList
+      val randomBytes: Array[Byte] = Random.randomBytes(32)
       val fields: Map[String, PValue] = Map(
-        "contractHash" -> PValue(contractHash.toList, Types.PCollection.ofByte),
+        "contractHash" -> PValue(contractHash, Types.PCollection.ofByte),
         "typeId" -> PValue(randomBytes, Types.PInt),
         "id" -> PValue(randomBytes, Types.PInt),
         "amount" -> PValue(amount, Types.PInt),
-        "tokenId" -> PValue(tokenId.toList, Types.PCollection.ofByte)
+        "tokenId" -> PValue(tokenId, Types.PCollection.ofByte)
       )
       PObject(fields, Types.AssetBox)
     }
@@ -78,16 +78,16 @@ object ContractEvaluation {
     def asPrism: PObject = PObject(Map(
       "inputs" -> PValue(inputs.map(_.toList), Types.PCollection(Types.PCollection.ofByte)),
       "outputs" -> PValue(outputs.map(_.asPrism), Types.PCollection(Types.EncryBox)),
-      "messageToSign" -> PValue(messageToSign.toList, Types.PCollection.ofByte)
+      "messageToSign" -> PValue(messageToSign, Types.PCollection.ofByte)
     ), Types.EncryTransaction)
     def asVal: PValue = PValue(asPrism, Types.EncryTransaction)
   }
 
   case class BlockchainState(height: Int, lastBlockTimestamp: Long, stateDigest: Array[Byte]) {
     def asPrism: PObject = PObject(Map(
-      "height" -> PValue(height.toLong, Types.PInt),
+      "height" -> PValue(height, Types.PInt),
       "lastBlockTimestamp" -> PValue(lastBlockTimestamp, Types.PInt),
-      "stateDigest" -> PValue(stateDigest.toList, Types.PCollection.ofByte)
+      "stateDigest" -> PValue(stateDigest, Types.PCollection.ofByte)
     ), Types.EncryState)
     def asVal: PValue = PValue(asPrism, Types.EncryState)
   }
