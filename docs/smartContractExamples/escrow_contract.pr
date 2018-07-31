@@ -1,0 +1,8 @@
+# Эскроу-счет хранит ценность до наступления определенных обстоятельств 
+# Для примера используем накопительный счет - прячем от себя коины с целью предотвратить паническую продажу
+# Условие - высота блокчейна превышает 500 и сигнатура принадлежит нам
+
+contract (signature: Signature25519, transaction: Transaction, state: State) = {
+	let myPubKey = base58'GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew'
+	checkSig(signature, transaction.messageToSign, myPubKey) && (state.height > 500)
+}
