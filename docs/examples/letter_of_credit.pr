@@ -1,9 +1,3 @@
-# Аккредитив
-# В более общем случае, когда больше одного гаранта:
-# 	1) в тело добавляются garant2, garant3 публичные ключи
-# 	2) эти ключчи включаются в массив keys
-# 	3) условие открытия sum > numOfGarants
-
 contract (signature: MultiSig, transaction: Transaction) = {
   def isValidSig(signature: MultiSig, message: Array[Byte], key: Array[Byte]): Bool = {
     anyOf(signature.map(lamb (x: Array[Byte]) = checkSig(x, message, key)))
