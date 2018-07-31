@@ -1,0 +1,4 @@
+contract (signature: Signature25519, transaction: Transaction, state: State) = {
+	let myPubKey = base58'GtBn7qJwK1v1EbB6CZdgmkcvt849VKVfWoJBMEWsvTew'
+	checkSig(signature, transaction.messageToSign, myPubKey) && (state.height > 500)
+}

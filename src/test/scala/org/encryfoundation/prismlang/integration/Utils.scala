@@ -46,5 +46,4 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
   def generateRandomString(length: Int): String = Random.alphanumeric.dropWhile(_.isDigit).take(length).mkString
 
   def generateRandomNumber: Int = Random.nextInt
-
 }
