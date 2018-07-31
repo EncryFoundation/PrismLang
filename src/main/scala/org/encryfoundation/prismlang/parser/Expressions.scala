@@ -20,7 +20,7 @@ object Expressions {
   val BOOL: P[Ast.Expr] = P( trueExpr | falseExpr )
   val STRING: P[String] = Lexer.stringliteral
   val BASE58STRING: P[String] = P( "base58" ~/ Lexer.stringliteral )
-  val BASE16STRING: P[String] = P( "base16" ~/ Lexer.stringliteral )
+  val BASE16STRING: P[String] = P( ( "base16" | "hex" ) ~/ Lexer.stringliteral )
 
   val spaces: P[Unit] = P( (Semis.? ~~ "\n").repX(1) )
 
@@ -72,15 +72,15 @@ object Expressions {
       }
   }
 
-  val listContents: noApi.Parser[Seq[Ast.Expr]] = P( test.rep(1, ",") ~ ",".? )
+  val listContents: noApi.Parser[Seq[Ast.Expr]] = P( test.rep(1, "," ~ LineBreak.?) ~ ",".? ~ LineBreak.? )
   val list: core.Parser[Ast.Expr.Collection, Char, String] = P( listContents ).map(exps => Ast.Expr.Collection(exps.toList))
   val tupleContents: core.Parser[Seq[Ast.Expr], Char, String] = P( test ~ "," ~ listContents.?).map { case (head, rest)  => head +: rest.getOrElse(Seq.empty) }
   val tuple: core.Parser[Ast.Expr.Tuple, Char, String] = P( tupleContents ).map(tcs => Ast.Expr.Tuple(tcs.toList))
 
   val atom: P[Ast.Expr] = {
     P(
-        "(" ~ (tuple | test) ~ ")" |
-        "Array(" ~ list ~ ")" |
+        "(" ~ LineBreak.? ~ (tuple | expr) ~ ")" |
+        "Array(" ~ LineBreak.? ~ list ~ ")" |
         BASE58STRING.rep(1).map(_.mkString).map(Ast.Expr.Base58Str) |
         BASE16STRING.rep(1).map(_.mkString).map(Ast.Expr.Base16Str) |
         STRING.rep(1).map(_.mkString).map(Ast.Expr.Str) |
@@ -90,7 +90,6 @@ object Expressions {
     )
   }
 
-  //val sliceop: noApi.Parser[Option[Ast.Expr]] = P(":" ~ test.?)
   val exprlist: P[Seq[Ast.Expr]] = P( expr.rep(1, sep = ",") ~ ",".? )
   val testlist: P[Seq[Ast.Expr]] = P( test.rep(1, sep = ",") ~ ",".? )
 
@@ -115,10 +114,7 @@ object Expressions {
 
   val plainArgument: core.Parser[Ast.Expr, Char, String] = P( test )
 
-  val arglist: noApi.Parser[Seq[Ast.Expr]] = {
-    val inits = P( (plainArgument ~ !"=").rep(0, ",") )
-    P( inits ~ ",".? )
-  }
+  val arglist: noApi.Parser[Seq[Ast.Expr]] = P( (plainArgument ~ !"=").rep(0, ",") ~ ",".? )
 
   def typeParams: P[Seq[Ast.TypeIdent]] = P( "[" ~ typeIdent.rep(sep = ",") ~ "]" )
 

@@ -5,7 +5,7 @@ import scorex.crypto.hash.Keccak256
 
 object Keccak256Hash extends HashFunctionHolder {
 
-  val name = "keccak256hash"
+  val name = "keccak256"
 
   val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = bodyValue(Keccak256.hash)
 }

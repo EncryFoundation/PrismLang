@@ -5,7 +5,7 @@ import scorex.crypto.hash.Blake2b512
 
 object Blake2b512Hash extends HashFunctionHolder {
 
-  val name: String = "blake2b512hash"
+  val name: String = "blake2b512"
 
   val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = bodyValue(Blake2b512.hash)
 }
