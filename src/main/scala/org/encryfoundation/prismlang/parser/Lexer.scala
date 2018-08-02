@@ -8,7 +8,7 @@ object WsApi extends fastparse.WhitespaceApi.Wrapper(Lexer.WS)
 
 object Lexer {
 
-  val keywords = Set(
+  val keywords: Set[String] = Set(
     "and",
     "not",
     "true",
@@ -28,23 +28,21 @@ object Lexer {
     "struct"
   )
 
-  /**
-    * Parses all whitespace, excluding newlines. This is only
+  /** Parses all whitespace, excluding newlines. This is only
     * really useful in e.g. {} blocks, where we want to avoid
-    * capturing newlines so semicolon-inference would work
-    */
+    * capturing newlines so semicolon-inference would work */
   val WS: Parser[Unit] = P( NoCut(NoTrace((Basic.WSChars | Comment).rep)) )
 
-  /**
-    * Parses whitespace, including newlines.
-    * This is the default for most things
-    */
+  /** Parses whitespace, including newlines.
+    * This is the default for most things */
   val WL0: Parser[Unit] = P( NoTrace((Basic.WSChars | Comment | Basic.Newline).rep) )(sourcecode.Name("WL"))
   val WL: Parser[Unit] = P( NoCut(WL0) )
 
   val Semi: Parser[Unit] = P( WS ~ Basic.Semi )
   val Semis: Parser[Unit] = P( Semi.rep(1) ~ WS )
-  val Newline: Parser[Unit] = P( WL ~ Basic.Newline )
+
+  val LineB: Parser[Unit] = P( WS ~ Basic.Linebreak )
+  val LineBreak: Parser[Unit] = P( LineB.rep(1) ~ WS )
 
   val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
   val OneNLMax: P0 = {

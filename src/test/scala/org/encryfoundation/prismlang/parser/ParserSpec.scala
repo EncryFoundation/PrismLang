@@ -605,6 +605,67 @@ class ParserSpec extends PropSpec with Matchers with Parser {
     parsedTry.get.toString shouldEqual expected.toString
   }
 
+  property("Array (multiline)") {
+
+    val source =
+      """
+        |Array(
+        |  1,
+        |  2,
+        |  3,
+        |  4
+        |)
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Collection(
+        List(
+          IntConst(1),
+          IntConst(2),
+          IntConst(3),
+          IntConst(4)
+        ),
+        Types.Nit
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
+  property("BooleanOps associativity") {
+
+    val source =
+      """
+        |true && false || false && false
+      """.stripMargin
+
+    val expected: Seq[Expr] = ArrayBuffer(
+      Bool(
+        BooleanOp.Or,
+        List(
+          Bool(
+            BooleanOp.And,
+            List(True, False)
+          ),
+          Bool(
+            BooleanOp.And,
+            List(False, False)
+          )
+        )
+      )
+    )
+
+    val parsedTry = parse(source)
+
+    parsedTry.isSuccess shouldBe true
+
+    parsedTry.get.toString shouldEqual expected.toString
+  }
+
   property("module") {
 
     val source =

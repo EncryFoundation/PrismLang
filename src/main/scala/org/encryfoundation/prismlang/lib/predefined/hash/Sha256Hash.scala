@@ -5,7 +5,7 @@ import scorex.crypto.hash.{Sha256 => ScorexSha256}
 
 object Sha256Hash extends HashFunctionHolder {
 
-  val name: String = "sha256hash"
+  val name: String = "sha256"
 
   val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = bodyValue(ScorexSha256.hash)
 }

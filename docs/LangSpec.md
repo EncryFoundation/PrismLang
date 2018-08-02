@@ -6,8 +6,7 @@
 - `Int` - 64 bit signed integer
 - `Bool` - a type with two logical values `true` and `false`
 - `String` - arbitrary sequence of chars
-- `Option[T]` - a container which either have some value of type `T` or none
-- `Array[T]` - arrays of arbitrary length with all values of type `T` 
+- `Array[T]` - arrays of arbitrary length with all values of type `T`
 
 ## Syntax
 
