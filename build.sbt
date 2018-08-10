@@ -1,6 +1,6 @@
 name := "prism"
 
-version := "0.2.7"
+version := "0.8.0"
 
 scalaVersion := "2.12.6"
 
@@ -10,8 +10,8 @@ resolvers += "Sonatype Releases" at "https://oss.sonatype.org/content/repositori
 
 libraryDependencies ++= Seq(
   "com.lihaoyi" %% "fastparse" % "1.0.0",
-  "com.google.guava" % "guava" % "21.+",
-  "org.scorexfoundation" %% "scrypto" % "2.1.+",
+  "com.google.guava" % "guava" % "21.0",
+  "org.scorexfoundation" %% "scrypto" % "2.1.2",
   "org.scodec" %% "scodec-core" % "1.10.3",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
