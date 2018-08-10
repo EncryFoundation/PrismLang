@@ -2,7 +2,7 @@ package org.encryfoundation.prismlang.core
 
 import org.encryfoundation.prismlang.codec.PCodec
 import org.encryfoundation.prismlang.core.wrapped.{PFunction, PObject}
-import scorex.crypto.encode.Base58
+import org.encryfoundation.utils.encoding.Base58
 import scorex.crypto.hash.Blake2b256
 
 object Types {

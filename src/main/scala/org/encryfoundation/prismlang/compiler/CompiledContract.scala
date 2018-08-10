@@ -1,12 +1,10 @@
 package org.encryfoundation.prismlang.compiler
 
 import java.nio.charset.Charset
-
 import org.encryfoundation.prismlang.codec.PCodec
 import org.encryfoundation.prismlang.core.{Ast, Types}
 import scodec.bits.BitVector
 import scorex.crypto.hash.Blake2b256
-
 import scala.util.Try
 
 case class CompiledContract(args: List[(String, Types.PType)], script: Ast.Expr) {

@@ -7,6 +7,7 @@ import org.encryfoundation.prismlang.core.CostTable
 case class CostEstimator(initialEnv: Map[String, Int]) {
 
   import CostTable._
+
   type Cost = PartialFunction[Expr, Int]
 
   private var env: Map[String, Int] = initialEnv

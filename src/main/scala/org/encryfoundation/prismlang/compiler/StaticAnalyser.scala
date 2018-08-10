@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.compiler
 import org.encryfoundation.prismlang.compiler.scope.{PredefinedScope, ScopedSymbolTable, Symbol}
 import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
-import scorex.crypto.encode.{Base16, Base58}
+import org.encryfoundation.utils.encoding.{Base16, Base58}
 
 case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) extends TypeMatching {
 

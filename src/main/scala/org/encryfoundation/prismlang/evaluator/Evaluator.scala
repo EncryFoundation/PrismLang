@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.evaluator
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.wrapped._
 import org.encryfoundation.prismlang.core.{TypeSystem, Types}
-import scorex.crypto.encode.{Base16, Base58}
+import org.encryfoundation.utils.encoding.{Base16, Base58}
 
 case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 

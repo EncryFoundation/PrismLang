@@ -2,7 +2,6 @@ package org.encryfoundation.prismlang.compiler.scope
 
 import org.encryfoundation.prismlang.core.Types
 
-
 object PredefinedScope {
 
   import org.encryfoundation.prismlang.lib.predefined._

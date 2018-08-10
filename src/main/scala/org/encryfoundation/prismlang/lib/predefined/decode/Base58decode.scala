@@ -4,7 +4,7 @@ import org.encryfoundation.prismlang.core.Types
 import org.encryfoundation.prismlang.core.wrapped.PFunctionPredef.PredefFunctionExecFailure
 import org.encryfoundation.prismlang.core.wrapped.{PFunctionPredef, PValue}
 import org.encryfoundation.prismlang.lib.predefined.BuiltInFunctionHolder
-import scorex.crypto.encode.Base58
+import org.encryfoundation.utils.encoding.Base58
 
 object Base58decode extends BuiltInFunctionHolder {
 
@@ -22,8 +22,6 @@ object Base58decode extends BuiltInFunctionHolder {
     if (validNumberOfArgs && validArgTypes) {
       val fnArg = args.map(_._2.value.asInstanceOf[String]).head
       Right(Base58.decode(fnArg).map(_.toList).toOption)
-    } else {
-      Left(PredefFunctionExecFailure)
-    }
+    } else Left(PredefFunctionExecFailure)
   }
 }
