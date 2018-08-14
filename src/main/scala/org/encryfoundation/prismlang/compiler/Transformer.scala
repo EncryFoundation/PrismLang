@@ -57,6 +57,7 @@ object Transformer {
       case sub @ Expr.Subscript(value, _, _) => sub.copy(transform(value))
 
       case coll @ Expr.Collection(elts, _) => coll.copy(elts.map(transform))
+      case set @ Expr.Set(elts, _) => set.copy(elts.map(transform))
       case tuple @ Expr.Tuple(elts, _) => tuple.copy(elts.map(transform))
 
       case other => other

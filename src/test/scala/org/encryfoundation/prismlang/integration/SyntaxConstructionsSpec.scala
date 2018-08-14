@@ -84,6 +84,24 @@ class SyntaxConstructionsSpec extends PropSpec with Utils {
       evaluationSuccess = Option(true), expectedValue = Option(longMin))
   }
 
+  property("Set construction") {
+    val toByteCast =
+      """
+                {
+                  let a = 1
+                  let b = 1
+                  let c = 1
+                  let d = 1
+                  let e = 6
+                  let g = Set(a,b,c,d,e)
+                  g[1] + g[0]
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(toByteCast, compilationSuccess = true,
+      evaluationSuccess = Option(true), expectedValue = Option(7))
+  }
+
   property("Int Lower Boundary check") {
     val longMax = Long.MaxValue
     val letLongMaxNumber =

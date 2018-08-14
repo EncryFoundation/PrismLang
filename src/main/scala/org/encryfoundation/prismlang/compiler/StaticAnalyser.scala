@@ -23,6 +23,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       scanSimpleExpr orElse
       scanRef orElse
       scanCollection orElse
+      scanSet orElse
       scanConstant orElse
       scanTransformers orElse
       pass
@@ -196,9 +197,24 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
       eltsS.head.tpe match {
         case Types.PCollection(inT) if inT.isCollection => error("Illegal level of nesting")
+        case Types.PSet(inT) if inT.isCollection => error("Illegal level of nesting")
         case _ => // Do nothing
       }
       coll.copy(eltsS, computeType(coll.copy(eltsS)))
+  }
+
+  def scanSet: Scan = {
+    case set @ Expr.Set(elts, _) =>
+      if (elts.size > Constants.CollMaxLength) error(s"Set size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
+      else if (elts.size < 1) error("Empty set")
+      val eltsS: Set[Expr] = elts.map(scan)
+      eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Set is inconsistent, ${elt.tpe} stands out.")))
+      eltsS.head.tpe match {
+        case Types.PCollection(inT) if inT.isCollection => error("Illegal level of nesting")
+        case Types.PSet(inT) if inT.isCollection => error("Illegal level of nesting")
+        case _ => // Do nothing
+      }
+      set.copy(eltsS, computeType(set.copy(eltsS)))
   }
 
   def scanConstant: Scan = {
@@ -305,6 +321,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
         case _: SliceOp.Index => inT
         case _: SliceOp.Slice => coll
       }
+      case set @ Types.PSet(inT) => op match {
+        case _: SliceOp.Index => inT
+        case _: SliceOp.Slice => set
+      }
       case otherT => error(s"$otherT does not support subscription")
     }
     case Expr.Unary(_, operand, _) => computeType(operand)
@@ -313,6 +333,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case Expr.Lambda(args, body, _) => Types.PFunc(types.resolveArgs(args), computeType(body))
     case Expr.Tuple(elts, _) => Types.PTuple(elts.map(elt => computeType(elt)))
     case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
+    case Expr.Set(elts, _) => Types.PSet(computeType(elts.head))
     case Expr.Map(_, func, _) => computeType(func) match {
       case Types.PFunc(_, retT) => Types.PCollection(retT)
       case otherT => error(s"$otherT is not a function")

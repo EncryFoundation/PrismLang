@@ -72,6 +72,8 @@ object Expressions {
       }
   }
 
+  val setContents: noApi.Parser[Seq[Ast.Expr]] = P( test.rep(1, "," ~ LineBreak.?) ~ ",".? ~ LineBreak.? )
+  val set: core.Parser[Ast.Expr.Set, Char, String] = P( setContents ).map(exps => Ast.Expr.Set(exps.toSet))
   val listContents: noApi.Parser[Seq[Ast.Expr]] = P( test.rep(1, "," ~ LineBreak.?) ~ ",".? ~ LineBreak.? )
   val list: core.Parser[Ast.Expr.Collection, Char, String] = P( listContents ).map(exps => Ast.Expr.Collection(exps.toList))
   val tupleContents: core.Parser[Seq[Ast.Expr], Char, String] = P( test ~ "," ~ listContents.?).map { case (head, rest)  => head +: rest.getOrElse(Seq.empty) }
@@ -81,6 +83,7 @@ object Expressions {
     P(
         "(" ~ LineBreak.? ~ (tuple | expr) ~ ")" |
         "Array(" ~ LineBreak.? ~ list ~ ")" |
+        "Set(" ~ LineBreak.? ~ set ~ ")" |
         BASE58STRING.rep(1).map(_.mkString).map(Ast.Expr.Base58Str) |
         BASE16STRING.rep(1).map(_.mkString).map(Ast.Expr.Base16Str) |
         STRING.rep(1).map(_.mkString).map(Ast.Expr.Str) |

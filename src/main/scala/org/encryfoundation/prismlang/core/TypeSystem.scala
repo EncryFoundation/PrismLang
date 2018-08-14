@@ -19,6 +19,9 @@ case class TypeSystem(additionalTypes: Seq[Types.PType]) {
   def resolveType(ident: TypeIdent): Types.PType = {
     val typeParams: List[Types.PType] = ident.typeParams.map(resolveType)
     typeByIdent(ident.name).map {
+      case Types.PSet(_) =>
+        if (typeParams.size == 1) Types.PSet(typeParams.head)
+        else throw TypeSystemException("'Set[T]' takes exactly one type parameter")
       case Types.PCollection(_) =>
         if (typeParams.size == 1) Types.PCollection(typeParams.head)
         else throw TypeSystemException("'Array[T]' takes exactly one type parameter")

@@ -58,6 +58,8 @@ object Ast {
 
     case class Collection(elts: List[Expr], override val tpe: PType = Nit) extends Expr
 
+    case class Set(elts: scala.collection.immutable.Set[Expr], override val tpe: PType = Nit) extends Expr
+
     case class Tuple(elts: List[Expr], override val tpe: PType = Nit) extends Expr
 
     case class Base58Str(value: String) extends Expr { override val tpe: PType = PCollection.ofByte }

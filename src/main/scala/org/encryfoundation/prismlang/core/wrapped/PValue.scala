@@ -19,6 +19,7 @@ object PValue {
     new PValue {
       override val tpe: Types.PType = t
       override val value: tpe.Underlying = (v match {
+        case set: Set[_] if t.isCollection => set.toList
         case arr: Array[_] if t.isCollection => arr.toList
         case seq: Seq[_] if t.isCollection => seq.toList
         case int: Int if t.isNumeric => int.toLong

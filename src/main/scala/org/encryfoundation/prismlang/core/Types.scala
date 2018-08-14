@@ -118,6 +118,24 @@ object Types {
     val ofString: PCollection = PCollection(PString)
   }
 
+  case class PSet(valT : PType) extends PType with Parametrized{
+    override type Underlying = Set[valT.Underlying]
+    override val ident: String = "Set"
+    override val isCollection: Boolean = true
+    override val dataCost: Int = 10 * valT.dataCost
+
+    override def isApplicable(func: PFunc): Boolean =
+      func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
+
+    override def equals(obj: Any): Boolean = obj match {
+      case set: PCollection =>
+        set.valT == this.valT || set.valT.isSubtypeOf(this.valT) || set.valT.canBeDerivedTo(this.valT)
+      case tag: TaggedType if tag.isCollection => tag.underlyingType == this
+      case _ => false
+    }
+  }
+
+
   case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
     override type Underlying = PFunction
     override val ident: String = "Func"
