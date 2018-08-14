@@ -135,7 +135,6 @@ object Types {
     }
   }
 
-
   case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
     override type Underlying = PFunction
     override val ident: String = "Func"
