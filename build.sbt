@@ -41,8 +41,4 @@ pomExtra in ThisBuild :=
       <id>ugulavaGeorge</id>
       <name>Ugulava George</name>
     </developer>
-    <developer>
-      <id>kapinuss</id>
-      <name>Stanislav Kapinus</name>
-    </developer>
   </developers>
