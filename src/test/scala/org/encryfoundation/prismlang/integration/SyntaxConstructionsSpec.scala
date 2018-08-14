@@ -85,7 +85,7 @@ class SyntaxConstructionsSpec extends PropSpec with Utils {
   }
 
   property("Set construction") {
-    val toByteCast =
+    val setConstruction =
       """
                 {
                   let a = 1
@@ -98,7 +98,7 @@ class SyntaxConstructionsSpec extends PropSpec with Utils {
                 }
       """.stripMargin
 
-    testCompiledExpressionWithOptionalEvaluation(toByteCast, compilationSuccess = true,
+    testCompiledExpressionWithOptionalEvaluation(setConstruction, compilationSuccess = true,
       evaluationSuccess = Option(true), expectedValue = Option(7))
   }
 

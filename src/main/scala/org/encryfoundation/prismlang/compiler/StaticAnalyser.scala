@@ -212,7 +212,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       eltsS.head.tpe match {
         case Types.PCollection(inT) if inT.isCollection => error("Illegal level of nesting")
         case Types.PSet(inT) if inT.isCollection => error("Illegal level of nesting")
-        case _ => // Do nothing
+        case _ =>
       }
       set.copy(eltsS, computeType(set.copy(eltsS)))
   }
