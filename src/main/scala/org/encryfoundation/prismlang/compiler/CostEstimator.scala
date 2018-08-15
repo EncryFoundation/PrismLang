@@ -57,7 +57,7 @@ case class CostEstimator(initialEnv: Map[String, Int]) {
   }
 
   def costOfConst: Cost = {
-    //case Expr.Set(elts, _) =>
+    case Expr.PrismSet(elts, _) => CollEltC * elts.length + elts.map(costOf).sum
     case Expr.Collection(elts, _) => CollEltC * elts.length + elts.map(costOf).sum
     case Expr.Tuple(elts, _) => TupleEltC * elts.length + elts.map(costOf).sum
     case Expr.Base58Str(value) => CharC * value.length + DecodingC
