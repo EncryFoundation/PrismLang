@@ -54,7 +54,7 @@ object PCodec {
   implicit def dByteConst = dExp.bind[Expr.ByteConst](16)
   implicit def dStr = dExp.bind[Expr.Str](17)
   implicit def dCollConst = dExp.bind[Expr.Collection](18)
-  implicit def dSetConst = dExp.bind[Expr.Set](19)
+  implicit def dSetConst = dExp.bind[Expr.PrismSet](19)
   implicit def dTupleConst = dExp.bind[Expr.Tuple](20)
   implicit def dBase58Str = dExp.bind[Expr.Base58Str](21)
   implicit def dBase16Str = dExp.bind[Expr.Base16Str](22)

@@ -58,7 +58,7 @@ object Ast {
 
     case class Collection(elts: List[Expr], override val tpe: PType = Nit) extends Expr
 
-    case class Set(elts: scala.collection.immutable.Set[Expr], override val tpe: PType = Nit) extends Expr
+    case class PrismSet(elts: List[Expr], override val tpe: PType = Nit) extends Expr
 
     case class Tuple(elts: List[Expr], override val tpe: PType = Nit) extends Expr
 

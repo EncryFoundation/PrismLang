@@ -206,7 +206,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       }
       case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
       case Expr.Tuple(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
-      case Expr.Set(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
+      case Expr.PrismSet(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt)).toSet
       case Expr.Base58Str(value) => Base58.decode(value).map(_.toList).getOrElse(error("Base58 string decoding failed"))
       case Expr.Base16Str(value) => Base16.decode(value).map(_.toList).getOrElse(error("Base16 string decoding failed"))
 

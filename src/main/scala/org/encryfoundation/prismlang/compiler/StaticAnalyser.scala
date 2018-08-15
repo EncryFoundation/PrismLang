@@ -204,10 +204,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
   }
 
   def scanSet: Scan = {
-    case set @ Expr.Set(elts, _) =>
+    case set @ Expr.PrismSet(elts, _) =>
       if (elts.size > Constants.CollMaxLength) error(s"Set size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
       else if (elts.size < 1) error("Empty set")
-      val eltsS: Set[Expr] = elts.map(scan)
+      val eltsS: List[Expr] = elts.map(scan).distinct
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Set is inconsistent, ${elt.tpe} stands out.")))
       eltsS.head.tpe match {
         case Types.PCollection(inT) if inT.isCollection => error("Illegal level of nesting")
@@ -333,7 +333,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case Expr.Lambda(args, body, _) => Types.PFunc(types.resolveArgs(args), computeType(body))
     case Expr.Tuple(elts, _) => Types.PTuple(elts.map(elt => computeType(elt)))
     case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
-    case Expr.Set(elts, _) => Types.PSet(computeType(elts.head))
+    case Expr.PrismSet(elts, _) => Types.PSet(computeType(elts.head))
     case Expr.Map(_, func, _) => computeType(func) match {
       case Types.PFunc(_, retT) => Types.PCollection(retT)
       case otherT => error(s"$otherT is not a function")

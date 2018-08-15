@@ -58,7 +58,7 @@ object Transformer {
 
       case coll @ Expr.Collection(elts, _) => coll.copy(elts.map(transform))
 
-      case set @ Expr.Set(elts, _) => set.copy(elts.map(transform))
+      case set @ Expr.PrismSet(elts, _) => set.copy(elts.map(transform))
 
       case tuple @ Expr.Tuple(elts, _) => tuple.copy(elts.map(transform))
 
