@@ -118,7 +118,7 @@ object Types {
     val ofString: PCollection = PCollection(PString)
   }
 
-  case class PSet(valT : PType) extends PType with Parametrized{
+  case class PSet(valT : PType) extends PType with Parametrized {
     override type Underlying = Set[valT.Underlying]
     override val ident: String = "Set"
     override val isCollection: Boolean = true
@@ -128,11 +128,18 @@ object Types {
       func.args.size == 1 && (valT.isSubtypeOf(func.args.head._2) || valT == func.args.head._2)
 
     override def equals(obj: Any): Boolean = obj match {
-      case set: PCollection =>
+      case set: PSet =>
         set.valT == this.valT || set.valT.isSubtypeOf(this.valT) || set.valT.canBeDerivedTo(this.valT)
       case tag: TaggedType if tag.isCollection => tag.underlyingType == this
       case _ => false
     }
+  }
+  object PSet {
+    val ofByte: PSet = PSet(PByte)
+    val ofByteArrays: PSet = PSet(PSet(PByte))
+    val ofInt: PSet = PSet(PInt)
+    val ofBool: PSet = PSet(PBoolean)
+    val ofString: PSet = PSet(PString)
   }
 
   case class PFunc(args: List[(String, PType)], retT: PType) extends PType {
@@ -345,7 +352,7 @@ object Types {
   /** All types with type parameters including `PTuple` instances
     * of all possible dimensions. */
   val parametrizedTypes: List[Parametrized] = List(
-    PCollection(Nit)
+    PCollection(Nit), PSet(Nit)
   ) ++ (1 to Constants.TupleMaxDim).map(i => PTuple((1 to i).map(_ => Nit).toList))
 
   val productTypes: List[Product] = List(
