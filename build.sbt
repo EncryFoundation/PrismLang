@@ -1,7 +1,7 @@
 name := "prism"
 version := "0.8.1"
 scalaVersion := "2.12.6"
-organization := "org.encryfoundation"
+organization := "org.encry"
 
 libraryDependencies ++= Seq(
   "com.lihaoyi" %% "fastparse" % "1.0.0",
