@@ -7,35 +7,35 @@ PrismLang is a Contract Oriented strong typed programming language with static t
 
 ### Supported Data Types
 
-    // Primitive Data Types
-    - `Any` - a supertype of any other type
-    - `Unit` - a type with a single value `()`
-    - `Byte` - 8 bit signed integer
-    - `Int` - 64 bit signed integer
-    - `Bool` - a type with two logical values `true` and `false`
-    - `String` - arbitrary sequence of chars
+ Primitive Data Types
+- `Any` - a supertype of any other type
+- `Unit` - a type with a single value `()`
+- `Byte` - 8 bit signed integer
+- `Int` - 64 bit signed integer
+- `Bool` - a type with two logical values `true` and `false`
+- `String` - arbitrary sequence of chars
 
-    // Collections
-    - `Array[T]` - arrays of arbitrary length with all values of type `T`
-    - `Tuple` - tuple of possibly different data types supported in PrismLang
+Collections
+- `Array[T]` - arrays of arbitrary length with all values of type `T`
+- `Tuple` - tuple of possibly different data types supported in PrismLang
 
-    //Built-in Complex Types
-    - `Signature25519` - is Edwards-curve Digital Signature Algorithm (EdDSA) over Curve25519
-    - `Transaction` - EncryTransaction
-    - `Box` - EncryBox
-    - `AssetBox` - EncryAssetBox
-    - `DataBox` - EncryDataBox
+Built-in Complex Types
+- `Signature25519` - is Edwards-curve Digital Signature Algorithm (EdDSA) over Curve25519
+- `Transaction` - EncryTransaction
+- `Box` - EncryBox
+- `AssetBox` - EncryAssetBox
+- `DataBox` - EncryDataBox
 
-    //Build-in functions
-    - `Str2Time(time: String)` - Convert String to Timestamp
-    - `checkSig(signature: Signature25519, message: Array[Byte], key: Array[Byte])` - Check message was signed with Key
+Build-in functions
+- `Str2Time(time: String)` - Convert String to Timestamp
+- `checkSig(signature: Signature25519, message: Array[Byte], key: Array[Byte])` - Check message was signed with Key
 
-    // Build-in  cryptographic hash functions
-    - `Blake2b256Hash`
-    - `Blake2b512Hash`
-    - `Keccak256Hash`
-    - `Keccak512Hash`
-    - `Sha256Hash`
+Build-in  cryptographic hash functions
+- `Blake2b256Hash`
+- `Blake2b512Hash`
+- `Keccak256Hash`
+- `Keccak512Hash`
+- `Sha256Hash`
 
 ### Basic Syntax
 
