@@ -75,5 +75,7 @@ PrismLang was developed in such way for a reason. For example in Ethereum, which
 
 PrismLang Structure is able to overcome this issue by statically analyzing source code structure we can compute computational cost of the operations. PrismLang does not support looping or recursion primitives for end user, that leeds to the fact, than in the compile time we already know exactly how many operations we need to perform. Taking previous statement in consideration, we can conclude that PrismLang can provide both end user and miner with precise Cost of the smart contract.
 
+## License
 
+All contributions are made under the [GNU General Public License v3](https://www.gnu.org/licenses/gpl-3.0.en.html). See [LICENSE](LICENSE).
 
