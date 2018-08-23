@@ -1,7 +1,7 @@
 # PrismLang
 [![Build Status](https://api.travis-ci.org/EncryFoundation/PrismLang.svg?branch=master)](https://travis-ci.org/EncryFoundation/PrismLang)
 
-PrismLang is a Contract Oriented strong typed programming language with static type-checking developed for the [EncryCore](https://github.com/EncryFoundation/EncryCore).
+PrismLang is a Contract Oriented statically typed programming language developed for the [EncryCore](https://github.com/EncryFoundation/EncryCore) blockchain protocol.
 
 ## Language Specification
 
@@ -22,6 +22,7 @@ Collections
 Built-in Complex Types
 - `Signature25519` - is Edwards-curve Digital Signature Algorithm (EdDSA) over Curve25519
 - `Transaction` - EncryTransaction
+- `State` - Information about current height of the blockchain, timestamp of the last published block
 - `Box` - EncryBox
 - `AssetBox` - EncryAssetBox
 - `DataBox` - EncryDataBox
@@ -31,11 +32,11 @@ Build-in functions
 - `checkSig(signature: Signature25519, message: Array[Byte], key: Array[Byte])` - Check message was signed with Key
 
 Build-in  cryptographic hash functions
-- `Blake2b256Hash`
-- `Blake2b512Hash`
-- `Keccak256Hash`
-- `Keccak512Hash`
-- `Sha256Hash`
+- `Blake2b256Hash(input: Array[Byte]): Array[Byte]`
+- `Blake2b512Hash(input: Array[Byte]): Array[Byte]`
+- `Keccak256Hash(input: Array[Byte]): Array[Byte]`
+- `Keccak512Hash(input: Array[Byte]): Array[Byte]`
+- `Sha256Hash(input: Array[Byte]): Array[Byte]`
 
 ### Basic Syntax
 
@@ -70,7 +71,7 @@ Build-in  cryptographic hash functions
 
     // Collections
     let ageList: Array[Int] = List(1, 2, 3, 4)
-    let ageDict: Dict[String, Int] = Dict('Alice' -> 4, 'Bob' -> 9, 'Tom' -> 17) [Under discussion]
+    let ageDict: Dict[String, Int] = Dict('Alice' -> 4, 'Bob' -> 9, 'Tom' -> 17) [Scheduled for the next release]
 
     // Collection subscription
     let someonesAge = ageList[0]            // Will result in `1`
@@ -89,15 +90,20 @@ Build-in  cryptographic hash functions
 
 ## About PrismLang
 
-PrismLang have following design:
+PrismLang has the following design:
 * Compiled
 * Strong typed
-* with static type-checking
-* Non turing-complete
+* Static type-checking
 
-PrismLang was developed in such way for a reason. For example in Ethereum, which is one of the biggest block chain platforms nowadays, miners use gas as execution fee for every operation made on Ethereum to get payed exactly for the computational resources they spend on this operation. This sometimes leads to OutOfGasError: when user didn't attach enough gas to execute his transaction, gas is payed to miner, because he was spending computational power, but transaction will not be send to block chain.
+PrismLang was developed in such way for a reason. For example in Ethereum, which is one of the biggest blockchain platforms nowadays, miners use gas as execution fee for every operation made on Ethereum to get paid exactly for the computational resources they spend on this operation. This sometimes leads to OutOfGasError: when the user didn't attach enough gas to execute his transaction, gas is paid to the miner, because he was spending computational power, but the transaction will not be sent to the blockchain.
 
-PrismLang Structure is able to overcome this issue by statically analyzing source code structure we can compute computational cost of the operations. PrismLang does not support looping or recursion primitives for end user, that leeds to the fact, than in the compile time we already know exactly how many operations we need to perform. Taking previous statement in consideration, we can conclude that PrismLang can provide both end user and miner with precise Cost of the smart contract.
+PrismLang Structure is able to overcome this issue by statically analyzing the source code structure we can precisely estimate the computational cost of the operations. PrismLang does not support looping or recursion primitives for the end user, that leads to the fact, then in the compile time, we already know exactly how many operations we need to perform. Taking the previous statement into consideration, we can conclude that PrismLang can provide both end user and miner with precise Cost of the smart contract.
+
+Furthermore, EncryCore protocol uses an Unspent Transaction Output(UTXO) model for the record keeping and smart contracts are used to lock the transaction output. Therefore, the main features kept in mind for PrismLang development were :
+1) The simplicity of usage.
+2) Clearness of the abstractions.
+3) Acceptable entry threshold.
+4) Ability to precisely estimate Cost of the operations in a convenient way for both end user and miner.
 
 ## License
 
