@@ -14,4 +14,5 @@ object BoxedValue {
   case class StringValue(value: String) extends BoxedValue { override val tpe: Types.PType = Types.PString }
   case class ByteCollectionValue(value: List[Byte]) extends BoxedValue { override val tpe: Types.PType = Types.PCollection.ofByte }
   case class Signature25519Value(value: List[Byte]) extends BoxedValue { override val tpe: Types.PType = Types.Signature25519 }
+  case class MultiSignatureValue(value: List[List[Byte]]) extends BoxedValue { override val tpe: Types.PType = Types.PCollection.ofByteArrays }
 }
