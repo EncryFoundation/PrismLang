@@ -10,9 +10,7 @@ import scorex.crypto.hash.Blake2b256
 import scala.util.Try
 
 case class CompiledContract(args: List[(String, Types.PType)], script: Ast.Expr) {
-
   lazy val bytes: Array[Byte] = CompiledContractSerializer.toBytes(this)
-
   lazy val hash: CompiledContract.ContractHash = Blake2b256.hash(bytes)
 }
 

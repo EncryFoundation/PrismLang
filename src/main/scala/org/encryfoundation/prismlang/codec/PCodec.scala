@@ -109,6 +109,7 @@ object PCodec {
   implicit def dByteVal = dBoxedVal.bind[BoxedValue.ByteValue](3)
   implicit def dByteCollVal = dBoxedVal.bind[BoxedValue.ByteCollectionValue](4)
   implicit def dSigVal = dBoxedVal.bind[BoxedValue.Signature25519Value](5)
+  implicit def dMultiSigVal = dBoxedVal.bind[BoxedValue.MultiSignatureValue](6)
 
   val exprCodec: Codec[Expr] = Codec[Expr]
   val nodeCodec: Codec[Node] = Codec[Node]

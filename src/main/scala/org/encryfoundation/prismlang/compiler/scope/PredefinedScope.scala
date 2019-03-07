@@ -34,6 +34,6 @@ object PredefinedScope {
     (math.Min.name, Types.PFunc(math.Min.args.toList, Types.PInt)),
     (math.Max.name, Types.PFunc(math.Max.args.toList, Types.PInt)),
     (collection.AnyOf.name, Types.PFunc(collection.AnyOf.args.toList, Types.PBoolean)),
-    (collection.AllOf.name, Types.PFunc(collection.AllOf.args.toList, Types.PBoolean)),
+    (collection.AllOf.name, Types.PFunc(collection.AllOf.args.toList, Types.PBoolean))
   )
 }
