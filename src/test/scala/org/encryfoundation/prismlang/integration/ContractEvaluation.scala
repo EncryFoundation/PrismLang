@@ -33,6 +33,8 @@ trait ContractEvaluation {
 
   val proof: Proof = Proof(BoxedValue.Signature25519Value(sig.toList), None)
 
+  val pairsForMultisig: Seq[(PrivateKey, PublicKey)] = (1 to 3).map(_ => Curve25519.createKeyPair(Random.randomBytes()))
+
   def transactionWithOutputs(outputs: List[Box]): Transaction = Transaction(List(dummyDigest), outputs, dummyMessage)
 
   def canBeUnlocked(contract: CompiledContract)
