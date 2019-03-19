@@ -25,7 +25,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
     def applyFunction(coll: Expr, func: Expr): Any = eval[coll.tpe.Underlying](coll) match {
       case elts: List[_] if func.tpe.isFunc => eval[func.tpe.Underlying](func) match {
         case func: PFunction => elts.map {
-          case packedArgs: List[_] => invoke(func, packedArgs:_*)
+          case packedArgs: List[_] => invoke(func, packedArgs)
           case plain => invoke(func, plain)
         }
       }
@@ -182,27 +182,27 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
               val upperR: Long = upper.map(idx => eval[Long](idx)).getOrElse(coll.size)
               coll.slice(lowerR.toInt, upperR.toInt)
           }
-          case _ => error("Illegal operation")
+          case _ => error("Illegal operation with Expr.Subscript")
         }
       case Expr.Map(coll, func, _) => applyFunction(coll, func)
       case Expr.Exists(coll, func) => applyFunction(coll, func) match {
         case bools: List[Boolean@unchecked] => bools.contains(true)
-        case _ => error("Illegal operation")
+        case _ => error("Illegal operation with Expr.Exists")
       }
       case Expr.Filter(coll, func, _) => applyFunction(coll, func) match {
         case bools: List[Boolean@unchecked] => eval[coll.tpe.Underlying](coll) match {
           case elts: List[_] => elts.zip(bools).foldLeft(List.empty[Any]) { case (acc, (elt, bool)) => if (bool) acc :+ elt else acc }
-          case _ => error("Illegal operation")
+          case _ => error("Illegal operation with Expr.Filter")
         }
-        case _ => error("Illegal operation")
+        case _ => error("Illegal operation with Expr.Filter")
       }
       case Expr.SizeOf(coll) => eval[coll.tpe.Underlying](coll) match {
         case list: List[_] => list.size.toLong
-        case _ => error("Illegal operation")
+        case _ => error("Illegal operation with Expr.SizeOf")
       }
       case Expr.Sum(coll) => eval[coll.tpe.Underlying](coll) match {
         case list: List[Long@unchecked] => list.sum
-        case _ => error("Illegal operation")
+        case _ => error("Illegal operation with Expr.Sum")
       }
       case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
       case Expr.Tuple(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
@@ -215,7 +215,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       case Expr.Str(value) => value
       case Expr.True => true
       case Expr.False => false
-      case _ => error("Illegal operation")
+      case _ => error("Illegal operation: expr matches nothing")
     }
   }.asInstanceOf[T]
 

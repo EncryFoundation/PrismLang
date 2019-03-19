@@ -1,10 +1,13 @@
 package org.encryfoundation.prismlang.integration
 
 import org.encryfoundation.prismlang.compiler.{CompiledContract, PCompiler}
-import org.encryfoundation.prismlang.integration.ContractEvaluation.{Box, Context}
+import org.encryfoundation.prismlang.core.wrapped.BoxedValue.MultiSignatureValue
+import org.encryfoundation.prismlang.integration.ContractEvaluation.{Box, Context, Proof}
 import org.scalatest.{Matchers, PropSpec, TryValues}
-import scorex.crypto.encode.Base16
+import scorex.crypto.encode.{Base16, Base58}
 import scorex.crypto.hash.Digest32
+import scorex.crypto.signatures.{Curve25519, PrivateKey, PublicKey}
+
 import scala.util.Try
 
 class ContractEvaluationSpec extends PropSpec with Matchers with ContractEvaluation with TryValues {
@@ -143,5 +146,33 @@ class ContractEvaluationSpec extends PropSpec with Matchers with ContractEvaluat
     val compiledContract: Try[CompiledContract] = PCompiler.compile(contractSource)
 
     canBeUnlocked(compiledContract.success.value)(dummyContext, Seq(proof), compiledContract.success.value.hash) shouldBe true
+  }
+
+  property("Multisig") {
+
+    val owners: Seq[(PrivateKey, PublicKey)] = pairsForMultisig
+
+    val contractSource: String =
+      s"""
+        |contract (signature: MultiSig, transaction: Transaction) = {
+        |  def isValidSig(signature: MultiSig, message: Array[Byte], key: Array[Byte]): Bool = {
+        |    anyOf(signature.map(lamb (x: Array[Byte]) = checkSig(x, message, key)))
+        |  }
+        |
+        |  let ownerPubKey = base58'${Base58.encode(owners.head._2)}'
+        |  let garantPubKey = base58'${Base58.encode(owners(1)._2)}'
+        |  let receiverPubKey = base58'${Base58.encode(owners(2)._2)}'
+        |  let keys = Array(ownerPubKey, garantPubKey, receiverPubKey)
+        |  let all: Array[Int] = keys.map(lamb(x: Array[Byte]) = if(isValidSig(signature, transaction.messageToSign, x)) 1 else 0)
+        |  all.sum > 1
+        |}
+      """.stripMargin
+
+    val compiledContract: Try[CompiledContract] = PCompiler.compile(contractSource)
+    val signatures: List[List[Byte]] = owners.take(2).map(_._1).map(k => Curve25519.sign(k, compiledContract.success.value.hash).toList).toList
+    val tx: ContractEvaluation.Transaction = dummyTransaction.copy(messageToSign = compiledContract.success.value.hash)
+    val proofs: Seq[Proof] = Seq(Proof(MultiSignatureValue(signatures), Some("signature")))
+
+    canBeUnlocked(compiledContract.success.value)(dummyContext.copy(transaction = tx), proofs, compiledContract.success.value.hash) shouldBe true
   }
 }

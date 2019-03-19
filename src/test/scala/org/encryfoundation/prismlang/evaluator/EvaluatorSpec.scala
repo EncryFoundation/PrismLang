@@ -162,6 +162,40 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
     resultTry.get shouldBe List(2, 4, 6)
   }
 
+  property("Map on Array of Arrays") {
+
+    val expr: Expr = Call(
+      Attribute(
+        Collection(
+          List(
+            Collection(List(IntConst(1), IntConst(2), IntConst(3))),
+            Collection(List(IntConst(2), IntConst(3), IntConst(4))),
+            Collection(List(IntConst(3), IntConst(4), IntConst(5)))
+          ),
+          Types.Nit
+        ),
+        Ident("map"),
+        Types.Nit
+      ),
+      List(
+        Lambda(
+          List(
+            (Ident("list"), TypeIdent("Array", List(TypeIdent("Int"))))
+          ),
+          Sum(Name(Ident("list"), Types.Nit)),
+          Types.Nit
+        )
+      ),
+      Types.Nit
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe List(6, 9, 12)
+  }
+
   property("Filter") {
 
     val expr: Expr = Call(
