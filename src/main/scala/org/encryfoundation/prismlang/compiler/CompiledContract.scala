@@ -12,6 +12,8 @@ import scala.util.Try
 case class CompiledContract(args: List[(String, Types.PType)], script: Ast.Expr) {
   lazy val bytes: Array[Byte] = CompiledContractSerializer.toBytes(this)
   lazy val hash: CompiledContract.ContractHash = Blake2b256.hash(bytes)
+
+  override def toString: String = script.toString
 }
 
 object CompiledContract {
@@ -50,3 +52,4 @@ object CompiledContractSerializer {
     CompiledContract(args, PCodec.exprCodec.decode(BitVector(scriptBytes)).require.value)
   }
 }
+

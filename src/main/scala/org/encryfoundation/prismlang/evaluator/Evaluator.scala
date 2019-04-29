@@ -1,11 +1,12 @@
 package org.encryfoundation.prismlang.evaluator
 
+import com.typesafe.scalalogging.StrictLogging
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.wrapped._
 import org.encryfoundation.prismlang.core.{TypeSystem, Types}
 import scorex.crypto.encode.{Base16, Base58}
 
-case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
+case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) extends StrictLogging {
 
   private var environments: List[ScopedRuntimeEnvironment] = List(initialEnv)
 
@@ -36,17 +37,22 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       /** Evaluate `value`, wrap it with `PValue` and add to the scope */
       case Expr.Let(name, value, _) =>
         val valT: Types.PType = value.tpe
+        logger.debug(s"""Evaluating "let" expression: "$expr" """)
         addToEnv(name.name, PValue(eval[valT.Underlying](value), valT))
 
       /** Just construct `PFunction` instance with resolved `args`. */
-      case Expr.Lambda(args, body, tpe) => PFunction(types.resolveArgs(args), tpe, body)
+      case Expr.Lambda(args, body, tpe) =>
+        logger.debug(s"""Evaluating "lambda" expression: "$expr" """)
+        PFunction(types.resolveArgs(args), tpe, body)
 
       /** Resolve args, construct `PFunction` and add it to the scope. */
       case Expr.Def(name, args, body, _) =>
+        logger.debug(s"""Evaluating "def" expression: "$expr" """)
         addToEnv(name.name, PFunction(types.resolveArgs(args), body.tpe, body))
 
       /** Evaluate `test`, then evaluate either `body` or `orelse` depending on test result. */
       case Expr.If(test, body, orelse, tpe) =>
+        logger.debug(s"""Evaluating "if" expression: if($test) """)
         val testR: Boolean = eval[Boolean](test)
         environments = currentEnvironment.emptyChild :: environments
         val result: tpe.Underlying = if (testR) eval[tpe.Underlying](body) else eval[tpe.Underlying](orelse)
@@ -57,6 +63,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         * can, create nested scope, put `local` there and evaluate `body`, else do the same
         * for `orelse` branch. */
       case Expr.IfLet(local, typeIdent, target, body, orelse, tpe) =>
+        logger.debug(s"""Evaluating "ifLet" expression: "$expr" """)
         val requiredT: Types.PType = types.resolveType(typeIdent)
         val targetR: target.tpe.Underlying = eval[target.tpe.Underlying](target)
         environments = currentEnvironment.emptyChild :: environments
@@ -94,6 +101,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 
       /** Evaluate operands, then perform `op`. */
       case bin @ Expr.Bin(left, op, right) =>
+        logger.debug(s"""Evaluating binary operation "$op" between $left and $right """)
         val leftR: left.tpe.Underlying = eval[left.tpe.Underlying](left)
         val rightR: right.tpe.Underlying = eval[right.tpe.Underlying](right)
         op match {
@@ -110,10 +118,11 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         }
 
       /** Evaluate operands, then compare them according to `op`. */
-      case Expr.Bool(op, operands) => op match {
-        case BooleanOp.And => operands.forall(operand => eval[Boolean](operand))
-        case BooleanOp.Or => operands.foldLeft(false) { case (bool, operand) =>
-          bool || eval[Boolean](operand)
+      case Expr.Bool(op, operands) =>
+        logger.debug(s"""Evaluating boolean operation "$op" between $operands """)
+        op match {
+          case BooleanOp.And => operands.forall(operand => eval[Boolean](operand))
+          case BooleanOp.Or => operands.foldLeft(false) { case (bool, operand) => bool || eval[Boolean](operand)
         }
       }
       case Expr.Unary(op, operand, _) =>
@@ -125,6 +134,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
       /** Evaluate left operand then compare it with evaluated
         * operands using `ops`. */
       case Expr.Compare(left, ops, comps) =>
+        logger.debug(s"""Evaluating compare operations "$ops" between $left and $comps """)
         val leftV: left.tpe.Underlying = eval[left.tpe.Underlying](left)
         ops.zip(comps).forall {
           case (CompOp.Eq, comp) => CompareOps.eq(leftV, eval[comp.tpe.Underlying](comp))
@@ -139,6 +149,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
 
       /** Get referenced name from environment. */
       case Expr.Name(ident, _) =>
+        logger.debug(s"""Evaluating "Name" expression. Trying to get ${ident.name} from environment""")
         currentEnvironment.get(ident.name) match {
           case Some(v: PValue) => v.value
           case Some(f: PFunction) => f
@@ -150,6 +161,7 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         * env, put there resolved arguments and evaluate `body`. In case predefined function
         * is called, just call body passing to it list of resolved arguments. */
       case Expr.Call(name: Expr.Name, args, _) =>
+        logger.debug(s"""Evaluating "Call" expression. Trying to invoke ${name.ident.name}(${args.collect{case name: Expr.Name => s"${name.ident.name}: ${name.tpe}"}.mkString(", ")})""")
         eval[name.tpe.Underlying](name) match {
           case func: PFunction => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)):_*)
           case PFunctionPredef(varargs, body) =>
@@ -184,7 +196,9 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
           }
           case _ => error("Illegal operation with Expr.Subscript")
         }
-      case Expr.Map(coll, func, _) => applyFunction(coll, func)
+      case Expr.Map(coll, func, _) =>
+        logger.debug(s"""Evaluating "Map" expression. Trying to map collection $coll by function $func""")
+        applyFunction(coll, func)
       case Expr.Exists(coll, func) => applyFunction(coll, func) match {
         case bools: List[Boolean@unchecked] => bools.contains(true)
         case _ => error("Illegal operation with Expr.Exists")
@@ -200,10 +214,12 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) {
         case list: List[_] => list.size.toLong
         case _ => error("Illegal operation with Expr.SizeOf")
       }
-      case Expr.Sum(coll) => eval[coll.tpe.Underlying](coll) match {
-        case list: List[Long@unchecked] => list.sum
-        case _ => error("Illegal operation with Expr.Sum")
-      }
+      case Expr.Sum(coll) =>
+        logger.debug(s"""Evaluating "Sum" expression. Trying to sum collection $coll""")
+        eval[coll.tpe.Underlying](coll) match {
+          case list: List[Long@unchecked] => list.sum
+          case _ => error("Illegal operation with Expr.Sum")
+        }
       case Expr.Collection(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
       case Expr.Tuple(elts, _) => elts.map(elt => eval[elt.tpe.Underlying](elt))
       case Expr.Base58Str(value) => Base58.decode(value).map(_.toList).getOrElse(error("Base58 string decoding failed"))
