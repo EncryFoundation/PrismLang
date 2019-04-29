@@ -1,8 +1,9 @@
 package org.encryfoundation.prismlang.core
 
+import com.typesafe.scalalogging.StrictLogging
 import org.encryfoundation.prismlang.core.Ast.{Ident, TypeIdent}
 
-case class TypeSystem(additionalTypes: Seq[Types.PType]) {
+case class TypeSystem(additionalTypes: Seq[Types.PType]) extends StrictLogging {
 
   import Types._
 
@@ -31,8 +32,13 @@ case class TypeSystem(additionalTypes: Seq[Types.PType]) {
     }.getOrElse(throw TypeSystemException(s"Type '${ident.name}' is undefined."))
   }
 
-  def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] =
-    args.map { case (id, typeId) => id.name -> resolveType(typeId) }
+  def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] = {
+    logger.debug(s"Resolving args: ${args.map(arg => s"(${arg._1}, ${arg._2})").mkString(",")}")
+    args.map { case (id, typeId) => id.name -> {
+        resolveType(typeId)
+      }
+    }
+  }
 }
 
 object TypeSystem {
