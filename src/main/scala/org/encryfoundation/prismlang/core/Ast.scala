@@ -243,6 +243,7 @@ object Ast {
     }
 
     case object In extends CompOp {
+      override def toString: String = "in"
       lazy val leftTypeResolution: List[Types.PType] = Types.regularTypes
       lazy val rightTypeResolution: List[Types.PType] = Types.regularTypes.map(PCollection.apply)
     }
