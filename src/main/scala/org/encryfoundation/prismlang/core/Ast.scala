@@ -97,7 +97,7 @@ object Ast {
     }
 
     case class Collection(elts: List[Expr], override val tpe: PType = Nit) extends Expr {
-      override def toString: String = s"(${elts.map(_.toString).mkString(", ")})"
+      override def toString: String = s"${tpe.ident}(${elts.map(_.toString).mkString(", ")})"
     }
 
     case class Tuple(elts: List[Expr], override val tpe: PType = Nit) extends Expr {
