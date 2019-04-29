@@ -190,17 +190,25 @@ object Ast {
       override def toString: String = " / "
     }
 
-    case object Mod extends Operator
+    case object Mod extends Operator {
+      override def toString: String = " % "
+    }
 
-    case object Pow extends Operator
+    case object Pow extends Operator {
+      override def toString: String = " ** "
+    }
   }
 
   sealed trait UnaryOp
   object UnaryOp {
 
-    case object Invert extends UnaryOp
+    case object Invert extends UnaryOp {
+      override def toString: String = " ~ "
+    }
 
-    case object Not extends UnaryOp
+    case object Not extends UnaryOp {
+      override def toString: String = "!"
+    }
   }
 
   sealed trait CompOp { val leftTypeResolution: List[Types.PType]; val rightTypeResolution: List[Types.PType] }
