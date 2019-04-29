@@ -34,7 +34,9 @@ object Ast {
       override def toString: String = s"lamb (${args.map{case (name, typeIdent) => s"$name: $typeIdent"}.mkString(",")}) = $body"
     }
 
-    case class If(test: Expr, body: Expr, orelse: Expr, override val tpe: PType = Nit) extends Expr
+    case class If(test: Expr, body: Expr, orelse: Expr, override val tpe: PType = Nit) extends Expr {
+      override def toString: String = s"if ($test) {\n$body\n} else {\n$orelse\n}"
+    }
 
     case class IfLet(name: Ident, typeIdent: TypeIdent, target: Expr, body: Expr, orelse: Expr, override val tpe: PType = Nit) extends Expr {
       override def toString: String = s"if (let $name: $typeIdent = $target) {\n$body\n} else {\n$orelse\n}"
@@ -266,6 +268,6 @@ object Ast {
   }
 
   case class TypeIdent(name: String, typeParams: List[TypeIdent] = List.empty) {
-    override def toString: String = s"$name"
+    override def toString: String = s"$name${if(typeParams.nonEmpty) s"[${typeParams.map(_.toString).mkString(", ")}]" else ""}"
   }
 }
