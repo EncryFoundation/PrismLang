@@ -4,14 +4,14 @@ import java.nio.charset.Charset
 
 import org.encryfoundation.prismlang.codec.PCodec
 import org.encryfoundation.prismlang.core.{Ast, Types}
+import org.encryfoundation.prismlang.utils.Hasher
 import scodec.bits.BitVector
-import scorex.crypto.hash.Blake2b256
 
 import scala.util.Try
 
-case class CompiledContract(args: List[(String, Types.PType)], script: Ast.Expr) {
+case class CompiledContract(args: List[(String, Types.PType)], script: Ast.Expr) extends Hasher {
   lazy val bytes: Array[Byte] = CompiledContractSerializer.toBytes(this)
-  lazy val hash: CompiledContract.ContractHash = Blake2b256.hash(bytes)
+  lazy val hash: CompiledContract.ContractHash = blake2bHash(bytes)
 
   override def toString: String = script.toString
 }
