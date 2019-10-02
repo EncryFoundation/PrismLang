@@ -7,7 +7,7 @@ import org.encryfoundation.prismlang.core.{Ast, Types}
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec}
 
-import scala.util.{Failure, Try}
+import scala.util.{Failure, Success, Try}
 import org.scalatest._
 import org.scalatest.prop._
 
@@ -20,57 +20,64 @@ class EvaluatorOperationsSpec extends PropSpec
   with ExprEvaluator {
 
   val operators = Table("operators", Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow)
-  val comps = Table("comps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE)
+  val compOps = Table("compOps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE, CompOp.Eq, CompOp.NotEq)
+  val values = Table("values", Str("qwe"), Str("100"), IntConst(100), True, False)
+    //Collection(List(IntConst(0))), Tuple(List()))
 
-  val values = Table("values", Str("qwe"), Str("100"), IntConst(100), Collection(List(IntConst(0))), True, False)
-
-  property("binary operator with different types shouldn't compiled") {
+  property("binary operator with different types shouldn't compile") {
 
     forAll(operators) { operator =>
       forAll(values) { value1 =>
         forAll(values) { value2 =>
           whenever(value1.tpe != value2.tpe) {
-            check(
+            checkExpr(
               Bin(
                 value1,
                 operator,
                 value2
               ),
-              "SemanticAnalysisException"
+              List("SemanticAnalysisException")
             )
           }
         }
       }
     }
+  }
 
-    forAll(comps) { comp =>
+  property("compare with different types shouldn't compile") {
+    forAll(compOps) { compOp =>
       forAll(values) { value1 =>
         forAll(values) { value2 =>
           whenever(value1.tpe != value2.tpe) {
-            check(
+            checkExpr(
               Expr.Compare(
                 value1,
-                List(comp),
+                List(compOp),
                 List(value2)
               ),
-              "SemanticAnalysisException"
+              List("SemanticAnalysisException", "Exception")
             )
           }
         }
       }
     }
-
   }
 
-  def check(expr: Ast.Expr, expectedExceptionName: String) {
+  def checkExpr(expr: Ast.Expr, expectedExceptions: List[String]) {
     val astExpr = compileExpr(expr)
 
-    assert(astExpr.isFailure, s"Expression '${expr.toString}' shouldn't compile")
-    val throwable: Throwable = astExpr match {
+    val throwable = astExpr match {
+      case Success(expr) =>
+        val evaluation = eval(expr)
+        assert(evaluation.isFailure, s"Expression '${expr.toString}' shouldn't compile")
+        evaluation match {
+          case Failure(e) => e
+        }
       case Failure(e) => e
     }
 
-    throwable.getClass.getSimpleName shouldBe expectedExceptionName
+    expectedExceptions.contains(throwable.getClass.getSimpleName) shouldBe true
   }
+
 
 }
