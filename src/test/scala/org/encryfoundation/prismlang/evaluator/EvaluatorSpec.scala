@@ -364,19 +364,4 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
     resultTry.get shouldBe true
   }
 
-  property("Div string by int") {
-
-    val expr: Expr = Bin(
-      Str("100"),
-      Operator.Div,
-      IntConst(4)
-    )
-
-    val astExpr = compileExpr(expr)
-
-    astExpr.isFailure shouldBe true
-    val errMsg: String = astExpr match { case Failure(e) => e.getMessage}
-    errMsg shouldBe "Unsupported operation for types PString and PInt"
-  }
-
 }
