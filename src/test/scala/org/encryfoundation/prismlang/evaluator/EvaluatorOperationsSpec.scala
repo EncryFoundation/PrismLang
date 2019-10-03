@@ -16,9 +16,6 @@ class EvaluatorOperationsSpec extends PropSpec
   with TestCompiler
   with ExprEvaluator {
 
-  val operators = Table("operators", Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow)
-  val compOps = Table("compOps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE, CompOp.Eq, CompOp.NotEq)
-
   val values1 = Table("values1", Str("qwe"), Str("100"), Base58Str("abc"), Base16Str("123"),
     True, False, Collection(List(Str("asd"))), Collection(List(IntConst(0))), Tuple(List(IntConst(10))))
 
@@ -26,6 +23,8 @@ class EvaluatorOperationsSpec extends PropSpec
     Collection(List(Str("123"))), Tuple(List(IntConst(0))))
 
   property("binary operator with different types shouldn't compile") {
+
+    val operators = Table("operators", Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow)
 
     forAll(operators) { operator =>
       forAll(values1) { value1 =>
@@ -46,6 +45,18 @@ class EvaluatorOperationsSpec extends PropSpec
   }
 
   property("compare operator with different types shouldn't compile") {
+    checkCompOps(Table("compOps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE), List("SemanticAnalysisException"))
+  }
+
+  property("Eq NotEq with different types shouldn't compile") {
+    checkCompOps(Table("compOps", CompOp.Eq, CompOp.NotEq), List("Exception", "ClassCastException"))
+  }
+
+  property("In NotIn with different types shouldn't compile") {
+    checkCompOps(Table("compOps", CompOp.In, CompOp.NotIn), List("SemanticAnalysisException", "ClassCastException"))
+  }
+
+  def checkCompOps(compOps: TableFor1[CompOp], expectedExceptions: List[String]) {
     forAll(compOps) { compOp =>
       forAll(values1) { value1 =>
         forAll(values2) { value2 =>
@@ -56,13 +67,14 @@ class EvaluatorOperationsSpec extends PropSpec
                 List(compOp),
                 List(value2)
               ),
-              List("SemanticAnalysisException", "Exception")
+              expectedExceptions
             )
           }
         }
       }
     }
   }
+
 
   def exclusion(value1: Expr, value2: Expr): Boolean = value1 != value2 && value1.tpe != value2.tpe
 
