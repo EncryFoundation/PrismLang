@@ -364,4 +364,35 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
     resultTry.get shouldBe true
   }
 
+  property("Collection") {
+
+    val expr: Expr =
+      Collection(
+        List(
+          IntConst(1),
+          IntConst(2)
+        ))
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe List(1, 2)
+  }
+
+  property("Tuple") {
+
+    val expr: Expr =
+      Tuple(
+        List(
+          Str("qwe"),
+          IntConst(1)
+        ))
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe List("qwe", 1)
+  }
 }
