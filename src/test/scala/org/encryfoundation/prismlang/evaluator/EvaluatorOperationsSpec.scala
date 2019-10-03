@@ -1,35 +1,36 @@
 package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.compiler.TestCompiler
-import org.encryfoundation.prismlang.core.Ast.Expr.{Compare, _}
+import org.encryfoundation.prismlang.core.Ast
+import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast.{CompOp, _}
-import org.encryfoundation.prismlang.core.{Ast, Types}
+import org.encryfoundation.prismlang.core.Types.{PCollection, PString}
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec}
 
-import scala.util.{Failure, Success, Try}
-import org.scalatest._
-import org.scalatest.prop._
+import scala.util.{Failure, Success}
 
 class EvaluatorOperationsSpec extends PropSpec
   with Matchers
   with TableDrivenPropertyChecks
-  //  with ScalaCheckDrivenPropertyChecks
-  //  with GeneratorDrivenPropertyChecks
   with TestCompiler
   with ExprEvaluator {
 
   val operators = Table("operators", Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow)
   val compOps = Table("compOps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE, CompOp.Eq, CompOp.NotEq)
-  val values = Table("values", Str("qwe"), Str("100"), IntConst(100), True, False)
-    //Collection(List(IntConst(0))), Tuple(List()))
+
+  val values1 = Table("values1", Str("qwe"), Str("100"), Base58Str("abc"), Base16Str("123"),
+    True, False, Collection(List(Str("asd"))), Collection(List(IntConst(0))), Tuple(List(IntConst(10))))
+
+  val values2 = Table("values2", IntConst(0), IntConst(123), ByteConst(123), True, False,
+    Collection(List(Str("123"))), Tuple(List(IntConst(0))))
 
   property("binary operator with different types shouldn't compile") {
 
     forAll(operators) { operator =>
-      forAll(values) { value1 =>
-        forAll(values) { value2 =>
-          whenever(value1.tpe != value2.tpe) {
+      forAll(values1) { value1 =>
+        forAll(values2) { value2 =>
+          whenever(exclusion(value1, value2)) {
             checkExpr(
               Bin(
                 value1,
@@ -44,11 +45,11 @@ class EvaluatorOperationsSpec extends PropSpec
     }
   }
 
-  property("compare with different types shouldn't compile") {
+  property("compare operator with different types shouldn't compile") {
     forAll(compOps) { compOp =>
-      forAll(values) { value1 =>
-        forAll(values) { value2 =>
-          whenever(value1.tpe != value2.tpe) {
+      forAll(values1) { value1 =>
+        forAll(values2) { value2 =>
+          whenever(exclusion(value1, value2)) {
             checkExpr(
               Expr.Compare(
                 value1,
@@ -63,6 +64,8 @@ class EvaluatorOperationsSpec extends PropSpec
     }
   }
 
+  def exclusion(value1: Expr, value2: Expr): Boolean = value1 != value2 && value1.tpe != value2.tpe
+
   def checkExpr(expr: Ast.Expr, expectedExceptions: List[String]) {
     val astExpr = compileExpr(expr)
 
@@ -76,8 +79,8 @@ class EvaluatorOperationsSpec extends PropSpec
       case Failure(e) => e
     }
 
-    expectedExceptions.contains(throwable.getClass.getSimpleName) shouldBe true
+    assert(expectedExceptions.contains(throwable.getClass.getSimpleName),
+      s"${throwable.getClass.getSimpleName} should be  ${expectedExceptions.mkString}")
   }
-
 
 }
