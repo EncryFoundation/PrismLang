@@ -1,13 +1,13 @@
 package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.compiler.TestCompiler
-import org.encryfoundation.prismlang.core.Ast
+import org.encryfoundation.prismlang.core.Ast.Expr
 
 import scala.util.{Failure, Success}
 
 trait ExprChecker extends TestCompiler with ExprEvaluator {
 
-  def checkExpr(expr: Ast.Expr, expectedExceptions: List[String]) {
+  def checkExpr(expr: Expr, expectedExceptions: List[String]) {
     val astExpr = compileExpr(expr)
 
     val throwable = astExpr match {

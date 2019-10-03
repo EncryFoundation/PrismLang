@@ -12,11 +12,7 @@ class CollectionsTypeCompatibilitySpec extends PropSpec
 
   val values = Table("values", Str("10"), IntConst(10), ByteConst(10), Base16Str("10"), Base58Str("10"), True)
 
-  property("collection should be consistent") {
-    checkConsistency(values => Collection(values))
-  }
-
-  def checkConsistency[T](expr: (List[Expr]) => Expr): Unit = {
+  def checkConsistency(expr: List[Expr] => Expr): Unit = {
     forAll(values) { value1 =>
       forAll(values) { value2 =>
         whenever(value1 != value2) {
@@ -24,6 +20,10 @@ class CollectionsTypeCompatibilitySpec extends PropSpec
         }
       }
     }
+  }
+
+  property("collection should be consistent") {
+    checkConsistency(values => Collection(values))
   }
 
 }
