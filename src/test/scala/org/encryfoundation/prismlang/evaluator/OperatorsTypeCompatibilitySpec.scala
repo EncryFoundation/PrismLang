@@ -26,7 +26,7 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
       forAll(values1) { value1 =>
         forAll(values2) { value2 =>
           whenever(exclusion(value1, value2)) {
-            checkExpr(expr(operator, List(value1, value2)), expectedExceptions)
+            checkExprForExceptions(expr(operator, List(value1, value2)), expectedExceptions)
           }
         }
       }

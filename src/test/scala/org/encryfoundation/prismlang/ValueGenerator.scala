@@ -32,4 +32,8 @@ object ValueGenerator {
       val bool = Random.nextBoolean()
       (if(bool) True else False, bool)
   }
+
+  def genValueTypeList(valueTypes: List[String], count: Int): List[String] =
+    (0 until count).foldLeft(List[String]()) { (acc, n) => acc :+ valueTypes(n % valueTypes.size) }
+
 }
