@@ -6,7 +6,7 @@ import org.encryfoundation.prismlang.core.Ast._
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec, TryValues}
 
-class CollectionsTypeCompatibilitySpec extends PropSpec
+class CollectionsSpec extends PropSpec
   with Matchers
   with TableDrivenPropertyChecks
   with ExprChecker
@@ -18,7 +18,7 @@ class CollectionsTypeCompatibilitySpec extends PropSpec
   def check(valueTypes: List[String], wrapper: List[Expr] => Expr, count: Int): Unit = {
     val (exprVals, expectedVals) =
       ValueGenerator.genValueTypeList(valueTypes, count)
-        .map(ValueGenerator.genValue)
+        .map(ValueGenerator.genRandomValue)
         .unzip
 
     val compile = compileExpr(wrapper(exprVals))
@@ -30,8 +30,8 @@ class CollectionsTypeCompatibilitySpec extends PropSpec
     forAll(valueTypesTable) { valueType1 =>
       forAll(valueTypesTable) { valueType2 =>
         whenever(valueType1 != valueType2) {
-          val (value1, _) = ValueGenerator.genValue(valueType1)
-          val (value2, _) = ValueGenerator.genValue(valueType2)
+          val (value1, _) = ValueGenerator.genRandomValue(valueType1)
+          val (value2, _) = ValueGenerator.genRandomValue(valueType2)
           checkExprForExceptions(wrapper(List(value1, value2)), expectedExceptions)
         }
       }
