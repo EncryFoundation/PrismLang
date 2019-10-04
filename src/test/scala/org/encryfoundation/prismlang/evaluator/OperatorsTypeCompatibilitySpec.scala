@@ -5,7 +5,7 @@ import org.encryfoundation.prismlang.core.Ast.{CompOp, _}
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec}
 
-class OperationsTypeCompatibilitySpec extends PropSpec
+class OperatorsTypeCompatibilitySpec extends PropSpec
   with Matchers
   with TableDrivenPropertyChecks
   with ExprChecker {
