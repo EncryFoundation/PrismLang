@@ -25,6 +25,34 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
     resultTry.get shouldEqual 25
   }
 
+  property("UnaryOp Not") {
+
+    val expr: Expr = Unary(
+      UnaryOp.Not,
+      True
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldEqual false
+  }
+
+  property("UnaryOp Invert") {
+
+    val expr: Expr = Unary(
+      UnaryOp.Invert,
+      IntConst(10)
+    )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldEqual -10
+  }
+
   property("Compare") {
 
     val expr: Expr = Expr.Compare(
