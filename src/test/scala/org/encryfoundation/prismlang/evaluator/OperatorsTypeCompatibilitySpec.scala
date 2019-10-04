@@ -2,6 +2,7 @@ package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast.{CompOp, _}
+import org.encryfoundation.prismlang.core.Types.{PBoolean, PByte, PInt}
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec}
 
@@ -19,6 +20,7 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
   def compareExpr(oper: CompOp, values: List[Expr]) = Compare(values(0), List(oper), List(values(1)))
   def binExpr(oper: Operator, values: List[Expr]) = Bin(values(0), oper, values(1))
   def boolExpr(oper: BooleanOp, values: List[Expr]) = Bool(oper, List(values(0), values(1)))
+  def unaryExpr(oper: UnaryOp, values: List[Expr]) = Unary(oper, values(0))
 
   def exclusion(value1: Expr, value2: Expr): Boolean = value1 != value2 && value1.tpe != value2.tpe
 
@@ -30,6 +32,14 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
             checkExprForExceptions(expr(operator, List(value1, value2)), expectedExceptions)
           }
         }
+      }
+    }
+  }
+
+  def checkUnaryOperators[T](operators: List[T], values: List[Expr], expr: (T, List[Expr]) => Expr, expectedExceptions: List[String]) {
+    operators.foreach { operator =>
+      values.foreach { value =>
+        checkExprForExceptions(expr(operator, List(value)), expectedExceptions)
       }
     }
   }
@@ -57,6 +67,16 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
   property("And Or with different types shouldn't compile") {
     checkOperators(Table("boolOps", BooleanOp.And, BooleanOp.Or),
       values1, values2, boolExpr, List("SemanticAnalysisException"))
+  }
+
+  property("Unary Not except Boolean type shouldn't compile") {
+    checkUnaryOperators(List(UnaryOp.Not), (values1.toList ++ values2.toList).filterNot(_.tpe == PBoolean),
+      unaryExpr, List("SemanticAnalysisException"))
+  }
+
+  property("Unary Invert except Int type shouldn't compile") {
+    checkUnaryOperators(List(UnaryOp.Invert), (values1.toList ++ values2.toList).filterNot(e => List(PInt, PByte).contains(e.tpe)),
+      unaryExpr, List("SemanticAnalysisException"))
   }
 
 }
