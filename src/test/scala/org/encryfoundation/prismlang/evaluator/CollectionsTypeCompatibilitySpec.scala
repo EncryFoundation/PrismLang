@@ -54,4 +54,14 @@ class CollectionsTypeCompatibilitySpec extends PropSpec
     checkConsistencyExceptions(valueTypesTable, values => Collection(values), List("SemanticAnalysisException"))
   }
 
+  property("tuple should be contains at least 1 element") {
+    checkExprForExceptions(Tuple(List()), List("SemanticAnalysisException"))
+  }
+
+  property("tuple should be contain elements of different types") {
+    (1 to 4).foreach { n =>
+      check(valueTypes, values => Tuple(values), n)
+    }
+  }
+
 }
