@@ -36,4 +36,9 @@ object ValueGenerator {
   def genValueTypeList(valueTypes: List[String], count: Int): List[String] =
     (0 until count).foldLeft(List[String]()) { (acc, n) => acc :+ valueTypes(n % valueTypes.size) }
 
+  def genValues(valueTypes: List[String], count: Int): (List[Expr], List[Any]) =
+    ValueGenerator.genValueTypeList(valueTypes, count)
+    .map(ValueGenerator.genRandomValue)
+    .unzip
+
 }
