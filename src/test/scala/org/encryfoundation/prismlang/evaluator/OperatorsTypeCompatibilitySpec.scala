@@ -10,18 +10,19 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
   with TableDrivenPropertyChecks
   with ExprChecker {
 
-  val values1 = Table("values1", Str("qwe"), Str("100"), Base58Str("abc"), Base16Str("123"),
+  val values1: TableFor1[Expr] = Table("values1", Str("qwe"), Str("100"), Base58Str("abc"), Base16Str("123"),
     True, False, Collection(List(Str("asd"))), Collection(List(IntConst(0))), Tuple(List(IntConst(10))))
 
-  val values2 = Table("values2", IntConst(0), IntConst(123), ByteConst(123), True, False,
+  val values2: TableFor1[Expr] = Table("values2", IntConst(0), IntConst(123), ByteConst(123), True, False,
     Collection(List(Str("123"))), Tuple(List(IntConst(0))))
 
   def compareExpr(oper: CompOp, values: List[Expr]) = Compare(values(0), List(oper), List(values(1)))
   def binExpr(oper: Operator, values: List[Expr]) = Bin(values(0), oper, values(1))
+  def boolExpr(oper: BooleanOp, values: List[Expr]) = Bool(oper, List(values(0), values(1)))
 
   def exclusion(value1: Expr, value2: Expr): Boolean = value1 != value2 && value1.tpe != value2.tpe
 
-  def checkOperators[T](table: TableFor1[T], expr: (T, List[Expr]) => Expr, expectedExceptions: List[String]) {
+  def checkOperators[T](table: TableFor1[T], values1: TableFor1[Expr], values2: TableFor1[Expr], expr: (T, List[Expr]) => Expr, expectedExceptions: List[String]) {
     forAll(table) { operator =>
       forAll(values1) { value1 =>
         forAll(values2) { value2 =>
@@ -35,19 +36,27 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
 
   property("binary operator with different types shouldn't compile") {
     checkOperators(Table("operators", Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow),
-      binExpr, List("SemanticAnalysisException"))
+      values1, values2, binExpr, List("SemanticAnalysisException"))
   }
 
   property("compare operator with different types shouldn't compile") {
-    checkOperators(Table("compOps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE), compareExpr, List("SemanticAnalysisException"))
+    checkOperators(Table("compOps", CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE),
+      values1, values2, compareExpr, List("SemanticAnalysisException"))
   }
 
   property("Eq NotEq with different types shouldn't compile") {
-    checkOperators(Table("compOps", CompOp.Eq, CompOp.NotEq), compareExpr, List("Exception", "ClassCastException"))
+    checkOperators(Table("compOps", CompOp.Eq, CompOp.NotEq),
+      values1, values2, compareExpr, List("Exception", "ClassCastException"))
   }
 
   property("In NotIn with different types shouldn't compile") {
-    checkOperators(Table("compOps", CompOp.In, CompOp.NotIn), compareExpr, List("SemanticAnalysisException", "ClassCastException"))
+    checkOperators(Table("compOps", CompOp.In, CompOp.NotIn),
+      values1, values2, compareExpr, List("SemanticAnalysisException", "ClassCastException"))
+  }
+
+  property("And Or with different types shouldn't compile") {
+    checkOperators(Table("boolOps", BooleanOp.And, BooleanOp.Or),
+      values1, values2, boolExpr, List("SemanticAnalysisException"))
   }
 
 }

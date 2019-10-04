@@ -10,7 +10,7 @@ object ValueGenerator {
   def generateRandomString(length: Int): String =
     Random.alphanumeric.take(length).mkString
 
-  def genValue(valueTypeName: String): (Expr, Any) = valueTypeName match {
+  def genRandomValue(valueTypeName: String): (Expr, Any) = valueTypeName match {
     case "Str" =>
       val s = generateRandomString(Random.nextInt(101))
       (Str(s), s)
