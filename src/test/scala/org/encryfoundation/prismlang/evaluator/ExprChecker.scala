@@ -7,10 +7,8 @@ import scala.util.{Failure, Success}
 
 trait ExprChecker extends TestCompiler with ExprEvaluator {
 
-  def checkExpr(expr: Expr, expectedExceptions: List[String]) {
-    val astExpr = compileExpr(expr)
-
-    val throwable = astExpr match {
+  def checkExprForExceptions(expr: Expr, expectedExceptions: List[String]) {
+    val throwable = compileExpr(expr) match {
       case Success(expr) =>
         val evaluation = eval(expr)
         assert(evaluation.isFailure, s"Expression '${expr.toString}' shouldn't compile")

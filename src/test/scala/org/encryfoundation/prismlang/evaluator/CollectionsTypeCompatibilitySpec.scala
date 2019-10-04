@@ -1,7 +1,7 @@
 package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.ValueGenerator
-import org.encryfoundation.prismlang.core.Ast.Expr.{ByteConst, IntConst, Str, _}
+import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast._
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec, TryValues}
@@ -12,40 +12,46 @@ class CollectionsTypeCompatibilitySpec extends PropSpec
   with ExprChecker
   with TryValues {
 
-  val valueTypes = Table("valueTypes", "Str", "IntConst", "ByteConst", "Base16Str", "Base58Str", "Bool")
+  val valueTypes = List("Str", "IntConst", "ByteConst", "Base16Str", "Base58Str", "Bool")
+  val valueTypesTable = Table("valueTypes", valueTypes: _*)
 
-  def checkConsistencyBound(expr: List[Expr] => Expr): Unit = {
-    forAll(valueTypes) { valueType1 =>
-      forAll(valueTypes) { valueType2 =>
+  def check(valueTypes: List[String], wrapper: List[Expr] => Expr, count: Int): Unit = {
+    val (exprVals, expectedVals) =
+      ValueGenerator.genValueTypeList(valueTypes, count)
+        .map(ValueGenerator.genValue)
+        .unzip
+
+    val compile = compileExpr(wrapper(exprVals))
+    val result = eval(compile.get).get
+    result shouldBe expectedVals
+  }
+
+  def checkConsistencyExceptions(valueTypesTable: TableFor1[String], wrapper: List[Expr] => Expr, expectedExceptions: List[String]): Unit = {
+    forAll(valueTypesTable) { valueType1 =>
+      forAll(valueTypesTable) { valueType2 =>
         whenever(valueType1 != valueType2) {
           val (value1, _) = ValueGenerator.genValue(valueType1)
           val (value2, _) = ValueGenerator.genValue(valueType2)
-          checkExpr(expr(List(value1, value2)), List("SemanticAnalysisException"))
+          checkExprForExceptions(wrapper(List(value1, value2)), expectedExceptions)
         }
       }
     }
   }
 
-  def checkCollection(expr: List[Expr] => Expr): Unit = {
+  property("collection should be contains elements") {
     (1 to 300).foreach { n =>
-      forAll(valueTypes) { valueType =>
-        val (exVal, v) = ValueGenerator.genValue(valueType)
-        val exprValues: List[Expr] = List.fill(n)(exVal)
-        val expectedValues: List[Any] = List.fill(n)(v)
-        val compile = compileExpr(expr(exprValues))
-        val result = eval(compile.get).get
-        result shouldBe expectedValues
+      forAll(valueTypesTable) { valueType =>
+        check(List(valueType), values => Collection(values), n)
       }
     }
   }
 
-  property("collection should be contains elements") {
-    checkCollection(values => Collection(values))
+  property("collection should be contains at least 1 element") {
+    checkExprForExceptions(Collection(List()), List("SemanticAnalysisException"))
   }
 
   property("collection should be consistent") {
-    checkConsistencyBound(values => Collection(values))
+    checkConsistencyExceptions(valueTypesTable, values => Collection(values), List("SemanticAnalysisException"))
   }
-
 
 }
