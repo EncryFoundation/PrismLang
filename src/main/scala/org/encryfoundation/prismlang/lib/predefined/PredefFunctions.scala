@@ -5,7 +5,7 @@ import org.encryfoundation.prismlang.core.wrapped.PWrappedMember
 object PredefFunctions {
 
   /** All predef functions by their categories. */
-  val timeF: Seq[BuiltInFunctionHolder] = Seq(time.Str2Time)
+  val timeF: Seq[BuiltInFunctionHolder] = Seq(time.UnixTime)
   val cryptoF: Seq[BuiltInFunctionHolder] = Seq(signature.CheckSig)
   val hashF: Seq[BuiltInFunctionHolder] = Seq(
     hash.Blake2b256Hash,

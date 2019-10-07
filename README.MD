@@ -28,7 +28,7 @@ Built-in Complex Types
 - `DataBox` - EncryDataBox
 
 Build-in functions
-- `Str2Time(time: String)` - Convert String to Timestamp
+- `unixTime(time: String)` - Convert String to Timestamp
 - `checkSig(signature: Signature25519, message: Array[Byte], key: Array[Byte])` - Check message was signed with Key
 
 Build-in  cryptographic hash functions
