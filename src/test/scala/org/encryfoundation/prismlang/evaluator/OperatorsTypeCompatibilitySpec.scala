@@ -48,26 +48,26 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
     }
   }
 
-  property("binary operators with different types shouldn't compile") {
+  property("binary operators shouldn't compile with different types") {
     checkBinOperators(List(Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow),
       values1, values2, binExpr, List("SemanticAnalysisException"))
   }
 
-  property("compare operators with different types shouldn't compile") {
+  property("compare operators shouldn't compile with different types") {
     checkBinOperators(List(CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE),
       values1, values2, compareExpr, List("SemanticAnalysisException"))
   }
 
-  property("Eq NotEq with different types shouldn't compile") {
+  property("Eq NotEq shouldn't compile with different types") {
     checkBinOperators(List(CompOp.Eq, CompOp.NotEq),
       values1, values2, compareExpr, List("Exception", "ClassCastException"))
   }
 
-  property("In NotIn with different types shouldn't compile") {
+  property("In NotIn shouldn't compile with different types") {
     checkBinOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr, List("SemanticAnalysisException", "ClassCastException"))
   }
 
-  property("And Or with different types shouldn't compile") {
+  property("And Or shouldn't compile with different types") {
     checkBinOperators(List(BooleanOp.And, BooleanOp.Or), values1, values2, boolExpr, List("SemanticAnalysisException"))
   }
 

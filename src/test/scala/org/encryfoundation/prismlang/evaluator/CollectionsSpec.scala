@@ -15,7 +15,7 @@ class CollectionsSpec extends PropSpec
   val valueTypes = List("Str", "IntConst", "ByteConst", "Base16Str", "Base58Str", "Bool")
   val valueTypesTable = Table("valueTypes", valueTypes: _*)
 
-  def check(valueTypes: List[String], wrapper: List[Expr] => Expr, count: Int): Unit = {
+  def checkContains(valueTypes: List[String], wrapper: List[Expr] => Expr, count: Int): Unit = {
     val (exprVals, expectedVals) =
       ValueGenerator.genValueTypeList(valueTypes, count)
         .map(ValueGenerator.genRandomValue)
@@ -41,7 +41,7 @@ class CollectionsSpec extends PropSpec
   property("collection should be contains elements") {
     (1 to 300).foreach { n =>
       forAll(valueTypesTable) { valueType =>
-        check(List(valueType), values => Collection(values), n)
+        checkContains(List(valueType), values => Collection(values), n)
       }
     }
   }
@@ -60,7 +60,7 @@ class CollectionsSpec extends PropSpec
 
   property("tuple should be contain elements of different types") {
     (1 to 4).foreach { n =>
-      check(valueTypes, values => Tuple(values), n)
+      checkContains(valueTypes, values => Tuple(values), n)
     }
   }
 
