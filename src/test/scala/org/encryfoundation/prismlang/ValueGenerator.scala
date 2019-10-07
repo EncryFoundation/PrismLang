@@ -2,13 +2,12 @@ package org.encryfoundation.prismlang
 
 import org.encryfoundation.prismlang.core.Ast.Expr
 import org.encryfoundation.prismlang.core.Ast.Expr.{Base16Str, Base58Str, ByteConst, False, IntConst, Str, True}
+import org.encryfoundation.prismlang.integration.Utils
 import scorex.utils.{Random => ScorexRandom}
+
 import scala.util.Random
 
-object ValueGenerator {
-
-  def generateRandomString(length: Int): String =
-    Random.alphanumeric.take(length).mkString
+object ValueGenerator extends Utils {
 
   def genRandomValue(valueTypeName: String): (Expr, Any) = valueTypeName match {
     case "Str" =>
