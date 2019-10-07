@@ -7,7 +7,7 @@ import org.encryfoundation.prismlang.core.wrapped.PFunctionPredef.PredefFunction
 import org.encryfoundation.prismlang.core.wrapped.{PFunctionPredef, PValue}
 import org.encryfoundation.prismlang.lib.predefined.BuiltInFunctionHolder
 
-object Str2Time extends BuiltInFunctionHolder {
+object UnixTime extends BuiltInFunctionHolder {
 
   val name = "unixTime"
 
