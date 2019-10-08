@@ -1,11 +1,11 @@
 package org.encryfoundation.prismlang.lib.predefined.hash
 
-import org.encryfoundation.prismlang.core.wrapped.{PFunctionPredef, PValue}
-import scorex.crypto.hash.{Sha256 => ScorexSha256}
+import scorex.crypto.hash.{Digest32, Sha256}
 
 object Sha256Hash extends HashFunctionHolder {
 
-  val name: String = "sha256"
+  override val name: String = "sha256"
 
-  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = bodyValue(ScorexSha256.hash)
+  override val hashFunc: Array[Byte] => Digest32 = Sha256.hash
+
 }
