@@ -65,10 +65,29 @@ class BuildInFuncSpec extends PropSpec with Utils {
     checkBinaryFunc("max", Math.max)
   }
 
+  property("base16encode") {
+    checkBaseEncodeFunc(bytes, "base16encode", Base16.encode)
+  }
+
+  property("base58encode") {
+    checkBaseEncodeFunc(bytes, "base58encode", Base58.encode)
+  }
+
   def checkBaseDecodeFunc(str: String, funcName: String, checkFunc: String => Try[Array[Byte]]): Unit = {
     val sources = s"{ $funcName'$str' }"
 
     testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(str)))
+  }
+
+  def checkBaseEncodeFunc(bytes: Array[Byte], funcName: String, checkFunc: Array[Byte] => String): Unit = {
+    val sources =
+      s"""
+         {
+           let b: Array[Byte] = Array(${bytes.mkString(",")})
+           $funcName(b)
+         }
+      """.stripMargin
+    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(bytes)))
   }
 
   def checkHashFunc(bytes: Array[Byte], funcName: String, checkFunc: Array[Byte] => Digest): Unit = {
