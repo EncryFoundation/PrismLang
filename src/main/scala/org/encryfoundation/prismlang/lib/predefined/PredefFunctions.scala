@@ -14,8 +14,8 @@ object PredefFunctions {
     hash.Keccak512Hash,
     hash.Sha256Hash
   )
-  val decodeF: Seq[BuiltInFunctionHolder] = Seq(
-    decode.Base58decode
+  val baseF: Seq[BuiltInFunctionHolder] = Seq(
+    base.Base16encode, base.Base58encode
   )
   val mathF: Seq[BuiltInFunctionHolder] = Seq(
     math.Max,
@@ -27,7 +27,7 @@ object PredefFunctions {
   )
 
   val all: Map[String, PWrappedMember] =
-    (timeF ++ cryptoF ++ hashF ++ decodeF ++ mathF ++ collF).map(f => f.name -> f.asFunc).toMap
+    (timeF ++ cryptoF ++ hashF ++ baseF ++ mathF ++ collF).map(f => f.name -> f.asFunc).toMap
 
   /** The most computationally expensive functions */
   val heavyFunctions: Seq[BuiltInFunctionHolder] = cryptoF ++ hashF
