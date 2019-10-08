@@ -1,11 +1,11 @@
 package org.encryfoundation.prismlang.lib.predefined.hash
 
-import org.encryfoundation.prismlang.core.wrapped.{PFunctionPredef, PValue}
-import scorex.crypto.hash.Blake2b512
+import scorex.crypto.hash.{Blake2b512, Digest64}
 
 object Blake2b512Hash extends HashFunctionHolder {
 
-  val name: String = "blake2b512"
+  override val name: String = "blake2b512"
 
-  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = bodyValue(Blake2b512.hash)
+  override val hashFunc: Blake2b512.Message => Digest64 = Blake2b512.hash
+
 }
