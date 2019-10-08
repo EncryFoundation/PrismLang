@@ -12,13 +12,11 @@ trait HashFunctionHolder extends BuiltInFunctionHolder {
 
   def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
-  val args = IndexedSeq("input" -> Types.PCollection.ofByte)
+  val args: IndexedSeq[(String, Types.PType)] = IndexedSeq("input" -> Types.PCollection.ofByte)
 
-  protected def bodyValue(hash: Array[Byte] => Array[Byte]): Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (varargs: Seq[(String, PValue)]) => {
-    val validNumberOfArgs = varargs.size == args.size
-    val validArgTypes = varargs.zip(args).forall { case ((_, value), (_, tpe)) => value.tpe == tpe }
-    if (validNumberOfArgs && validArgTypes) {
-      val fnArgs = varargs.map(_._2.value.asInstanceOf[Array[Byte]])
+  protected def bodyValue(hash: Array[Byte] => Array[Byte]): Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (pArgs: Seq[(String, PValue)]) => {
+    if(checkArgs(args, pArgs)) {
+      val fnArgs = pArgs.map(_._2.value.asInstanceOf[List[Byte]].toArray)
       Right(hash(fnArgs.head).toList)
     } else {
       Left(PredefFunctionExecFailure)
