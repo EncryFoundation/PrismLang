@@ -29,14 +29,6 @@ class BuildInFuncSpec extends PropSpec with Utils {
     testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(timestamp))
   }
 
-  property("base16") {
-    checkBaseDecodeFunc(Base16.encode(bytes), "base16", Base16.decode)
-  }
-
-  property("base58") {
-    checkBaseDecodeFunc(Base58.encode(bytes), "base58", Base58.decode)
-  }
-
   property("blake2b256") {
     checkHashFunc(bytes, "blake2b256", Blake2b256.hash)
   }
@@ -65,29 +57,20 @@ class BuildInFuncSpec extends PropSpec with Utils {
     checkBinaryFunc("max", Math.max)
   }
 
-  property("base16encode") {
-    checkBaseEncodeFunc(bytes, "base16encode", Base16.encode)
+  property("base16") {
+    checkBaseDecodeFunc(Base16.encode(bytes), "base16", Base16.decode)
   }
 
-  property("base58encode") {
-    checkBaseEncodeFunc(bytes, "base58encode", Base58.encode)
+  property("base58") {
+    checkBaseDecodeFunc(Base58.encode(bytes), "base58", Base58.decode)
   }
 
-  def checkBaseDecodeFunc(str: String, funcName: String, checkFunc: String => Try[Array[Byte]]): Unit = {
-    val sources = s"{ $funcName'$str' }"
-
-    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(str)))
+  property("encode16") {
+    checkBaseEncodeFunc(bytes, "encode16", Base16.encode)
   }
 
-  def checkBaseEncodeFunc(bytes: Array[Byte], funcName: String, checkFunc: Array[Byte] => String): Unit = {
-    val sources =
-      s"""
-         {
-           let b: Array[Byte] = Array(${bytes.mkString(",")})
-           $funcName(b)
-         }
-      """.stripMargin
-    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(bytes)))
+  property("encode58") {
+    checkBaseEncodeFunc(bytes, "encode58", Base58.encode)
   }
 
   def checkHashFunc(bytes: Array[Byte], funcName: String, checkFunc: Array[Byte] => Digest): Unit = {
@@ -103,6 +86,23 @@ class BuildInFuncSpec extends PropSpec with Utils {
     val sources = s"{ $funcName($a, $b) }"
 
     testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(a, b)))
+  }
+
+  def checkBaseDecodeFunc(str: String, funcName: String, checkFunc: String => Try[Array[Byte]]): Unit = {
+    val sources = s"{ $funcName'$str' }"
+
+    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(str).get))
+  }
+
+  def checkBaseEncodeFunc(bytes: Array[Byte], funcName: String, checkFunc: Array[Byte] => String): Unit = {
+    val sources =
+      s"""
+         {
+           let b: Array[Byte] = Array(${bytes.mkString(",")})
+           $funcName(b)
+         }
+      """.stripMargin
+    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(checkFunc(bytes)))
   }
 
 }
