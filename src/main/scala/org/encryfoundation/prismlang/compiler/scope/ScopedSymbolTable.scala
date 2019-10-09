@@ -1,5 +1,7 @@
 package org.encryfoundation.prismlang.compiler.scope
 
+import org.encryfoundation.prismlang.compiler.SemanticAnalysisException
+
 import scala.collection.immutable.TreeMap
 
 case class ScopedSymbolTable(scopeLevel: Int,
@@ -10,7 +12,7 @@ case class ScopedSymbolTable(scopeLevel: Int,
   var symbols: TreeMap[String, Symbol] = TreeMap(initialMembers.map(m => m.name -> m):_*)
 
   def insert(sym: Symbol): Unit = {
-    lookup(sym.name).foreach(_ => throw new Exception(s"${sym.name} is already defined in scope"))
+    lookup(sym.name).foreach(_ => SemanticAnalysisException(s"${sym.name} is already defined in scope"))
     symbols = symbols.updated(sym.name, sym)
   }
 
