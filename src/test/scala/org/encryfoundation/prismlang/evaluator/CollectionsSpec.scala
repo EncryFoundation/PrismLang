@@ -3,6 +3,7 @@ package org.encryfoundation.prismlang.evaluator
 import org.encryfoundation.prismlang.ValueGenerator
 import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast._
+import org.encryfoundation.prismlang.core.Constants
 import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec, TryValues}
 
@@ -39,7 +40,7 @@ class CollectionsSpec extends PropSpec
   }
 
   property("collection should be contains elements") {
-    (1 to 300).foreach { n =>
+    (1 to Constants.CollMaxLength).foreach { n =>
       forAll(valueTypesTable) { valueType =>
         checkContains(List(valueType), values => Collection(values), n)
       }
@@ -59,7 +60,7 @@ class CollectionsSpec extends PropSpec
   }
 
   property("tuple should be contain elements of different types") {
-    (1 to 4).foreach { n =>
+    (1 to Constants.TupleMaxDim).foreach { n =>
       checkContains(valueTypes, values => Tuple(values), n)
     }
   }
