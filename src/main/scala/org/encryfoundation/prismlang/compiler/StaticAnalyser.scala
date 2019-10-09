@@ -53,7 +53,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       val bodyScope: ScopedSymbolTable = currentScope.nested(params.map(p => Symbol(p._1, p._2)), isFunc = true)
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
-      if (bodyS.toString.contains(ident.name)) error("Recursion not allowed")
+      if (bodyS.toString.contains(ident.name)) SemanticAnalysisException("Recursion not allowed")
       matchType(declaredReturnType, bodyS.tpe)
       scopes = scopes.tail
       func.copy(ident, args, bodyS, returnTypeIdent)
@@ -94,7 +94,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case ifLet @ Expr.IfLet(local, typeIdent, target, body, orelse, _) =>
       val targetS: Expr = scan(target)
       val localT: Types.PType = types.resolveType(typeIdent)
-      if (localT.isSubtypeOf(target.tpe)) error(s"${target.tpe} can not be cast to $localT")
+      if (localT.isSubtypeOf(target.tpe)) SemanticAnalysisException(s"${target.tpe} can not be cast to $localT")
       val bodyScope: ScopedSymbolTable = currentScope.nested(List(Symbol(local.name, localT)))
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
@@ -148,9 +148,22 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case compare @ Expr.Compare(left, ops, comparators) =>
       val leftS: Expr = scan(left)
       val comparatorsS: List[Expr] = comparators.map(scan)
-      ops.foreach { op => if (!op.leftTypeResolution.exists(t => rightType(t, leftS.tpe))) error(s"$op is not supported on ${leftS.tpe}") }
+
+      ops.foreach { op => if (!op.leftTypeResolution.exists(t => rightType(t, leftS.tpe)))
+        SemanticAnalysisException(s"$op is not supported on ${leftS.tpe}")
+      }
+
       if (!ops.zip(comparatorsS).forall { case (op, comp) => op.rightTypeResolution.exists(t => rightType(t, comp.tpe)) })
-        error(s"Comparison between unsupported types")
+        SemanticAnalysisException(s"Comparison between unsupported types")
+
+      ops
+        .collect { case op@(CompOp.In | CompOp.NotIn) => op }
+        .zip(comparatorsS)
+        .foreach { case (op, comp) =>
+          if (!rightTypeIn(leftS.tpe, comp.tpe))
+            SemanticAnalysisException(s"$op between unsupported types")
+        }
+
       compare.copy(leftS, ops, comparatorsS)
   }
 
@@ -169,7 +182,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
         symbol.tpe match {
           case Types.PFunc(declaredArgs, _) =>
             declaredArgs.map(_._2).zip(argsS.map(_.tpe)).foreach { case (dt, ft) => matchType(dt, ft) }
-          case _ => error(s"${ident.name} is not a function")
+          case _ => SemanticAnalysisException(s"${ident.name} is not a function")
         }
       }
       call.copy(funcS, argsS, computeType(call))
@@ -190,12 +203,12 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       * size does not overflow `CollMaxElements`, then check type
       * consistency of all elements and collection nesting. */
     case coll @ Expr.Collection(elts, _) =>
-      if (elts.size > Constants.CollMaxLength) error(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
-      else if (elts.size < 1) error("Empty collection")
+      if (elts.size > Constants.CollMaxLength) SemanticAnalysisException(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
+      else if (elts.size < 1) SemanticAnalysisException("Empty collection")
       val eltsS: List[Expr] = elts.map(scan)
       eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
       eltsS.head.tpe match {
-        case Types.PCollection(inT) if inT.isCollection => error("Illegal level of nesting")
+        case Types.PCollection(inT) if inT.isCollection => SemanticAnalysisException("Illegal level of nesting")
         case _ => // Do nothing
       }
       coll.copy(eltsS, computeType(coll.copy(eltsS)))
@@ -205,35 +218,34 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     /** Scan each element of tuple ensuring its actual size does not
       * overflow `TupleMaxLength`, then check type consistency of all elements. */
     case tuple @ Expr.Tuple(elts, _) =>
-      if (elts.size > Constants.TupleMaxDim) error(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxDim})")
-      else if (elts.size < 1) error("Empty tuple")
+      if (elts.size > Constants.TupleMaxDim) SemanticAnalysisException(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxDim})")
+      else if (elts.size < 1) SemanticAnalysisException("Empty tuple")
       val eltsS: List[Expr] = elts.map(scan)
-      eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Tuple is inconsistent, ${elt.tpe} stands out.")))
       tuple.copy(eltsS, computeType(tuple.copy(eltsS)))
 
     /** Has default type, check max length overflow and base58-string validity. */
     case base58 @ Expr.Base58Str(value) =>
       if (value.length > Constants.ByteStringMaxLength)
-        error(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
-      else if (Base58.decode(value).isFailure) error(s"Invalid Base58 string '$value'")
+        SemanticAnalysisException(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
+      else if (Base58.decode(value).isFailure) SemanticAnalysisException(s"Invalid Base58 string '$value'")
       base58
 
     /** Has default type, check max length overflow and base16-string validity. */
     case base16 @ Expr.Base16Str(value) =>
       if (value.length > Constants.ByteStringMaxLength)
-        error(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
-      else if (Base16.decode(value).isFailure) error(s"Invalid Base16 string '$value'")
+        SemanticAnalysisException(s"String max length overflow (${value.length} > ${Constants.ByteStringMaxLength})")
+      else if (Base16.decode(value).isFailure) SemanticAnalysisException(s"Invalid Base16 string '$value'")
       base16
 
     /** Has default type, check max length overflow. */
     case string @ Expr.Str(value) =>
       if (value.length > Constants.StringMaxLength)
-        error(s"String max length overflow (${value.length} > ${Constants.StringMaxLength})")
+        SemanticAnalysisException(s"String max length overflow (${value.length} > ${Constants.StringMaxLength})")
       string
 
     /** Make sure given `value` does not overflow `Long.MaxSize`. */
     case int @ Expr.IntConst(value) =>
-      if (value > Long.MaxValue) error(s"int64 max size overflow ($value > ${Long.MaxValue})")
+      if (value > Long.MaxValue) SemanticAnalysisException(s"int64 max size overflow ($value > ${Long.MaxValue})")
       int
   }
 
@@ -243,9 +255,9 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case map @ Expr.Map(coll, func, _) =>
       val collS: Expr = scan(coll)
       val funcS: Expr = scan(func)
-      if (!collS.tpe.isCollection) error(s"'map()' is inapplicable to ${collS.tpe}")
-      else if (!funcS.tpe.isFunc) error(s"'${funcS.tpe}' is not a function")
-      else if (!isApplicableTo(collS, funcS)) error(s"${funcS.tpe} is inapplicable to ${collS.tpe}")
+      if (!collS.tpe.isCollection) SemanticAnalysisException(s"'map()' is inapplicable to ${collS.tpe}")
+      else if (!funcS.tpe.isFunc) SemanticAnalysisException(s"'${funcS.tpe}' is not a function")
+      else if (!isApplicableTo(collS, funcS)) SemanticAnalysisException(s"${funcS.tpe} is inapplicable to ${collS.tpe}")
       map.copy(collS, funcS, computeType(map.copy(collS, funcS)))
 
     /** Ensure `coll` is of type `Collection` and `func` is of
@@ -253,9 +265,9 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case exists @ Expr.Exists(coll, predicate) =>
       val collS: Expr = scan(coll)
       val predicateS: Expr = scan(predicate)
-      if (!collS.tpe.isCollection) error(s"'exists()' is inapplicable to ${collS.tpe}")
-      else if (!predicateS.tpe.isFunc) error(s"'${predicateS.tpe}' is not a function")
-      else if (!isApplicableTo(collS, predicateS)) error(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
+      if (!collS.tpe.isCollection) SemanticAnalysisException(s"'exists()' is inapplicable to ${collS.tpe}")
+      else if (!predicateS.tpe.isFunc) SemanticAnalysisException(s"'${predicateS.tpe}' is not a function")
+      else if (!isApplicableTo(collS, predicateS)) SemanticAnalysisException(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
       exists.copy(collS, predicateS)
 
     /** Ensure `coll` is of type `Collection` and `func` is of
@@ -263,9 +275,9 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case filter @ Expr.Filter(coll, predicate, _) =>
       val collS: Expr = scan(coll)
       val predicateS: Expr = scan(predicate)
-      if (!collS.tpe.isCollection) error(s"'filter()' is inapplicable to ${collS.tpe}")
-      else if (!predicateS.tpe.isFunc) error(s"'${predicateS.tpe}' is not a function")
-      else if (!isApplicableTo(collS, predicateS)) error(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
+      if (!collS.tpe.isCollection) SemanticAnalysisException(s"'filter()' is inapplicable to ${collS.tpe}")
+      else if (!predicateS.tpe.isFunc) SemanticAnalysisException(s"'${predicateS.tpe}' is not a function")
+      else if (!isApplicableTo(collS, predicateS)) SemanticAnalysisException(s"${predicateS.tpe} is inapplicable to ${collS.tpe}")
       filter.copy(collS, predicateS, computeType(filter.copy(collS, predicateS)))
   }
 
@@ -278,22 +290,22 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case Expr.Block(body, _) => computeType(body.last)
 
     /** Type of the referenced name is looked up in the scope. */
-    case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(error(s"$name is undefined"))
+    case Expr.Name(Ident(name), _) => currentScope.lookup(name).map(_.tpe).getOrElse(SemanticAnalysisException(s"$name is undefined"))
 
     /** In this case some referenced name is called, the type
       * is inferred from the return-type of the ref, which is
       * looked up in the scope. */
     case Expr.Call(func @ Expr.Name(ident, _), _, _) => computeType(func) match {
       case Types.PFunc(_, retT) => retT
-      case _ => error(s"${ident.name} is not a function")
+      case _ => SemanticAnalysisException(s"${ident.name} is not a function")
     }
 
     /** Type of attribute is inferred from the type of
       * corresponding field of the object. */
     case Expr.Attribute(value, attr, _) => computeType(value) match {
-      case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${prod.ident}"))
-      case tag: Types.TaggedType if tag.isProduct => tag.underlyingType.asInstanceOf[Types.Product].getAttrType(attr.name).getOrElse(error(s"${attr.name} is not defined in ${tag.underlyingType.ident}"))
-      case other => error(s"${other.ident} is not an object")
+      case prod: Types.Product => prod.getAttrType(attr.name).getOrElse(SemanticAnalysisException(s"${attr.name} is not defined in ${prod.ident}"))
+      case tag: Types.TaggedType if tag.isProduct => tag.underlyingType.asInstanceOf[Types.Product].getAttrType(attr.name).getOrElse(SemanticAnalysisException(s"${attr.name} is not defined in ${tag.underlyingType.ident}"))
+      case other => SemanticAnalysisException(s"${other.ident} is not an object")
     }
 
     /** Infer type for the `value`, ensure it is of type `Collection`,
@@ -305,7 +317,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
         case _: SliceOp.Index => inT
         case _: SliceOp.Slice => coll
       }
-      case otherT => error(s"$otherT does not support subscription")
+      case otherT => SemanticAnalysisException(s"$otherT does not support subscription")
     }
     case Expr.Unary(_, operand, _) => computeType(operand)
     case Expr.If(_, body, orelse, _) => findCommonType(computeType(body), computeType(orelse))
@@ -315,7 +327,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
     case Expr.Map(_, func, _) => computeType(func) match {
       case Types.PFunc(_, retT) => Types.PCollection(retT)
-      case otherT => error(s"$otherT is not a function")
+      case otherT => SemanticAnalysisException(s"$otherT is not a function")
     }
     case Expr.Filter(coll, _, _) => computeType(coll)
   }

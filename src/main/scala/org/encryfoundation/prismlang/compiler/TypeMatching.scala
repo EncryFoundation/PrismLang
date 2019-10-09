@@ -14,13 +14,18 @@ trait TypeMatching {
     }
   }
 
-  def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
-    if (!rightType(required, actual)) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
+  def rightTypeIn(left: Types.PType, right: Types.PType): Boolean = {
+    right match {
+      case PCollection(collType) if rightType(collType, left) => true
+      case _ => false
+    }
+  }
 
-  def error(msg: String) = throw new SemanticAnalysisException(msg)
+  def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
+    if (!rightType(required, actual)) SemanticAnalysisException(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 
   def unsupportedOperation(leftType: PType, rightType: PType) =
-    error(s"Unsupported operation for types $leftType and $rightType")
+    SemanticAnalysisException(s"Unsupported operation for types $leftType and $rightType")
 
   def isValidBinaryOperation(leftOperand: Ast.Expr, rightOperand: Ast.Expr, operator: Ast.Operator): Unit = {
     operator match {
@@ -38,7 +43,7 @@ trait TypeMatching {
       }
       case _ => leftOperand.tpe match {
         case PByte | PInt => matchType(PInt, rightOperand.tpe)
-          if (!checkIntBoundaries(leftOperand, rightOperand, operator)) error("Result exceeds PInt boundary")
+          if (!checkIntBoundaries(leftOperand, rightOperand, operator)) SemanticAnalysisException("Result exceeds PInt boundary")
         case _ => unsupportedOperation(leftOperand.tpe, rightOperand.tpe)
       }
     }
@@ -47,11 +52,11 @@ trait TypeMatching {
   def checkZeroDivision(rightOperand: Ast.Expr): Unit = {
     rightOperand match {
       case exp: IntConst => exp.value match {
-        case 0 => error("Zero division found")
+        case 0 => SemanticAnalysisException("Zero division found")
         case _ =>
       }
       case exp: ByteConst => exp.value match {
-        case 0 => error("Zero division found")
+        case 0 => SemanticAnalysisException("Zero division found")
         case _ =>
       }
       case _ =>
