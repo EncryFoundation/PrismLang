@@ -4,12 +4,10 @@ import org.encryfoundation.prismlang.ValueGenerator
 import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.Constants
+import org.encryfoundation.prismlang.integration.Utils
 import org.scalatest.{Matchers, PropSpec, TryValues}
 
-class ContainersSpec extends PropSpec
-  with Matchers
-  with ExprChecker
-  with TryValues {
+class ContainersSpec extends PropSpec with Utils {
 
   val valueTypes = List("Str", "IntConst", "ByteConst", "Base16Str", "Base58Str", "Bool")
 
@@ -19,18 +17,16 @@ class ContainersSpec extends PropSpec
         .map(ValueGenerator.genRandomValue)
         .unzip
 
-    val compile = compileExpr(wrapper(exprVals))
-    val result = eval(compile.get).get
-    result shouldBe expectedVals
+    checkExpr(wrapper(exprVals), true, true, Some(expectedVals))
   }
 
-  def checkConsistencyExceptions(valueTypes: List[String], wrapper: List[Expr] => Expr, expectedExceptions: List[String]): Unit = {
+  def checkConsistencyExceptions(valueTypes: List[String], wrapper: List[Expr] => Expr): Unit = {
     valueTypes.foreach { valueType1 =>
       valueTypes.foreach { valueType2 =>
           val (value1, _) = ValueGenerator.genRandomValue(valueType1)
           val (value2, _) = ValueGenerator.genRandomValue(valueType2)
           if(value1.tpe != value2.tpe && !exclusion(value1, value2)) {
-            checkExprForExceptions(wrapper(List(value1, value2)), expectedExceptions)
+            checkExpr(wrapper(List(value1, value2)))
         }
       }
     }
@@ -45,15 +41,15 @@ class ContainersSpec extends PropSpec
   }
 
   property("collection should be contains at least 1 element") {
-    checkExprForExceptions(Collection(List()), List("SemanticAnalysisException"))
+    checkExpr(Collection(List()))
   }
 
   property("collection should be consistent") {
-    checkConsistencyExceptions(valueTypes, values => Collection(values), List("SemanticAnalysisException"))
+    checkConsistencyExceptions(valueTypes, values => Collection(values))
   }
 
   property("tuple should be contains at least 1 element") {
-    checkExprForExceptions(Tuple(List()), List("SemanticAnalysisException"))
+    checkExpr(Tuple(List()))
   }
 
   property("tuple should be contain elements of different types") {

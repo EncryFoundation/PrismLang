@@ -2,9 +2,12 @@ package org.encryfoundation.prismlang.integration
 
 import org.encryfoundation.prismlang.compiler.{CostEstimator, TestCompiler}
 import org.encryfoundation.prismlang.core.Ast
+import org.encryfoundation.prismlang.core.Ast.Expr
+import org.encryfoundation.prismlang.core.Types.{PByte, PInt}
 import org.encryfoundation.prismlang.evaluator.ExprEvaluator
 import org.encryfoundation.prismlang.parser.Parser
 import org.scalatest.Matchers
+
 import scala.util.{Failure, Random, Success, Try}
 
 trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
@@ -41,6 +44,38 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
       val value: Any = expectedValue.getOrElse(throw new Exception("No value to compare found"))
       tryEvaluatedExpression.getOrElse(s"Expected $value, but failure occurred") shouldEqual value
     }
+  }
+
+  def checkExpr(expr: Expr, compilationSuccess: Boolean = false, evaluationSuccess: Boolean = false, expectedValue: Option[Any] = None) {
+    val (compiled, evaluated, result) = compileExpr(expr) match {
+      case Success(expr) =>
+        if (evaluationSuccess) {
+          val result = eval(expr)
+          (true, result.isSuccess, result.toOption)
+        } else
+          (true, false, None)
+      case Failure(_) => (false, false, None)
+    }
+
+    if (compilationSuccess != compiled) {
+      val should = if (compilationSuccess) "should" else "shouldn't"
+      throw new Exception(s"Expression '${expr.toString}' $should compile")
+    }
+
+    if (evaluationSuccess != evaluated) {
+      val should = if (compilationSuccess) "should" else "shouldn't"
+      throw new Exception(s"Expression '${expr.toString}' $should evaluate")
+    }
+
+    if (evaluationSuccess) {
+      val value: Any = expectedValue.getOrElse(throw new Exception("No value to compare found"))
+      result.getOrElse(s"Expected $value, but failure occurred") shouldEqual value
+    }
+  }
+
+  def exclusion(value1: Expr, value2: Expr): Boolean = {
+    val compatibleTypes = List(PByte, PInt)
+    compatibleTypes.contains(value1.tpe) && compatibleTypes.contains(value2.tpe)
   }
 
   def generateRandomString(length: Int): String = Random.alphanumeric.dropWhile(_.isDigit).take(length).mkString
