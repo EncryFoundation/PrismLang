@@ -1,3 +1,7 @@
 package org.encryfoundation.prismlang.compiler
 
-class SemanticAnalysisException(m: String) extends Exception(m)
+case class SemanticAnalysisException(m: String) extends Exception(m)
+
+object SemanticAnalysisException {
+  def apply(msg: String): Nothing =  throw new SemanticAnalysisException(msg)
+}
