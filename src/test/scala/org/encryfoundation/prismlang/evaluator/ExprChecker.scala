@@ -2,6 +2,7 @@ package org.encryfoundation.prismlang.evaluator
 
 import org.encryfoundation.prismlang.compiler.TestCompiler
 import org.encryfoundation.prismlang.core.Ast.Expr
+import org.encryfoundation.prismlang.core.Types.{PByte, PInt}
 
 import scala.util.{Failure, Success}
 
@@ -20,6 +21,11 @@ trait ExprChecker extends TestCompiler with ExprEvaluator {
 
     assert(expectedExceptions.contains(throwable.getClass.getSimpleName),
       s"${throwable.getClass.getSimpleName} should be  ${expectedExceptions.mkString}")
+  }
+
+  def exclusion(value1: Expr, value2: Expr): Boolean = {
+    val compatibleTypes = List(PByte, PInt)
+    compatibleTypes.contains(value1.tpe) && compatibleTypes.contains(value2.tpe)
   }
 
 }
