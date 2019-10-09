@@ -4,12 +4,10 @@ import org.encryfoundation.prismlang.ValueGenerator
 import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast.{CompOp, _}
 import org.encryfoundation.prismlang.core.Types.{PBoolean, PByte, PInt}
-import org.scalatest.prop._
 import org.scalatest.{Matchers, PropSpec}
 
 class OperatorsTypeCompatibilitySpec extends PropSpec
   with Matchers
-  with TableDrivenPropertyChecks
   with ExprChecker {
 
   val valueTypes = List("Str", "IntConst", "ByteConst", "Base16Str", "Base58Str", "Bool")
@@ -58,11 +56,11 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
 
   property("Eq NotEq shouldn't compile with different types") {
     checkBinOperators(List(CompOp.Eq, CompOp.NotEq),
-      values1, values2, compareExpr, List("Exception", "ClassCastException"))
+      values1, values2, compareExpr, List("SemanticAnalysisException"))
   }
 
   property("In NotIn shouldn't compile with different types") {
-    checkBinOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr, List("SemanticAnalysisException", "ClassCastException", "Exception"))
+    checkBinOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr, List("SemanticAnalysisException"))
   }
 
   property("And Or shouldn't compile with different types") {
