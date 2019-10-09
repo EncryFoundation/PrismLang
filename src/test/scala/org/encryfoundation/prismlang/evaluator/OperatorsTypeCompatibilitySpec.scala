@@ -24,14 +24,12 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
   def boolExpr(oper: BooleanOp, values: List[Expr]) = Bool(oper, List(values(0), values(1)))
   def unaryExpr(oper: UnaryOp, values: List[Expr]) = Unary(oper, values(0))
 
-  def exclusion(value1: Expr, value2: Expr): Boolean = value1 == value2 || value1.tpe == value2.tpe
-
   def checkBinOperators[T](operators: List[T], values1: List[Expr], values2: List[Expr],
                            expr: (T, List[Expr]) => Expr, expectedExceptions: List[String]) {
     operators.foreach { operator =>
       values1.foreach { value1 =>
         values2.foreach { value2 =>
-          if(!exclusion(value1, value2)) {
+          if(value1.tpe != value2.tpe && !exclusion(value1, value2)) {
             checkExprForExceptions(expr(operator, List(value1, value2)), expectedExceptions)
           }
         }
@@ -64,7 +62,7 @@ class OperatorsTypeCompatibilitySpec extends PropSpec
   }
 
   property("In NotIn shouldn't compile with different types") {
-    checkBinOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr, List("SemanticAnalysisException", "ClassCastException"))
+    checkBinOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr, List("SemanticAnalysisException", "ClassCastException", "Exception"))
   }
 
   property("And Or shouldn't compile with different types") {

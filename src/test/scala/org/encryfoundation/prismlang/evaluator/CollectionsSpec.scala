@@ -30,10 +30,10 @@ class CollectionsSpec extends PropSpec
   def checkConsistencyExceptions(valueTypesTable: TableFor1[String], wrapper: List[Expr] => Expr, expectedExceptions: List[String]): Unit = {
     forAll(valueTypesTable) { valueType1 =>
       forAll(valueTypesTable) { valueType2 =>
-        whenever(valueType1 != valueType2) {
           val (value1, _) = ValueGenerator.genRandomValue(valueType1)
           val (value2, _) = ValueGenerator.genRandomValue(valueType2)
-          checkExprForExceptions(wrapper(List(value1, value2)), expectedExceptions)
+          if(value1.tpe != value2.tpe && !exclusion(value1, value2)) {
+            checkExprForExceptions(wrapper(List(value1, value2)), expectedExceptions)
         }
       }
     }
