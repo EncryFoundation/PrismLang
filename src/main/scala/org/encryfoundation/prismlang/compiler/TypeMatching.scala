@@ -14,6 +14,13 @@ trait TypeMatching {
     }
   }
 
+  def rightTypeIn(left: Types.PType, right: Types.PType): Boolean = {
+    right match {
+      case PCollection(collType) if rightType(collType, left) => true
+      case _ => false
+    }
+  }
+
   def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
     if (!rightType(required, actual)) error(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 

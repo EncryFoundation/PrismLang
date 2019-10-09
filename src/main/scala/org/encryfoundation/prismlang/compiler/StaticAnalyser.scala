@@ -148,9 +148,22 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case compare @ Expr.Compare(left, ops, comparators) =>
       val leftS: Expr = scan(left)
       val comparatorsS: List[Expr] = comparators.map(scan)
-      ops.foreach { op => if (!op.leftTypeResolution.exists(t => rightType(t, leftS.tpe))) error(s"$op is not supported on ${leftS.tpe}") }
+
+      ops.foreach { op => if (!op.leftTypeResolution.exists(t => rightType(t, leftS.tpe)))
+        error(s"$op is not supported on ${leftS.tpe}")
+      }
+
       if (!ops.zip(comparatorsS).forall { case (op, comp) => op.rightTypeResolution.exists(t => rightType(t, comp.tpe)) })
         error(s"Comparison between unsupported types")
+
+      ops
+        .collect { case op@(CompOp.In | CompOp.NotIn) => op }
+        .zip(comparatorsS)
+        .foreach { case (op, comp) =>
+          if (!rightTypeIn(leftS.tpe, comp.tpe))
+            error(s"$op between unsupported types")
+        }
+
       compare.copy(leftS, ops, comparatorsS)
   }
 
