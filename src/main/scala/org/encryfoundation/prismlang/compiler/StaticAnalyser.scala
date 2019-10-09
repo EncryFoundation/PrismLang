@@ -208,7 +208,6 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       if (elts.size > Constants.TupleMaxDim) error(s"Tuple size limit overflow (${elts.size} > ${Constants.TupleMaxDim})")
       else if (elts.size < 1) error("Empty tuple")
       val eltsS: List[Expr] = elts.map(scan)
-      eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Tuple is inconsistent, ${elt.tpe} stands out.")))
       tuple.copy(eltsS, computeType(tuple.copy(eltsS)))
 
     /** Has default type, check max length overflow and base58-string validity. */
