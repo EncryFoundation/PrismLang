@@ -156,13 +156,17 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       if (!ops.zip(comparatorsS).forall { case (op, comp) => op.rightTypeResolution.exists(t => rightType(t, comp.tpe)) })
         SemanticAnalysisException(s"Comparison between unsupported types")
 
-      ops
-        .collect { case op@(CompOp.In | CompOp.NotIn) => op }
-        .zip(comparatorsS)
-        .foreach { case (op, comp) =>
-          if (!rightTypeIn(leftS.tpe, comp.tpe))
-            SemanticAnalysisException(s"$op between unsupported types")
+      ops.zip(comparatorsS).foreach { case (op, comp) =>
+        op match {
+          case CompOp.In | CompOp.NotIn =>
+            if (!rightTypeIn(leftS.tpe, comp.tpe))
+              SemanticAnalysisException(s"$op type mismatch: ${leftS.tpe} and ${comp.tpe}")
+          case CompOp.Eq | CompOp.NotEq =>
+            if (leftS.tpe != comp.tpe)
+              SemanticAnalysisException(s"$op type mismatch: ${leftS.tpe} and ${comp.tpe}")
+          case _ =>
         }
+      }
 
       compare.copy(leftS, ops, comparatorsS)
   }

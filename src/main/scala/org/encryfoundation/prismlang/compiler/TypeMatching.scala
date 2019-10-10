@@ -16,7 +16,7 @@ trait TypeMatching {
 
   def rightTypeIn(left: Types.PType, right: Types.PType): Boolean = {
     right match {
-      case PCollection(collType) if rightType(collType, left) => true
+      case PCollection(collType) if collType == left => true
       case _ => false
     }
   }
