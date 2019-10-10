@@ -8,7 +8,7 @@ import org.encryfoundation.prismlang.core.{Ast, Types}
 trait TypeMatching {
 
   def isTypesCompatible(t1: PType, t2: PType): Boolean = {
-    val compatibleTypes = List(
+    val compatibleTypes: List[List[PType]] = List(
       List(PByte, PInt)
     )
     compatibleTypes.exists(compatibleList => compatibleList.contains(t1) && compatibleList.contains(t2))
