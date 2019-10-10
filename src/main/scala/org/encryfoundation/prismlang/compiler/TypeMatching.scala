@@ -7,16 +7,23 @@ import org.encryfoundation.prismlang.core.{Ast, Types}
 
 trait TypeMatching {
 
+  def isTypesCompatible(t1: PType, t2: PType): Boolean = {
+    val compatibleTypes = List(
+      List(PByte, PInt)
+    )
+    compatibleTypes.exists(compatibleList => compatibleList.contains(t1) && compatibleList.contains(t2))
+  }
+
   def rightType(required: Types.PType, actual: Types.PType): Boolean = {
-    required match {
-      case coll: PCollection => coll.valT != PAny
-      case _ => required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
-    }
+    required == actual || isTypesCompatible(required, actual) ||
+      required.isCollection && actual.isCollection &&
+        isTypesCompatible(required.asInstanceOf[PCollection].valT, actual.asInstanceOf[PCollection].valT) ||
+      actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
   }
 
   def rightTypeIn(left: Types.PType, right: Types.PType): Boolean = {
     right match {
-      case PCollection(collType) if collType == left => true
+      case PCollection(collType) if rightType(collType, left) => true
       case _ => false
     }
   }
