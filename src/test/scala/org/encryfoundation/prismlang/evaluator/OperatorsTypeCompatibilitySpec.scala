@@ -3,7 +3,7 @@ package org.encryfoundation.prismlang.evaluator
 import org.encryfoundation.prismlang.ValueGenerator
 import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast.{CompOp, _}
-import org.encryfoundation.prismlang.core.Types.{PBoolean, PByte, PInt}
+import org.encryfoundation.prismlang.core.Types.{PBoolean, PByte, PCollection, PInt}
 import org.encryfoundation.prismlang.integration.Utils
 import org.scalatest.PropSpec
 
@@ -17,6 +17,7 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
   val values2: List[Expr] = genValues
 
   def compareExpr(oper: CompOp, values: List[Expr]) = Compare(values(0), List(oper), List(values(1)))
+  def inExpr(oper: CompOp, values: List[Expr]) =  Compare(values(0), List(oper), List(Collection(List(values(1)))))
   def binExpr(oper: Operator, values: List[Expr]) = Bin(values(0), oper, values(1))
   def boolExpr(oper: BooleanOp, values: List[Expr]) = Bool(oper, List(values(0), values(1)))
   def unaryExpr(oper: UnaryOp, values: List[Expr]) = Unary(oper, values(0))
@@ -55,7 +56,7 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
   }
 
   property("In NotIn shouldn't compile with different types") {
-    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr)
+    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, inExpr)
   }
 
   property("And Or shouldn't compile with different types") {
