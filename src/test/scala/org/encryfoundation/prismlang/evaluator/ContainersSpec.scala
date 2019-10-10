@@ -5,7 +5,7 @@ import org.encryfoundation.prismlang.core.Ast.Expr._
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.Constants
 import org.encryfoundation.prismlang.integration.Utils
-import org.scalatest.{Matchers, PropSpec, TryValues}
+import org.scalatest.PropSpec
 
 class ContainersSpec extends PropSpec with Utils {
 
@@ -17,7 +17,7 @@ class ContainersSpec extends PropSpec with Utils {
         .map(ValueGenerator.genRandomValue)
         .unzip
 
-    checkExpr(wrapper(exprVals), true, true, Some(expectedVals))
+    checkExpr(wrapper(exprVals), compilationSuccess = true, evaluationSuccess = true, Some(expectedVals))
   }
 
   def checkConsistencyExceptions(valueTypes: List[String], wrapper: List[Expr] => Expr): Unit = {
@@ -25,7 +25,7 @@ class ContainersSpec extends PropSpec with Utils {
       valueTypes.foreach { valueType2 =>
           val (value1, _) = ValueGenerator.genRandomValue(valueType1)
           val (value2, _) = ValueGenerator.genRandomValue(valueType2)
-          if(value1.tpe != value2.tpe && !exclusion(value1, value2)) {
+          if(value1.tpe != value2.tpe && !compatibleTypesExclusion(value1, value2)) {
             checkExpr(wrapper(List(value1, value2)))
         }
       }
