@@ -21,11 +21,11 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
   def boolExpr(oper: BooleanOp, values: List[Expr]) = Bool(oper, List(values(0), values(1)))
   def unaryExpr(oper: UnaryOp, values: List[Expr]) = Unary(oper, values(0))
 
-  def checkBinOperators[T](operators: List[T], values1: List[Expr], values2: List[Expr], expr: (T, List[Expr]) => Expr) {
+  def checkBinaryOperators[T](operators: List[T], values1: List[Expr], values2: List[Expr], expr: (T, List[Expr]) => Expr) {
     operators.foreach { operator =>
       values1.foreach { value1 =>
         values2.foreach { value2 =>
-          if(value1.tpe != value2.tpe && !exclusion(value1, value2)) {
+          if(value1.tpe != value2.tpe && !compatibleTypesExclusion(value1, value2)) {
             checkExpr(expr(operator, List(value1, value2)))
           }
         }
@@ -42,25 +42,24 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
   }
 
   property("binary operators shouldn't compile with different types") {
-    checkBinOperators(List(Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow),
+    checkBinaryOperators(List(Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow),
       values1, values2, binExpr)
   }
 
   property("compare operators shouldn't compile with different types") {
-    checkBinOperators(List(CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE), values1, values2, compareExpr)
+    checkBinaryOperators(List(CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE), values1, values2, compareExpr)
   }
 
   property("Eq NotEq shouldn't compile with different types") {
-    checkBinOperators(List(CompOp.Eq, CompOp.NotEq),
-      values1, values2, compareExpr)
+    checkBinaryOperators(List(CompOp.Eq, CompOp.NotEq), values1, values2, compareExpr)
   }
 
   property("In NotIn shouldn't compile with different types") {
-    checkBinOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr)
+    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, compareExpr)
   }
 
   property("And Or shouldn't compile with different types") {
-    checkBinOperators(List(BooleanOp.And, BooleanOp.Or), values1, values2, boolExpr)
+    checkBinaryOperators(List(BooleanOp.And, BooleanOp.Or), values1, values2, boolExpr)
   }
 
   property("Unary.Not should be compile with Boolean type only") {

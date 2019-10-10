@@ -73,7 +73,7 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
     }
   }
 
-  def exclusion(value1: Expr, value2: Expr): Boolean = {
+  def compatibleTypesExclusion(value1: Expr, value2: Expr): Boolean = {
     val compatibleTypes = List(PByte, PInt)
     compatibleTypes.contains(value1.tpe) && compatibleTypes.contains(value2.tpe)
   }
