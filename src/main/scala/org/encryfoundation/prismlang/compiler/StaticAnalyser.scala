@@ -162,7 +162,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
             if (!rightTypeIn(leftS.tpe, comp.tpe))
               SemanticAnalysisException(s"$op type mismatch: ${leftS.tpe} and ${comp.tpe}")
           case CompOp.Eq | CompOp.NotEq =>
-            if (leftS.tpe != comp.tpe)
+            if (!rightType(leftS.tpe, comp.tpe))
               SemanticAnalysisException(s"$op type mismatch: ${leftS.tpe} and ${comp.tpe}")
           case _ =>
         }
@@ -210,8 +210,8 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       if (elts.size > Constants.CollMaxLength) SemanticAnalysisException(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
       else if (elts.size < 1) SemanticAnalysisException("Empty collection")
       val eltsS: List[Expr] = elts.map(scan)
-      eltsS.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
-      eltsS.head.tpe match {
+      eltsS.tail.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
+      eltsS.head.tpe match {//check eltsS.head only ?
         case Types.PCollection(inT) if inT.isCollection => SemanticAnalysisException("Illegal level of nesting")
         case _ => // Do nothing
       }
