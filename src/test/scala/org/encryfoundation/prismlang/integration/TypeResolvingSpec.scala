@@ -208,6 +208,20 @@ class TypeResolvingSpec extends PropSpec with Utils {
       evaluationSuccess = Option(true), expectedValue = Option(120.toByte))
   }
 
+  property("resolve type for add operation") {
+    val sumOfBytes =
+      """
+                {
+                  let a : Byte = (1).toByte
+                  let b : Byte = (2).toByte
+                  let c : Byte = a + b
+                  c
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(sumOfBytes, compilationSuccess = true, Some(true), Some(3))
+  }
+
   property("Sum bytes exceed byte boundaries") {
     val sumOfBytes =
       """
