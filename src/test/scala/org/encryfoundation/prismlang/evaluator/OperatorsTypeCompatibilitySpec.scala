@@ -24,13 +24,13 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
     checkBinaryOperators(List(CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE), values1, values2, compareExpr)
   }
 
-  property("Eq NotEq shouldn't compile with different types") {
-    checkBinaryOperators(List(CompOp.Eq, CompOp.NotEq), values1, values2, compareExpr)
-  }
-
-  property("In NotIn shouldn't compile with different types") {
-    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, inExpr)
-  }
+//  property("Eq NotEq shouldn't compile with different types") {
+//    checkBinaryOperators(List(CompOp.Eq, CompOp.NotEq), values1, values2, compareExpr)
+//  }
+//
+//  property("In NotIn shouldn't compile with different types") {
+//    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, inExpr)
+//  }
 
   property("And Or shouldn't compile with different types") {
     checkBinaryOperators(List(BooleanOp.And, BooleanOp.Or), values1, values2, boolExpr)
