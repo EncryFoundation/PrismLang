@@ -1,9 +1,15 @@
 language: scala
 sudo: false
+branches:
+  only:
+    - master
+    - release
+    - /^\d\.\d+$/
 jdk:
   - oraclejdk8
 scala:
   - 2.12.6
+dist: trusty
 script:
   - sbt test
 cache:
