@@ -3,6 +3,7 @@ package org.encryfoundation.prismlang.compiler
 import org.encryfoundation.prismlang.compiler.scope.{PredefinedScope, ScopedSymbolTable, Symbol}
 import org.encryfoundation.prismlang.core.{Constants, TypeSystem, Types}
 import org.encryfoundation.prismlang.core.Ast._
+import org.encryfoundation.prismlang.core.Types.PCollection
 import scorex.crypto.encode.{Base16, Base58}
 
 case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) extends TypeMatching {
@@ -211,10 +212,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       else if (elts.size < 1) SemanticAnalysisException("Empty collection")
       val eltsS: List[Expr] = elts.map(scan)
       eltsS.tail.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
-      eltsS.head.tpe match {//check eltsS.head only ?
-        case Types.PCollection(inT) if inT.isCollection => SemanticAnalysisException("Illegal level of nesting")
-        case _ => // Do nothing
-      }
+      if (eltsS.exists { el => el.tpe match {
+        case PCollection(in) if in.isCollection => true
+        case _ => false
+      }}) SemanticAnalysisException("Illegal level of nesting")
       coll.copy(eltsS, computeType(coll.copy(eltsS)))
   }
 
