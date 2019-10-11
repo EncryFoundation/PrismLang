@@ -1,6 +1,5 @@
 package org.encryfoundation.prismlang.evaluator
 
-import org.encryfoundation.prismlang.compiler.SemanticAnalysisException
 import org.encryfoundation.prismlang.core.wrapped.PObject
 
 object CompareOps {
@@ -14,7 +13,7 @@ object CompareOps {
       case (o1: String, o2: String) => o1 == o2
       case (o1: List[_], o2: List[_]) => o1 == o2
       case (o1: PObject, o2: PObject) => o1 == o2
-      case (leftT, rightT) => SemanticAnalysisException(s"$leftT and $rightT does not support `Eq` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Eq` operation")
     }
   }
 
@@ -23,7 +22,7 @@ object CompareOps {
       case (o1: Long, o2: Long) => o1 > o2
       case (o1: Byte, o2: Long) => o1 > o2
       case (o1: Long, o2: Byte) => o1 > o2
-      case (leftT, rightT) => SemanticAnalysisException(s"$leftT and $rightT does not support `Gt` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Gt` operation")
     }
   }
 
@@ -32,7 +31,7 @@ object CompareOps {
       case (o1: Long, o2: Long) => o1 >= o2
       case (o1: Byte, o2: Long) => o1 >= o2
       case (o1: Long, o2: Byte) => o1 >= o2
-      case (leftT, rightT) => SemanticAnalysisException(s"$leftT and $rightT does not support `Gte` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Gte` operation")
     }
   }
 
@@ -41,7 +40,7 @@ object CompareOps {
       case (o1: Long, o2: Long) => o1 < o2
       case (o1: Byte, o2: Long) => o1 < o2
       case (o1: Long, o2: Byte) => o1 < o2
-      case (leftT, rightT) => SemanticAnalysisException(s"$leftT and $rightT does not support `Lt` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Lt` operation")
     }
   }
 
@@ -50,8 +49,7 @@ object CompareOps {
       case (o1: Long, o2: Long) => o1 <= o2
       case (o1: Byte, o2: Long) => o1 <= o2
       case (o1: Long, o2: Byte) => o1 <= o2
-      case (leftT, rightT) => SemanticAnalysisException(s"$leftT and $rightT does not support `Lte` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Lte` operation")
     }
   }
-
 }

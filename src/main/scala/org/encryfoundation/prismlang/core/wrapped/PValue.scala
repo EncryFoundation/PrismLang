@@ -1,6 +1,5 @@
 package org.encryfoundation.prismlang.core.wrapped
 
-import org.encryfoundation.prismlang.compiler.SemanticAnalysisException
 import org.encryfoundation.prismlang.core.Types
 
 trait PValue extends PWrappedMember {
@@ -24,7 +23,7 @@ object PValue {
         case seq: Seq[_] if t.isCollection => seq.toList
         case int: Int if t.isNumeric => int.toLong
         case other if v.isInstanceOf[t.Underlying@unchecked] => other
-        case _ => SemanticAnalysisException("Can't create PValue, actual value type mismatches the declared one")
+        case _ => throw new Exception("Can't create PValue, actual value type mismatches the declared one")
       }).asInstanceOf[tpe.Underlying]
     }
   }

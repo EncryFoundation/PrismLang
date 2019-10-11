@@ -5,7 +5,7 @@ import java.util.Date
 
 import org.scalatest.PropSpec
 import scorex.crypto.encode.{Base16, Base58}
-import scorex.crypto.hash.{Blake2b256, Blake2b512, Digest, Digest32, Keccak256, Keccak512, Sha256}
+import scorex.crypto.hash.{Blake2b256, Blake2b512, Digest, Keccak256, Keccak512, Sha256}
 import scorex.utils.{Random => ScorexRandom}
 
 import scala.util.{Random, Try}
