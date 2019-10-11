@@ -4,6 +4,7 @@ sudo: false
 branches:
   only:
     - master
+    - release
     - /^\d\.\d+$/
 jdk:
   - oraclejdk8
