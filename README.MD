@@ -7,7 +7,7 @@ PrismLang is a Contract Oriented statically typed programming language developed
 
 ### Supported Data Types
 
- Primitive Data Types
+Primitive Data Types
 - `Any` - a supertype of any other type
 - `Unit` - a type with a single value `()`
 - `Byte` - 8 bit signed integer
@@ -15,7 +15,7 @@ PrismLang is a Contract Oriented statically typed programming language developed
 - `Bool` - a type with two logical values `true` and `false`
 - `String` - arbitrary sequence of chars
 
-Collections
+Containers
 - `Array[T]` - arrays of arbitrary length with all values of type `T`
 - `Tuple` - tuple of possibly different data types supported in PrismLang
 
@@ -28,15 +28,21 @@ Built-in Complex Types
 - `DataBox` - EncryDataBox
 
 Build-in functions
-- `unixTime(time: String)` - Convert String to Timestamp
-- `checkSig(signature: Signature25519, message: Array[Byte], key: Array[Byte])` - Check message was signed with Key
+- `unixTime(time: String)` - convert String to Timestamp using yyyy-MM-dd hh:mm:ss format
+- `checkSig(signature: Signature25519, message: Array[Byte], key: Array[Byte])` - check message was signed with Key
 
-Build-in  cryptographic hash functions
-- `Blake2b256Hash(input: Array[Byte]): Array[Byte]`
-- `Blake2b512Hash(input: Array[Byte]): Array[Byte]`
-- `Keccak256Hash(input: Array[Byte]): Array[Byte]`
-- `Keccak512Hash(input: Array[Byte]): Array[Byte]`
-- `Sha256Hash(input: Array[Byte]): Array[Byte]`
+Build-in base functions
+- `encode16(input: Array[Byte]): String` - represents bytes using a base of 16 symbols
+- `encode58(input: Array[Byte]): String` - represents bytes using a base of 58 symbols
+- `base16'String': Array[Byte]` - decode string to bytes using a base of 16 symbols
+- `base58'String': Array[Byte]` - decode string to bytes using a base of 58 symbols
+
+Build-in cryptographic hash functions
+- `blake2b256(input: Array[Byte]): Array[Byte]`
+- `blake2b512(input: Array[Byte]): Array[Byte]`
+- `keccak256(input: Array[Byte]): Array[Byte]`
+- `keccak512(input: Array[Byte]): Array[Byte]`
+- `sha256(input: Array[Byte]): Array[Byte]`
 
 ### Basic Syntax
 

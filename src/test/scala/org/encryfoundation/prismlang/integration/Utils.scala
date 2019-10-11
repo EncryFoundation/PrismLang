@@ -7,7 +7,6 @@ import org.encryfoundation.prismlang.core.Types.{PByte, PInt}
 import org.encryfoundation.prismlang.evaluator.ExprEvaluator
 import org.encryfoundation.prismlang.parser.Parser
 import org.scalatest.Matchers
-
 import scala.util.{Failure, Random, Success, Try}
 
 trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {

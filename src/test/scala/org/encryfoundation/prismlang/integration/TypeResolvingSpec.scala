@@ -209,7 +209,7 @@ class TypeResolvingSpec extends PropSpec with Utils {
   }
 
   property("resolve type for add operation") {
-    val sumOfBytes =
+    val sources =
       """
                 {
                   let a : Byte = (1).toByte
@@ -219,7 +219,7 @@ class TypeResolvingSpec extends PropSpec with Utils {
                 }
       """.stripMargin
 
-    testCompiledExpressionWithOptionalEvaluation(sumOfBytes, compilationSuccess = true, Some(true), Some(3))
+    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(3))
   }
 
   property("Sum bytes exceed byte boundaries") {
@@ -328,4 +328,5 @@ class TypeResolvingSpec extends PropSpec with Utils {
 
     testCompiledExpressionWithOptionalEvaluation(source, compilationSuccess = false)
   }
+
 }

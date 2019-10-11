@@ -11,7 +11,7 @@ object ValueGenerator extends Utils {
 
   def genRandomValue(valueTypeName: String): (Expr, Any) = valueTypeName match {
     case "Str" =>
-      val s = generateRandomString(Random.nextInt(101))
+      val s = generateRandomString(Random.nextInt(100))
       (Str(s), s)
     case "IntConst" =>
       val i = Random.nextInt()

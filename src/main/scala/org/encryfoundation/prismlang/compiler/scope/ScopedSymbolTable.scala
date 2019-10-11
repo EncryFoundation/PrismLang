@@ -12,7 +12,7 @@ case class ScopedSymbolTable(scopeLevel: Int,
   var symbols: TreeMap[String, Symbol] = TreeMap(initialMembers.map(m => m.name -> m):_*)
 
   def insert(sym: Symbol): Unit = {
-    lookup(sym.name).foreach(_ => SemanticAnalysisException(s"${sym.name} is already defined in scope"))
+    lookup(sym.name).foreach(_ => throw SemanticAnalysisException(s"${sym.name} is already defined in scope"))
     symbols = symbols.updated(sym.name, sym)
   }
 

@@ -9,7 +9,7 @@ class CostEstimatorSpec extends PropSpec with Utils with TimeLimits {
 
   property("Nested block attack") {
     val longMax: Long = Long.MaxValue
-    val nestedCount: Int = 302
+    val nestedCount: Int = 300
     val varNames: Iterator[String] = List.range(0, nestedCount).map(_ => generateRandomString(10)).toIterator
     val source: String = varNames.map(variable => s"{let $variable: Int = $longMax \n").mkString +
       List.fill(nestedCount)("}").mkString
