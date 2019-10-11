@@ -319,4 +319,13 @@ class TypeResolvingSpec extends PropSpec with Utils {
 
     testCompiledExpressionWithOptionalEvaluation(arrayOfAnyUpCast, compilationSuccess = false)
   }
+
+  property("Nested collection limit") {
+    val source =
+      """
+        |let coll = Array(Array(1), Array(Array(1), Array(1, 2)))
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(source, compilationSuccess = false)
+  }
 }
