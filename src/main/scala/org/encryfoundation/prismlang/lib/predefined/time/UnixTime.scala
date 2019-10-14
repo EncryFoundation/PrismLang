@@ -10,18 +10,13 @@ import org.encryfoundation.prismlang.lib.predefined.BuiltInFunctionHolder
 object UnixTime extends BuiltInFunctionHolder {
 
   val name = "unixTime"
-
   val cost: Int = 2
 
-  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
+  val args: IndexedSeq[(String, Types.PString.type)] = IndexedSeq("input" -> Types.PString)
 
-  val args = IndexedSeq("input" -> Types.PString)
-
-  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (args: Seq[(String, PValue)]) => {
-    val validNumberOfArgs = args.size == 1
-    val validArgTypes = args.forall { case (_, v) => v.tpe == Types.PString }
-    if (validNumberOfArgs && validArgTypes) {
-      val fnArgs = args.map(_._2.value.asInstanceOf[String])
+  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Long] = (pArgs: Seq[(String, PValue)]) => {
+    if(checkArgs(args, pArgs)) {
+      val fnArgs = pArgs.map(_._2.value.asInstanceOf[String])
       val dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
       Right(dateFormat.parse(fnArgs.head).getTime)
     } else {

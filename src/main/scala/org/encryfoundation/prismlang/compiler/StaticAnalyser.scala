@@ -253,7 +253,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       if (value > Long.MaxValue) throw SemanticAnalysisException(s"int64 max size overflow ($value > ${Long.MaxValue})")
       int
 
-    /** Make sure given `value` does not overflow `Long.MaxSize`. */
+    /** Make sure given `value` does not overflow `Byte.MaxValue`. */
     case byte @ Expr.ByteConst(value) =>
       if (value > Byte.MaxValue) throw SemanticAnalysisException(s"byte max size overflow ($value > ${Byte.MaxValue})")
       byte

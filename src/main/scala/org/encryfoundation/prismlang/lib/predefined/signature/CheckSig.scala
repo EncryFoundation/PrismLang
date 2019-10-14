@@ -9,10 +9,7 @@ import scorex.crypto.signatures.{Curve25519, PublicKey, Signature}
 object CheckSig extends BuiltInFunctionHolder {
 
   val name: String = "checkSig"
-
   val cost: Int = 50
-
-  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   val args: IndexedSeq[(String, Types.PType)] = IndexedSeq(
     "sig"    -> Types.PCollection.ofByte,

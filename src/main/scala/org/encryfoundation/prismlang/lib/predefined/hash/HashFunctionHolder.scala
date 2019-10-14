@@ -9,19 +9,14 @@ import scorex.crypto.hash.Digest
 trait HashFunctionHolder extends BuiltInFunctionHolder {
 
   val cost: Int = 25
-
-  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
-
-  val args: IndexedSeq[(String, Types.PType)] = IndexedSeq("input" -> Types.PCollection.ofByte)
-
   val hashFunc: Array[Byte] => Digest
 
-  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (pArgs: Seq[(String, PValue)]) => {
-    if(checkArgs(args, pArgs)) {
-      val fnArgs = pArgs.map(_._2.value.asInstanceOf[List[Byte]].toArray)
-      Right(hashFunc(fnArgs.head).toList)
-    } else {
+  val args: IndexedSeq[(String, Types.PCollection)] = IndexedSeq("input" -> Types.PCollection.ofByte)
+
+  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, List[Byte]] = (pArgs: Seq[(String, PValue)]) => {
+    if(checkArgs(args, pArgs))
+      Right(hashFunc(pArgs.map(_._2.value.asInstanceOf[List[Byte]].toArray).head).toList)
+    else
       Left(PredefFunctionExecFailure)
-    }
   }
 }
