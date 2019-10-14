@@ -7,7 +7,10 @@ import org.encryfoundation.prismlang.core.wrapped.{PFunctionPredef, PValue}
 trait BuiltInFunctionHolder {
   val name: String
   val cost: Int
-  def asFunc: PFunctionPredef
+
+  val args: IndexedSeq[(String, Types.PType)]
+  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any]
+  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
 
   def checkArgs(dArgs: Seq[(String, Types.PType)], pArgs: Seq[(String, PValue)]): Boolean = dArgs.zip(pArgs)
     .foldLeft(true) { case (acc, ((_, tpe), (_, v))) => acc && tpe == v.tpe } && dArgs.lengthCompare(pArgs.size) == 0

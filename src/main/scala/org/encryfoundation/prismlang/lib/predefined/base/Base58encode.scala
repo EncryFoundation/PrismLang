@@ -4,8 +4,8 @@ import scorex.crypto.encode.Base58
 
 object Base58encode extends BaseFunctionHolder {
 
-  override val name: String = "encode58"
+  val name: String = "encode58"
 
-  override val baseFunc = Base58.encode
+  val baseFunc = Base58.encode
 
 }

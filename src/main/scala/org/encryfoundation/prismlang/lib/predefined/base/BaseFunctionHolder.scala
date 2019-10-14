@@ -9,18 +9,14 @@ trait BaseFunctionHolder extends BuiltInFunctionHolder {
 
   val cost: Int = 10
 
-  def asFunc: PFunctionPredef = PFunctionPredef(args, body)
-
   val args: IndexedSeq[(String, Types.PType)] = IndexedSeq("input" -> Types.PCollection.ofByte)
 
   val baseFunc: Array[Byte] => String
 
-  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, Any] = (pArgs: Seq[(String, PValue)]) => {
-    if(checkArgs(args, pArgs)) {
-      val fnArgs = pArgs.map(_._2.value.asInstanceOf[List[Number]].map(_.byteValue()).toArray)
-      Right(baseFunc(fnArgs.head))
-    } else {
+  val body: Seq[(String, PValue)] => Either[PFunctionPredef.PredefFunctionExecFailure.type, String] = (pArgs: Seq[(String, PValue)]) => {
+    if(checkArgs(args, pArgs))
+      Right(baseFunc(pArgs.map(_._2.value.asInstanceOf[List[Number]].map(_.byteValue()).toArray).head))
+    else
       Left(PredefFunctionExecFailure)
-    }
   }
 }
