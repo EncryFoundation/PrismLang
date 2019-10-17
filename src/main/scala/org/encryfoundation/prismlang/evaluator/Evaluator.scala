@@ -35,8 +35,8 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
 
     expr match {
       /** Evaluate `value`, wrap it with `PValue` and add to the scope */
-      case Expr.Let(name, value, _) =>
-        val valT: Types.PType = value.tpe
+      case Expr.Let(name, value, typeIdentOpt) =>
+        val valT: Types.PType = typeIdentOpt.map(types.resolveType).getOrElse(value.tpe)
         logger.debug(s"""Evaluating "let" expression: "$expr" """)
         addToEnv(name.name, PValue(eval[valT.Underlying](value), valT))
 

@@ -38,7 +38,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       val valueS: Expr = scan(value)
       val valueT: Types.PType = valueS.tpe
       typeIdentOpt.foreach(t => matchType(types.resolveType(t), valueT))
-      addToScope(name, valueT)
+      addToScope(name, typeIdentOpt.map(types.resolveType).getOrElse(valueT))
       let.copy(name, valueS, typeIdentOpt)
   }
 
