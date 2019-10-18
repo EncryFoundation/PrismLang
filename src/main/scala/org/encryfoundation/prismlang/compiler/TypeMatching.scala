@@ -14,15 +14,28 @@ trait TypeMatching {
     }
   }
 
+  def rightTypeEqNotEq(required: Types.PType, actual: Types.PType): Boolean = {
+    required match {
+      case coll: PCollection if actual.isCollection =>
+        val actualCollType = actual.asInstanceOf[PCollection].valT
+        coll.valT == actualCollType || coll.valT.isSubtypeOf(actualCollType) || coll.valT.canBeDerivedTo(actualCollType)
+      case _ => required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
+    }
+  }
+
   def rightTypeIn(left: Types.PType, right: Types.PType): Boolean = {
     right match {
-      case PCollection(collType) if rightType(collType, left) => true
+      case PCollection(collType) if collType.isCollection && rightTypeEqNotEq(collType, left) => true
+      case PCollection(collType) if !collType.isCollection && rightType(collType, left) => true
       case _ => false
     }
   }
 
   def matchType(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
     if (!rightType(required, actual)) throw SemanticAnalysisException(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
+
+  def matchTypeCollElems(required: Types.PType, actual: Types.PType, msgOpt: Option[String] = None): Unit =
+    if (!rightTypeEqNotEq(required, actual)) throw SemanticAnalysisException(msgOpt.getOrElse(s"Type mismatch: $required != $actual"))
 
   def unsupportedOperation(leftType: PType, rightType: PType) =
     throw SemanticAnalysisException(s"Unsupported operation for types $leftType and $rightType")

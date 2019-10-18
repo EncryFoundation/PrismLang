@@ -163,7 +163,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
             if (!rightTypeIn(leftS.tpe, comp.tpe))
               throw SemanticAnalysisException(s"$op type mismatch: ${leftS.tpe} and ${comp.tpe}")
           case CompOp.Eq | CompOp.NotEq =>
-            if (!rightType(leftS.tpe, comp.tpe))
+            if (!rightTypeEqNotEq(leftS.tpe, comp.tpe))
               throw SemanticAnalysisException(s"$op type mismatch: ${leftS.tpe} and ${comp.tpe}")
           case _ =>
         }
@@ -211,7 +211,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       if (elts.size > Constants.CollMaxLength) throw SemanticAnalysisException(s"Collection size limit overflow (${elts.size} > ${Constants.CollMaxLength})")
       else if (elts.size < 1) throw SemanticAnalysisException("Empty collection")
       val eltsS: List[Expr] = elts.map(scan)
-      eltsS.tail.foreach(elt => matchType(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
+      eltsS.tail.foreach(elt => matchTypeCollElems(eltsS.head.tpe, elt.tpe, Some(s"Collection is inconsistent, ${elt.tpe} stands out.")))
       if (eltsS.exists { el => el.tpe match {
         case PCollection(in) if in.isCollection => true
         case _ => false
