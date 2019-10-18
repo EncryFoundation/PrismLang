@@ -23,9 +23,9 @@ class ContainersSpec extends PropSpec with Utils {
     checkExpr(Collection(List()))
   }
 
-//  property("collection should be consistent") {
-//    checkConsistency(valueTypes, values => Collection(values))
-//  }
+  property("collection should be consistent") {
+    checkConsistency(valueTypes, values => Collection(values))
+  }
 
   property("tuple should be contains at least 1 element") {
     checkExpr(Tuple(List()))

@@ -14,6 +14,7 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
 
   val values1: List[Expr] = genValues
   val values2: List[Expr] = genValues
+  val coll: Expr = Collection(List(IntConst(1)), PInt)
 
   property("binary operators shouldn't compile with different types") {
     checkBinaryOperators(List(Operator.Add, Operator.Sub, Operator.Mult, Operator.Div, Operator.Mod, Operator.Pow),
@@ -24,19 +25,19 @@ class OperatorsTypeCompatibilitySpec extends PropSpec with Utils {
     checkBinaryOperators(List(CompOp.GtE, CompOp.Gt, CompOp.Lt, CompOp.LtE), values1, values2, compareExpr)
   }
 
-//  property("Eq NotEq shouldn't compile with different types") {
-//    checkBinaryOperators(List(CompOp.Eq, CompOp.NotEq), values1, values2, compareExpr)
-//  }
-//
-//  property("In NotIn shouldn't compile with different types") {
-//    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, inExpr)
-//  }
+  property("Eq NotEq shouldn't compile with different types") {
+    checkBinaryOperators(List(CompOp.Eq, CompOp.NotEq), values1 :+ coll, values2 :+ coll, compareExpr)
+  }
+
+  property("In NotIn shouldn't compile with different types") {
+    checkBinaryOperators(List(CompOp.In, CompOp.NotIn), values1, values2, inExpr)
+  }
 
   property("And Or shouldn't compile with different types") {
     checkBinaryOperators(List(BooleanOp.And, BooleanOp.Or), values1, values2, boolExpr)
   }
 
-  property("Unary.Not should be compile with Boolean type only") {
+  property("Unary.Not should compile with Boolean type only") {
     val valExprs = values1
       .filterNot(_.tpe == PBoolean)
     checkUnaryOperators(List(UnaryOp.Not), valExprs, unaryExpr)
