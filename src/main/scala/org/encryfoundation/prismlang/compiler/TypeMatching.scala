@@ -19,7 +19,8 @@ trait TypeMatching {
       case coll: PCollection if actual.isCollection =>
         val actualCollType = actual.asInstanceOf[PCollection].valT
         coll.valT == actualCollType || coll.valT.isSubtypeOf(actualCollType) || coll.valT.canBeDerivedTo(actualCollType)
-      case _ => required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
+      case _  if !actual.isCollection && !required.isCollection => required == actual || actual.isSubtypeOf(required) || actual.canBeDerivedTo(required)
+      case _ => false
     }
   }
 
