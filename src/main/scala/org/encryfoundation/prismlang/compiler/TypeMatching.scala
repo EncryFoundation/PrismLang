@@ -104,7 +104,7 @@ trait TypeMatching {
           case Operator.Pow => (BigInt(lExpr.value).modPow(BigInt(rExpr.value), 1)).isValidByte
           case Operator.Mult => (BigInt(lExpr.value) * BigInt(rExpr.value)).isValidByte
         }
-        case rExpr: IntConst => checkIntBoundaries(leftOperand, IntConst(rExpr.value), operator)
+        case rExpr: IntConst => checkIntBoundaries(IntConst(lExpr.value), rExpr, operator)
       }
       case lExpr: IntConst => checkIntBoundaries(IntConst(lExpr.value), rightOperand, operator)
       case _ => true
