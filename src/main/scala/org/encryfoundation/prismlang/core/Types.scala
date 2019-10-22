@@ -65,7 +65,7 @@ object Types {
     override val dataCost: Int = 1
   }
   case object PInt extends PType with Primitive {
-    override type Underlying = Int
+    override type Underlying = Long
     override val ident: String = "Int"
     override val isNumeric: Boolean = true
     override val dataCost: Int = 8
@@ -76,6 +76,11 @@ object Types {
     override val dataCost: Int = 4
 
     override def canBeDerivedTo(thatT: PType): Boolean = thatT match {
+      case PInt => true
+      case _ => false
+    }
+
+    override def isSubtypeOf(thatT: PType): Boolean = thatT match {
       case PInt => true
       case _ => false
     }
