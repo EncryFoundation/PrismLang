@@ -47,7 +47,7 @@ trait TypeMatching {
         leftOperand.tpe match {
         case PByte if rightOperand.tpe == PByte => matchType(PInt, rightOperand.tpe)
           if (!checkByteBoundaries(leftOperand, rightOperand, operator)) throw SemanticAnalysisException("Result exceeds PByte boundary")
-        case PInt => matchType(PInt, rightOperand.tpe)
+        case PInt | PByte => matchType(PInt, rightOperand.tpe)
           if (!checkIntBoundaries(leftOperand, rightOperand, operator)) throw SemanticAnalysisException("Result exceeds PInt boundary")
         case PString => matchType(PString, rightOperand.tpe)
         case _ => unsupportedOperation(leftOperand.tpe, rightOperand.tpe)
