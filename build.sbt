@@ -1,5 +1,5 @@
 name := "prism"
-version := "0.8.6"
+version := "0.8.5"
 scalaVersion := "2.12.6"
 organization := "org.encry"
 

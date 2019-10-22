@@ -25,7 +25,9 @@ object PValue {
         case value: Long if t == PByte =>
           if (value <= Byte.MaxValue && value >= Byte.MinValue) value.toByte
           else throw new Exception("Can't create PValue, actual value exceeds Byte boundaries")
-        case int: Int if t.isNumeric => int.toLong
+        case int: Int if t.isNumeric =>
+          if (int <= Long.MaxValue && int >= Long.MinValue) int.toLong
+          else throw new Exception("Can't create PValue, actual value exceeds Long boundaries")
         case other if v.isInstanceOf[t.Underlying@unchecked] => other
         case _ => throw new Exception("Can't create PValue, actual value type mismatches the declared one")
       }).asInstanceOf[tpe.Underlying]

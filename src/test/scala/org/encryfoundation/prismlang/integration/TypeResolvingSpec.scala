@@ -233,7 +233,7 @@ class TypeResolvingSpec extends PropSpec with Utils {
                 }
       """.stripMargin
 
-    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), None)
+    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(false))
   }
 
   property("Sum bytes exceed byte boundaries") {
