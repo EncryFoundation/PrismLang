@@ -45,7 +45,7 @@ object Arith {
       case (o1: Long, o2: Long) => checkType[T](o1 / o2)
       case (o1: Byte, o2: Long) => checkType[T](o1 / o2)
       case (o1: Long, o2: Byte) => checkType[T](o1 / o2)
-      case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 - o2) => checkType[T](o1 / o2)
+      case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 / o2) => checkType[T](o1 / o2)
       case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Div` operation")
     }
   }
