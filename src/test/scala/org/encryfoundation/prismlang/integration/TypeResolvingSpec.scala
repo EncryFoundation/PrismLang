@@ -222,6 +222,20 @@ class TypeResolvingSpec extends PropSpec with Utils {
     testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(true), Some(3))
   }
 
+  property("resolve type for let") {
+    val sources =
+      """
+                {
+                  let a = 120
+                  let b = 120
+                  let c : Byte = a + b
+                  c
+                }
+      """.stripMargin
+
+    testCompiledExpressionWithOptionalEvaluation(sources, compilationSuccess = true, Some(false))
+  }
+
   property("Sum bytes exceed byte boundaries") {
     val sumOfBytes =
       """

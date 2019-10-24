@@ -16,7 +16,7 @@ object Arith {
       case (o1: Long, o2: Byte) => checkType[T](o1 + o2)
       case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 + o2) => checkType[T](o1 + o2)
       case (o1: String, o2: String) => checkType[T](o1 + o2)
-      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Add` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Add` operation or exceed type boundaries")
     }
   }
 
@@ -26,7 +26,7 @@ object Arith {
       case (o1: Byte, o2: Long) => checkType[T](o1 - o2)
       case (o1: Long, o2: Byte) => checkType[T](o1 - o2)
       case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 - o2) => checkType[T](o1 - o2)
-      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Sub` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Sub` operation or exceed type boundaries")
     }
   }
 
@@ -36,7 +36,7 @@ object Arith {
       case (o1: Byte, o2: Long) => checkType[T](o1 * o2)
       case (o1: Long, o2: Byte) => checkType[T](o1 * o2)
       case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 * o2) => checkType[T](o1 * o2)
-      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Mul` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Mul` operation or exceed type boundaries")
     }
   }
 
@@ -46,7 +46,7 @@ object Arith {
       case (o1: Byte, o2: Long) => checkType[T](o1 / o2)
       case (o1: Long, o2: Byte) => checkType[T](o1 / o2)
       case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 / o2) => checkType[T](o1 / o2)
-      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Div` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Div` operation or exceed type boundaries")
     }
   }
 
@@ -56,7 +56,7 @@ object Arith {
       case (o1: Byte, o2: Long) => checkType[T](o1 % o2)
       case (o1: Long, o2: Byte) => checkType[T](o1 % o2)
       case (o1: Byte, o2: Byte) if checkByteBoundaries(o1 % o2) => checkType[T](o1 % o2)
-      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Mod` operation")
+      case (leftT, rightT) => throw new Exception(s"$leftT and $rightT does not support `Mod` operation or exceed type boundaries")
     }
   }
 }
