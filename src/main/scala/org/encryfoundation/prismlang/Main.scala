@@ -58,13 +58,11 @@ object Main extends App {
         }
 
         if (!Files.exists(dir)) Files.createDirectories(dir)
+
         val hashPath = dir.resolve(s"${srcFilePath.getFileName}.hash")
         val bytesPath = dir.resolve(s"${srcFilePath.getFileName}.bytes")
 
-        if (!Files.exists(hashPath)) Files.createFile(hashPath)
         Files.write(hashPath, Base16.encode(contract.hash).getBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
-
-        if (!Files.exists(bytesPath)) Files.createFile(bytesPath)
         Files.write(bytesPath, Base16.encode(contract.bytes).getBytes, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)
 
         srcFilePath
