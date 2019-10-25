@@ -51,7 +51,7 @@ object Main extends App {
             val relative = sourceFolderPath.relativize(srcFilePath.getParent)
             targetPath.resolve(relative)
           case Some(targetPath) =>
-            val target = sourceFolderPath.resolve(targetPath)
+            val target = Paths.get(".").toAbsolutePath.resolve(targetPath)
             val relative = sourceFolderPath.relativize(srcFilePath.getParent)
             target.resolve(relative)
           case None => srcFilePath.getParent
