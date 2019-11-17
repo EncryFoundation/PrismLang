@@ -1,10 +1,9 @@
 package org.encryfoundation.prismlang.parser
 
-import fastparse.all._
-import fastparse.{all, core}
+import fastparse._, NoWhitespace._
 import org.encryfoundation.prismlang.core.Ast
 
-object WsApi extends fastparse.WhitespaceApi.Wrapper(Lexer.WS)
+class WsApi[_: P] extends fastparse.Wrapper(new Lexer[P].WS)
 
 object Lexer {
 
@@ -31,21 +30,21 @@ object Lexer {
   /** Parses all whitespace, excluding newlines. This is only
     * really useful in e.g. {} blocks, where we want to avoid
     * capturing newlines so semicolon-inference would work */
-  val WS: Parser[Unit] = P( NoCut(NoTrace((Basic.WSChars | Comment).rep)) )
+  def WS[_: P]: P[Unit] = P( NoCut(NoTrace((Basic.WSChars | Comment).rep)))
 
   /** Parses whitespace, including newlines.
     * This is the default for most things */
-  val WL0: Parser[Unit] = P( NoTrace((Basic.WSChars | Comment | Basic.Newline).rep) )(sourcecode.Name("WL"))
-  val WL: Parser[Unit] = P( NoCut(WL0) )
+  def WL0[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Comment | Basic.Newline).rep) )(sourcecode.Name("WL"))
+  def WL[_: P]: P[Unit] = P( NoCut(WL0) )
 
-  val Semi: Parser[Unit] = P( WS ~ Basic.Semi )
-  val Semis: Parser[Unit] = P( Semi.rep(1) ~ WS )
+  def Semi[_: P]: P[Unit] = P( WS ~ Basic.Semi )
+  def Semis[_: P]: P[Unit] = P( Semi.rep(1) ~ WS )
 
-  val LineB: Parser[Unit] = P( WS ~ Basic.Linebreak )
-  val LineBreak: Parser[Unit] = P( LineB.rep(1) ~ WS )
+  def LineB[_: P]: P[Unit] = P( WS ~ Basic.Linebreak )
+  def LineBreak[_: P]: P[Unit] = P( LineB.rep(1) ~ WS )
 
-  val NotNewline: P0 = P( &( WS ~ !Basic.Newline ) )
-  val OneNLMax: P0 = {
+  def NotNewline[_: P]: P0 = P( &( WS ~ !Basic.Newline ) )
+  def OneNLMax[_: P]: P0 = {
     val ConsumeComments = P( (Basic.WSChars.? ~ Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
     P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
   }
@@ -53,42 +52,42 @@ object Lexer {
   // Comments cannot have cuts in them, because they appear before every
   // terminal node. That means that a comment before any terminal will
   // prevent any backtracking from working, which is not what we want!
-  val CommentChunk: Parser[Unit] = P( CharsWhile(c => c != '/' && c != '*') | MultilineComment | !"*/" ~ AnyChar )
-  lazy val MultilineComment: P0 = P( "/*" ~/ CommentChunk.rep ~ "*/" )
-  val SameLineCharChunks: Parser[Unit] = P( CharsWhile(c => c != '\n' && c != '\r')  | !Basic.Newline ~ AnyChar )
-  val LineComment: Parser[Unit] = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
-  lazy val Comment: P0 = P( MultilineComment | LineComment )
+  def CommentChunk[_: P]: P[Unit] = P( CharsWhile(c => c != '/' && c != '*') | MultilineComment | !"*/" ~ AnyChar )
+  def MultilineComment[_: P]: P0 = P( "/*" ~/ CommentChunk.rep ~ "*/" )
+  def SameLineCharChunks[_: P]: P[Unit] = P( CharsWhile(c => c != '\n' && c != '\r')  | !Basic.Newline ~ AnyChar )
+  def LineComment[_: P]: P[Unit] = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
+  def Comment[_: P]: P0 = P( MultilineComment | LineComment )
 
-  val integer: core.Parser[Long, Char, String] = P( ("+" | "-").?.! ~ CharIn('0' to '9').rep(min = 1).! ).map {
+  def integer[_: P]: P[(Long, Char, String)] = P( ("+" | "-").?.! ~ CharIn('0' to '9').rep(min = 1).! ).map {
     case ("-", i) => ("-" + i).toLong
     case (_, i) => i.toLong
   }
 
-  lazy val stringliteral: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
-  lazy val stringprefix: P0 = P(
+  def stringliteral[_: P]: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
+  def stringprefix[_: P]: P0 = P(
     "r" | "u" | "ur" | "R" | "U" | "UR" | "Ur" | "uR" | "b" | "B" | "br" | "Br" | "bR" | "BR"
   )
 
-  val escapeseq: P0 = P( "\\" ~ AnyChar )
+  def escapeseq[_: P]: P0 = P( "\\" ~ AnyChar )
 
-  val shortstring: P[String] = P( shortstring0("'") | shortstring0("\"") )
-  def shortstring0(delimiter: String): all.Parser[String] = P( delimiter ~ shortstringitem(delimiter).rep.! ~ delimiter)
-  def shortstringitem(quote: String): P0 = P( shortstringchar(quote) | escapeseq )
-  def shortstringchar(quote: String): P0 = P( CharsWhile(!s"\\\n${quote(0)}".contains(_)) )
+  def shortstring[_: P]: P[String] = P( shortstring0("'") | shortstring0("\"") )
+  def shortstring0[_: P](delimiter: String): P[String] = P( delimiter ~ shortstringitem(delimiter).rep.! ~ delimiter)
+  def shortstringitem[_: P](quote: String): P0 = P( shortstringchar(quote) | escapeseq )
+  def shortstringchar[_: P](quote: String): P0 = P( CharsWhile(!s"\\\n${quote(0)}".contains(_)) )
 
-  lazy val longstring: P[String] = P( longstring0("'''") | longstring0("\"\"\"") )
-  def longstring0(delimiter: String): all.Parser[String] = P( delimiter ~ longstringitem(delimiter).rep.! ~ delimiter)
-  def longstringitem(quote: String): P0 = P( longstringchar(quote) | escapeseq | !quote ~ quote.take(1)  )
-  def longstringchar(quote: String): P0 = P( CharsWhile(!s"\\${quote(0)}".contains(_)) )
+  def longstring[_: P]: P[String] = P( longstring0("'''") | longstring0("\"\"\"") )
+  def longstring0[_: P](delimiter: String): P[String] = P( delimiter ~ longstringitem(delimiter).rep.! ~ delimiter)
+  def longstringitem[_: P](quote: String): P0 = P( longstringchar(quote) | escapeseq | !quote ~ quote.take(1)  )
+  def longstringchar[_: P](quote: String): P0 = P( CharsWhile(!s"\\${quote(0)}".contains(_)) )
 
-  val identifier: P[Ast.Ident] = P( (letter|"_") ~ (letter | digit | "_").rep ).!.filter(!keywords.contains(_))
+  def identifier[_: P]: P[Ast.Ident] = P( (letter|"_") ~ (letter | digit | "_").rep ).!.filter(!keywords.contains(_))
     .map(Ast.Ident)
 
-  lazy val letter: all.Parser[Unit] =        P( lowercase | uppercase )
-  lazy val lowercase: all.Parser[Unit] =     P( CharIn('a' to 'z') )
-  lazy val uppercase: all.Parser[Unit] =     P( CharIn('A' to 'Z') )
-  lazy val digit: all.Parser[Unit] =         P( CharIn('0' to '9') )
-  lazy val hexdigit: P0 =                    P( digit | CharIn('a' to 'f', 'A' to 'F') )
+  def letter[_: P]: P[Unit] =        P( lowercase | uppercase )
+  def lowercase[_: P]: P[Unit] =     P( CharIn('a' to 'z') )
+  def uppercase[_: P]: P[Unit] =     P( CharIn('A' to 'Z') )
+  def digit[_: P]: P[Unit] =         P( CharIn('0' to '9') )
+  def hexdigit[_: P]: P0 =                    P( digit | CharIn('a' to 'f', 'A' to 'F') )
 
-  def kwd(s: String): core.Parser[Unit, Char, String] = s ~ !(letter | digit | "_")
+  def kwd[_: P](s: String): P[(Unit, Char, String)] = s ~ !(letter | digit | "_")
 }

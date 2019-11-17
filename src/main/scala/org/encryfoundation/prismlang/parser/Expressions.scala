@@ -1,9 +1,7 @@
 package org.encryfoundation.prismlang.parser
 
-import fastparse.{core, noApi}
-import fastparse.noApi._
+import fastparse._, NoWhitespace._
 import org.encryfoundation.prismlang.core.Ast
-import org.encryfoundation.prismlang.parser.WsApi._
 
 object Expressions {
 
