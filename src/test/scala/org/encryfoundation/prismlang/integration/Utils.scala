@@ -13,7 +13,7 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
 
   def getArrayString(sample: List[Any]): String = sample.mkString("Array(", ", ", ")")
 
-  def compiled(prismScript: String): Try[Ast.Expr] = parse(prismScript) match {
+  def compiled(prismScript: String): Try[Ast.Expr] = parseExpr(prismScript) match {
     case Success(parsed) => compileExpr(parsed.head)
     case Failure(e) => Failure[Ast.Expr](e)
   }
@@ -38,6 +38,7 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
       case _ => throw new Exception("Cannot evaluate expression")
     }
     val tryEvaluatedExpression: Try[Any] = eval(expression)
+    println(tryEvaluatedExpression)
     tryEvaluatedExpression.isSuccess shouldBe evaluationSuccess
     if (evaluationSuccess) {
       val value: Any = expectedValue.getOrElse(throw new Exception("No value to compare found"))
@@ -53,7 +54,9 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
           (true, result.isSuccess, result.toOption)
         } else
           (true, false, None)
-      case Failure(_) => (false, false, None)
+      case Failure(er) =>
+        println(er.getMessage)
+        (false, false, None)
     }
 
     if (compilationSuccess != compiled) {
