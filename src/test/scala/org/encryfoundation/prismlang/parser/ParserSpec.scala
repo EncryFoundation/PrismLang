@@ -1,5 +1,6 @@
 package org.encryfoundation.prismlang.parser
 
+import fastparse.Parsed
 import org.encryfoundation.prismlang.core.Ast.TypeDescriptor.{ProductType, SimpleType}
 import org.encryfoundation.prismlang.core.Types
 import org.scalatest.{Matchers, PropSpec}
@@ -22,7 +23,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -40,7 +41,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -65,7 +66,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -74,7 +75,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
   property("Lambda parsing (with block)") {
 
-    val source = "lamb (a: Int, b: Int) = { a + b }"
+    val source = "lamb (a: Int, b: Int) = {a + b}"
 
     val expected: Seq[Expr] = ArrayBuffer(
       Lambda(
@@ -94,7 +95,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -123,7 +124,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -136,7 +137,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     val expected: Seq[Expr] = ArrayBuffer(Let(Ident("age"), IntConst(28), Some(TypeIdent("Int", List()))))
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -149,7 +150,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     val expected: Seq[Expr] = ArrayBuffer(Let(Ident("age"), IntConst(28), None))
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -176,7 +177,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -218,7 +219,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -254,7 +255,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -281,7 +282,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -299,6 +300,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
         |}
       """.stripMargin
 
+
     val expected: Seq[Expr] = ArrayBuffer(
       If(
         Compare(
@@ -311,7 +313,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -339,7 +341,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -350,7 +352,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     val source =
       """
-        |object.method()
+        |object.method();
       """.stripMargin
 
     val expected: Seq[Expr] = ArrayBuffer(
@@ -364,7 +366,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -386,7 +388,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -424,7 +426,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -461,7 +463,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -519,7 +521,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -530,7 +532,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
 
     val source =
       """
-        |allOf(Array(2 > 1, 1 == 1, 3 != 4, 10 < 100, true))
+        |allOf( Array(2 > 1, 1 == 1, 3 != 4, 10 < 100, true) )
       """.stripMargin
 
     val expected: Seq[Expr] = ArrayBuffer(
@@ -566,7 +568,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -598,7 +600,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -629,7 +631,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 
@@ -659,7 +661,7 @@ class ParserSpec extends PropSpec with Matchers with Parser {
       )
     )
 
-    val parsedTry = parse(source)
+    val parsedTry = parseExpr(source)
 
     parsedTry.isSuccess shouldBe true
 

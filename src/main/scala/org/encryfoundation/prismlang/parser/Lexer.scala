@@ -1,9 +1,8 @@
 package org.encryfoundation.prismlang.parser
 
-import fastparse._, NoWhitespace._
+import fastparse._
+import NoWhitespace._
 import org.encryfoundation.prismlang.core.Ast
-
-class WsApi[_: P] extends fastparse.Wrapper(new Lexer[P].WS)
 
 object Lexer {
 
@@ -27,21 +26,21 @@ object Lexer {
     "struct"
   )
 
+
   /** Parses all whitespace, excluding newlines. This is only
     * really useful in e.g. {} blocks, where we want to avoid
     * capturing newlines so semicolon-inference would work */
+
   def WS[_: P]: P[Unit] = P( NoCut(NoTrace((Basic.WSChars | Comment).rep)))
 
   /** Parses whitespace, including newlines.
     * This is the default for most things */
-  def WL0[_: P]: P[Unit] = P( NoTrace((Basic.WSChars | Comment | Basic.Newline).rep) )(sourcecode.Name("WL"))
-  def WL[_: P]: P[Unit] = P( NoCut(WL0) )
 
   def Semi[_: P]: P[Unit] = P( WS ~ Basic.Semi )
-  def Semis[_: P]: P[Unit] = P( Semi.rep(1) ~ WS )
+  def Semis[_: P]: P[Unit] = P( Semi.rep(1) ~ WS)
 
   def LineB[_: P]: P[Unit] = P( WS ~ Basic.Linebreak )
-  def LineBreak[_: P]: P[Unit] = P( LineB.rep(1) ~ WS )
+  def LineBreak[_: P]: P[Unit] = P( LineB.rep(1) ~ WS)
 
   def NotNewline[_: P]: P0 = P( &( WS ~ !Basic.Newline ) )
   def OneNLMax[_: P]: P0 = {
@@ -58,10 +57,11 @@ object Lexer {
   def LineComment[_: P]: P[Unit] = P( "//" ~ SameLineCharChunks.rep ~ &(Basic.Newline | End) )
   def Comment[_: P]: P0 = P( MultilineComment | LineComment )
 
-  def integer[_: P]: P[(Long, Char, String)] = P( ("+" | "-").?.! ~ CharIn('0' to '9').rep(min = 1).! ).map {
-    case ("-", i) => ("-" + i).toLong
-    case (_, i) => i.toLong
-  }
+  def integer[_: P]: P[Long] =
+    P(CharIn("+\\-").?.! ~ CharIn("0-9").rep(1).!).map {
+      case ("-", i) => ("-" + i).toLong
+      case (_, i) => i.toLong
+    }
 
   def stringliteral[_: P]: P[String] = P( stringprefix.? ~ (longstring | shortstring) )
   def stringprefix[_: P]: P0 = P(
@@ -84,10 +84,10 @@ object Lexer {
     .map(Ast.Ident)
 
   def letter[_: P]: P[Unit] =        P( lowercase | uppercase )
-  def lowercase[_: P]: P[Unit] =     P( CharIn('a' to 'z') )
-  def uppercase[_: P]: P[Unit] =     P( CharIn('A' to 'Z') )
-  def digit[_: P]: P[Unit] =         P( CharIn('0' to '9') )
-  def hexdigit[_: P]: P0 =                    P( digit | CharIn('a' to 'f', 'A' to 'F') )
+  def lowercase[_: P]: P[Unit] =     P( CharIn("a-z") )
+  def uppercase[_: P]: P[Unit] =     P( CharIn("A-Z") )
+  def digit[_: P]: P[Unit] =         P( CharIn("0-9") )
+  def hexdigit[_: P]: P0 =           P( digit | CharIn("a-f", "A-F") )
 
-  def kwd[_: P](s: String): P[(Unit, Char, String)] = s ~ !(letter | digit | "_")
+  def kwd[_: P](s: String): P[Unit] = s ~ !(letter | digit | "_")
 }
