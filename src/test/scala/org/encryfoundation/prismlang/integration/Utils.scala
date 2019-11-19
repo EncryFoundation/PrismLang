@@ -38,7 +38,6 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
       case _ => throw new Exception("Cannot evaluate expression")
     }
     val tryEvaluatedExpression: Try[Any] = eval(expression)
-    println(tryEvaluatedExpression)
     tryEvaluatedExpression.isSuccess shouldBe evaluationSuccess
     if (evaluationSuccess) {
       val value: Any = expectedValue.getOrElse(throw new Exception("No value to compare found"))
@@ -55,7 +54,6 @@ trait Utils extends TestCompiler with Parser with ExprEvaluator with Matchers {
         } else
           (true, false, None)
       case Failure(er) =>
-        println(er.getMessage)
         (false, false, None)
     }
 

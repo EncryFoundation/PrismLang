@@ -18,6 +18,6 @@ object Parser {
 
   def parseModule(source: String): Try[Ast.Module] = parse(source, module(_)) match {
     case r: Parsed.Success[Ast.Module] => Success(r.value)
-    case e: Parsed.Failure => Failure(new Exception(s"Parsing failed: ${e.msg}"))
+    case e: Parsed.Failure => Failure(new Exception(s"Parsing failed: ${e.trace().longAggregateMsg}"))
   }
 }

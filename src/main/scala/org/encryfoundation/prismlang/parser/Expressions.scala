@@ -180,7 +180,6 @@ object Expressions {
   def tpe[_: P]: P[Ast.TypeDescriptor] = P( productType | simpleType )
 
   def struct[_: P]: P[Ast.Struct] = P( kwd("struct") ~ NAME ~ ":" ~ tpe ).map { case (id, tp) =>
-    println(s"struct: ${id}")
     Ast.Struct(id, tp)
   }
 }
