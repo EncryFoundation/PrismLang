@@ -17,7 +17,7 @@ assemblyMergeStrategy in assembly := {
 }
 
 libraryDependencies ++= Seq(
-  "com.lihaoyi" %% "fastparse" % "1.0.0",
+  "com.lihaoyi" %% "fastparse" % "2.1.3",
   "com.google.guava" % "guava" % "21.0",
   "org.scorexfoundation" %% "scrypto" % "2.1.2",
   "org.scodec" %% "scodec-core" % "1.10.3",
