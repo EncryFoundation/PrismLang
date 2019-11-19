@@ -96,8 +96,8 @@ object Expressions {
   def testlist[_: P]: P[Seq[Ast.Expr]] = P( test.rep(1, sep = ",") ~ ",".? )
 
   def subscript[_: P]: P[Ast.SliceOp] = {
-    val single = P(test.map(Ast.SliceOp.Index))
-    val multi = P(test.? ~ ":" ~ test.?).map { case (lower, upper) =>
+    def single = P(test.map(Ast.SliceOp.Index))
+    def multi = P(test.? ~ ":" ~ test.?).map { case (lower, upper) =>
       Ast.SliceOp.Slice(lower, upper)
     }
     P( multi | single )
@@ -111,8 +111,9 @@ object Expressions {
     def call = P("(" ~ arglist ~ ")").map { args => (lhs: Ast.Expr) =>
       Ast.Expr.Call(lhs, args.toList)
      }
-    def slice = P("[" ~ subscriptlist ~ "]").map(args => (lhs: Ast.Expr) =>
-      Ast.Expr.Subscript(lhs, args))
+    def slice = P("[" ~ subscriptlist ~ "]").map{args => (lhs: Ast.Expr) =>
+      Ast.Expr.Subscript(lhs, args)
+    }
     def attr = P("." ~ NAME).map(id => (lhs: Ast.Expr) => Ast.Expr.Attribute(lhs, id) )
     P(call | slice | attr)
   }
@@ -143,12 +144,11 @@ object Expressions {
     .map { case (name, args, retType, body) => Ast.Expr.Def(name, args.toList, body, retType) }
 
   def ifExpr[_: P]: P[Ast.Expr.If] = {
-    def firstIf: P[(Expr, Expr)] = P( kwd("if") ~ "(" ~ test ~ ")" ~ expr)
-    def lastElse: P[Expr] = P( Semi.? ~ kwd("else") ~ expr ~ Semi.?)
-    val res = P( firstIf ~/ lastElse ).map { case (tst, body, elseBody) =>
+    def firstIf: P[(Expr, Expr)] = P( kwd("if") ~ "(" ~ test ~ ")" ~/ expr)
+    def lastElse: P[Expr] = P( Semi.? ~ kwd("else") ~/ expr)
+    P( firstIf ~ lastElse ).map { case (tst, body, elseBody) =>
       Ast.Expr.If(tst, body, elseBody)
     }
-    res
   }
 
   def ifLetExpr[_: P]: P[Ast.Expr.IfLet] = {
@@ -179,5 +179,8 @@ object Expressions {
 
   def tpe[_: P]: P[Ast.TypeDescriptor] = P( productType | simpleType )
 
-  def struct[_: P]: P[Ast.Struct] = P( kwd("struct") ~ NAME ~ ":" ~ tpe ).map { case (id, tp) => Ast.Struct(id, tp) }
+  def struct[_: P]: P[Ast.Struct] = P( kwd("struct") ~ NAME ~ ":" ~ tpe ).map { case (id, tp) =>
+    println(s"struct: ${id}")
+    Ast.Struct(id, tp)
+  }
 }

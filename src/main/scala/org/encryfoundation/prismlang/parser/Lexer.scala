@@ -44,7 +44,7 @@ object Lexer {
 
   def NotNewline[_: P]: P0 = P( &( WS ~ !Basic.Newline ) )
   def OneNLMax[_: P]: P0 = {
-    val ConsumeComments = P( (Basic.WSChars.? ~ Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
+    def ConsumeComments = P( (Basic.WSChars.? ~ Comment ~ Basic.WSChars.? ~ Basic.Newline).rep )
     P( NoCut( WS ~ Basic.Newline.? ~ ConsumeComments ~ NotNewline) )
   }
 
