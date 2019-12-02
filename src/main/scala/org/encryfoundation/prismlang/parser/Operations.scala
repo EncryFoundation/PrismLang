@@ -34,6 +34,7 @@ object Operations {
     P( p ~ (op ~ p).rep).map {
         case (lhs, chunks) =>
           chunks.foldLeft(lhs) { case (lhs, (op, rhs)) =>
+            println(s"chain $lhs with ${op}")
             Ast.Expr.Bin(lhs, op, rhs)
           }
       }

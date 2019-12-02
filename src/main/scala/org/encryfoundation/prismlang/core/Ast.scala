@@ -12,7 +12,7 @@ object Ast {
 
   case class Contract(body: Expr, args: List[(Ident, TypeIdent)]) extends Node
 
-  sealed trait Expr { val tpe: PType }
+  sealed trait Expr {val tpe: PType}
   object Expr {
 
     case class Block(body: List[Expr], override val tpe: PType = Nit) extends Expr {
@@ -21,11 +21,13 @@ object Ast {
 
     // Syntactical constructions
     case class Let(name: Ident, value: Expr, typeIdentOpt: Option[TypeIdent]) extends Expr {
+      val nameForScope: String = name.name + "let"
       override def toString: String = s"let $name = $value"
       override val tpe: PType = PUnit
     }
 
     case class Def(name: Ident, args: List[(Ident, TypeIdent)], body: Expr, returnTypeIdent: TypeIdent) extends Expr {
+      val nameForScope: String = name.name + "def" + args.map(_._2.name).mkString
       override def toString: String = s"def $name(${args.map{case (argName, argType) => s"$argName: $argType"}.mkString(",")}): $returnTypeIdent = {\n$body\n}"
       override val tpe: PType = PUnit
     }

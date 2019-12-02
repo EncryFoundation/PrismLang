@@ -101,9 +101,11 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
 
       /** Evaluate operands, then perform `op`. */
       case bin @ Expr.Bin(left, op, right) =>
-        logger.debug(s"""Evaluating binary operation "$op" between $left and $right """)
+        println(s"""Evaluating binary operation "$op" between ${left.tpe} and ${right.tpe} """)
         val leftR: left.tpe.Underlying = eval[left.tpe.Underlying](left)
+        println(s"leftR: ${leftR}")
         val rightR: right.tpe.Underlying = eval[right.tpe.Underlying](right)
+        println(s"rightR: ${rightR}")
         op match {
           case Operator.Add =>
             Arith.add[bin.tpe.Underlying](leftR, rightR)
