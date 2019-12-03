@@ -1,23 +1,21 @@
 package org.encryfoundation.prismlang.compiler.scope
 
-import org.encryfoundation.prismlang.compiler.{SemanticAnalysisException, TypeMatching}
-import org.encryfoundation.prismlang.compiler.scope.Symbol.{FunctionSymbol, VariableSymbol}
-
-import scala.collection.immutable.{HashSet, TreeMap}
 import cats.implicits._
-import cats.instances.set
-import cats.instances.map
-import cats.instances.string
+import org.encryfoundation.prismlang.compiler.scope.Symbol.{FunctionSymbol, VariableSymbol}
+import org.encryfoundation.prismlang.compiler.{SemanticAnalysisException, TypeMatching}
 import org.encryfoundation.prismlang.core.Ast.Expr
 import org.encryfoundation.prismlang.core.Ast.Expr.Call
 import org.encryfoundation.prismlang.core.TypeSystem
-import org.encryfoundation.prismlang.core.Types.{PFunc, PType}
+import org.encryfoundation.prismlang.core.Types.PType
+
+import scala.collection.immutable.TreeMap
 
 case class ScopedSymbolTable(scopeLevel: Int,
                              parentalScopeOpt: Option[ScopedSymbolTable] = None,
                              initialVariables: List[VariableSymbol] = List.empty,
                              initialFunctions: List[FunctionSymbol] = List.empty,
                              isFunc: Boolean = false) extends TypeMatching {
+
 
   var variablesSymbols: Map[String, VariableSymbol] =
     TreeMap(initialVariables.map(m => m.name -> m):_*)
