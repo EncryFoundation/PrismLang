@@ -101,11 +101,8 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
 
       /** Evaluate operands, then perform `op`. */
       case bin @ Expr.Bin(left, op, right) =>
-        println(s"""Evaluating binary operation "$op" between ${left.tpe} and ${right.tpe} """)
         val leftR: left.tpe.Underlying = eval[left.tpe.Underlying](left)
-        println(s"leftR: ${leftR}")
         val rightR: right.tpe.Underlying = eval[right.tpe.Underlying](right)
-        println(s"rightR: ${rightR}")
         op match {
           case Operator.Add =>
             Arith.add[bin.tpe.Underlying](leftR, rightR)
@@ -162,7 +159,6 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
         * env, put there resolved arguments and evaluate `body`. In case predefined function
         * is called, just call body passing to it list of resolved arguments. */
       case m@Expr.Call(name: Expr.Name, args, _) =>
-        println(s"Call ${m} " + args)
         logger.debug(s"""Evaluating "Call" expression. Trying to invoke ${name.ident.name}(${args.collect{case name: Expr.Name => s"${name.ident.name}: ${name.tpe}"}.mkString(", ")})""")
         currentEnvironment.getFunction(name.ident.name, args.map(_.tpe)) match {
           case Some(func: PFunction) => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)):_*)

@@ -35,10 +35,8 @@ case class ScopedSymbolTable(scopeLevel: Int,
     }
   }
 
-  def lookupVariable(name: String, currentScopeOnly: Boolean = false): Option[VariableSymbol] = {
-    //println(variablesSymbols)
+  def lookupVariable(name: String, currentScopeOnly: Boolean = false): Option[VariableSymbol] =
     variablesSymbols.get(name).orElse(if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookupVariable(name)) else None)
-  }
 
   def lookupFunction(name: String, args: List[PType], currentScopeOnly: Boolean = false): Option[FunctionSymbol] = {
     functionsSymbols.get(name).flatMap(_.find(elem =>
