@@ -65,12 +65,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     /** Resolve arguments, create scope for the function body
       * with argument inserted, scan body, pop function scope. */
     case lamb @ Expr.Lambda(args, body, _) =>
-      //println(s"lamb: ${lamb}")
       val params: List[(String, Types.PType)] = types.resolveArgs(args)
-      val bodyScope: ScopedSymbolTable = currentScope.nested(variables = params.map(p => {
-        //println(s"put in scope: ${VariableSymbol(p._1, p._2)}")
-        VariableSymbol(p._1, p._2)
-      }), functions = List.empty, isFunc = true)
+      val bodyScope: ScopedSymbolTable = currentScope.nested(variables = params.map(p =>
+        VariableSymbol(p._1, p._2)), functions = List.empty, isFunc = true
+      )
       scopes = bodyScope :: scopes
       val bodyS: Expr = scan(body)
       scopes = scopes.tail
@@ -121,7 +119,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case block @ Expr.Block(body, _) =>
       val bodyScope: ScopedSymbolTable = currentScope.nested(isFunc = false)
       scopes = bodyScope :: scopes
-      val bodyS: List[Expr] = body.map(scan)
+      val bodyS: List[Expr] = body.map(elem => scan(elem))
       val blockType: Types.PType = computeType(block.copy(bodyS))
       scopes = scopes.tail
       block.copy(bodyS, blockType)
@@ -190,7 +188,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       currentScope.lookupFunction(func.ident.name, argsS.map(_.tpe)) match {
         case Some(funcSymbol) =>
           val funcS = func.copy(tpe = funcSymbol.tpe)
-          call.copy(funcS, argsS, computeType(call))
+          call.copy(funcS, argsS, funcSymbol.tpe.retT)
         case None => throw SemanticAnalysisException(s"function ${ident.name} is not a function")
       }
 
@@ -198,7 +196,6 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case attr @ Expr.Attribute(value, attrName, _) =>
       val valueS: Expr = scan(value)
       attr.copy(valueS, attrName, computeType(attr.copy(valueS)))
-
     /** Scan value, its type will be checked in `computeType()` (should be Collection). */
     case slice @ Expr.Subscript(value, op, _) =>
       val valueS: Expr = scan(value)
@@ -266,7 +263,6 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       * type `Func`, check whether `func` can be applied to `coll`. */
     case map @ Expr.Map(coll, func, _) =>
       val collS: Expr = scan(coll)
-      //println(s"call map: ${collS}")
       val collectionElType = scan(coll).tpe match {
         case collection: PCollection => collection.valT
         case product: TaggedType => product.underlyingType
@@ -337,18 +333,17 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
 
     /** Type of the referenced name is looked up in the scope. */
     case nameCall @ Expr.Name(Ident(name), _) =>
-      //println("nameCall: " + nameCall)
       currentScope.lookupVariable(nameCall).map(_.tpe).getOrElse(throw SemanticAnalysisException(s"variable $name is undefined"))
 
     /** In this case some referenced name is called, the type
       * is inferred from the return-type of the ref, which is
       * looked up in the scope. */
     case call@Expr.Call(func @ Expr.Name(ident, _), args, _) =>
-      println(s"call: ${call}")
-      currentScope.lookupFunction(func.ident.name, args.map(arg => computeType(arg))) match {
+      val res = currentScope.lookupFunction(func.ident.name, args.map(arg => computeType(arg))) match {
         case _@Some(FunctionSymbol(_, _@Types.PFunc(_, retT))) => retT
         case _ => throw SemanticAnalysisException(s"${ident.name} is not a function")
       }
+      res
 
     /** Type of attribute is inferred from the type of
       * corresponding field of the object. */
@@ -375,14 +370,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
     case Expr.Lambda(args, body, _) => Types.PFunc(types.resolveArgs(args), computeType(body))
     case Expr.Tuple(elts, _) => Types.PTuple(elts.map(elt => computeType(elt)))
     case Expr.Collection(elts, _) => Types.PCollection(computeType(elts.head))
-    case Expr.Map(_, func, _) => {
-      //println(s"func: ${func}. ${computeType(func)}")
-      //println(s"scope: ${currentScope}")
-      computeType(func) match {
+    case Expr.Map(_, func, _) => computeType(func) match {
         case Types.PFunc(_, retT) => Types.PCollection(retT)
         case otherT => throw SemanticAnalysisException(s"$otherT is not a function")
       }
-    }
     case Expr.Filter(coll, _, _) => computeType(coll)
   }
 

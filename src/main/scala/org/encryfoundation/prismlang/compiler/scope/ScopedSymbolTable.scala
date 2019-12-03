@@ -30,7 +30,6 @@ case class ScopedSymbolTable(scopeLevel: Int,
         lookupVariable(name).foreach(_ => throw SemanticAnalysisException(s"Variable $name is already defined in scope"))
         variablesSymbols = variablesSymbols.updated(variable.name, variable)
       case function @ Symbol.FunctionSymbol(name, tpe) =>
-        //println(s"insert: $function")
         lookupFunction(name, tpe.args.map(_._2)).foreach(_ =>
           throw SemanticAnalysisException(s"Function $name with args list of type (${tpe.args.map(_._2).mkString(",")}) is already defined in scope")
         )
@@ -44,11 +43,9 @@ case class ScopedSymbolTable(scopeLevel: Int,
   }
 
   def lookupFunction(name: String, args: List[PType], currentScopeOnly: Boolean = false): Option[FunctionSymbol] = {
-    functionsSymbols.get(name).flatMap(_.find(elem => {
-      println(s"${elem.name}||${elem.tpe.args}||${args}")
-      elem.tpe.args.map(_._2).zip(args).forall { case (dt, ft) => matchType(dt, ft); true}
-    }))
-      .orElse(if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookupFunction(name, args)) else None)
+    functionsSymbols.get(name).flatMap(_.find(elem =>
+      elem.tpe.args.length == args.length && elem.tpe.args.map(_._2).zip(args).forall { case (dt, ft) => matchType(dt, ft); true}
+    )).orElse(if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookupFunction(name, args)) else None)
   }
 
   def lookupVariable(name: Expr.Name): Option[VariableSymbol] = lookupVariable(name.ident.name)
@@ -59,23 +56,17 @@ case class ScopedSymbolTable(scopeLevel: Int,
 
   def lookupFunctionByCall(funcCall: Call, typeSystem: TypeSystem, typesResolver: Expr => PType): Option[FunctionSymbol] = funcCall match {
     case Expr.Call(func @ Expr.Name(_, _), args, _) =>
-      println(s"Looking for $func func. Args: ${args}")
       val argsTypes = args.flatMap {
         case call@ Expr.Call(_, _, _) =>
           lookupFunctionByCall(call, typeSystem, typesResolver).map(func => List(func.tpe))
         case name: Expr.Name =>
           lookupVariable(name).map( variable => List(variable.tpe))
         case anotherExpr: Expr =>
-          println(s"another expr: ${anotherExpr.getClass}")
           List(typesResolver(anotherExpr)).some
       }.flatten
       //todo: Add check for eq args.length and argsTypes.length
-      val res = lookupFunction(func.ident.name, argsTypes)
-      println(s"res of looking: ${res}")
-      res
-    case el =>
-      println(s"Looking for $el")
-      None
+      lookupFunction(func.ident.name, argsTypes)
+    case _ => None
   }
 
   def lookup(name: String, currentScopeOnly: Boolean = false): Option[Symbol] =
