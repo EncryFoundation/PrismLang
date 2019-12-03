@@ -30,7 +30,7 @@ case class ScopedSymbolTable(scopeLevel: Int,
         lookupVariable(name).foreach(_ => throw SemanticAnalysisException(s"Variable $name is already defined in scope"))
         variablesSymbols = variablesSymbols.updated(variable.name, variable)
       case function @ Symbol.FunctionSymbol(name, tpe) =>
-        println(s"insert: $function")
+        //println(s"insert: $function")
         lookupFunction(name, tpe.args.map(_._2)).foreach(_ =>
           throw SemanticAnalysisException(s"Function $name with args list of type (${tpe.args.map(_._2).mkString(",")}) is already defined in scope")
         )
@@ -39,7 +39,7 @@ case class ScopedSymbolTable(scopeLevel: Int,
   }
 
   def lookupVariable(name: String, currentScopeOnly: Boolean = false): Option[VariableSymbol] = {
-    println(variablesSymbols)
+    //println(variablesSymbols)
     variablesSymbols.get(name).orElse(if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookupVariable(name)) else None)
   }
 
