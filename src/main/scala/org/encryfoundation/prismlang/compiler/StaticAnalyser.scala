@@ -339,11 +339,10 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       * is inferred from the return-type of the ref, which is
       * looked up in the scope. */
     case call@Expr.Call(func @ Expr.Name(ident, _), args, _) =>
-      val res = currentScope.lookupFunction(func.ident.name, args.map(arg => computeType(arg))) match {
+      currentScope.lookupFunction(func.ident.name, args.map(arg => computeType(arg))) match {
         case _@Some(FunctionSymbol(_, _@Types.PFunc(_, retT))) => retT
         case _ => throw SemanticAnalysisException(s"${ident.name} is not a function")
       }
-      res
 
     /** Type of attribute is inferred from the type of
       * corresponding field of the object. */
