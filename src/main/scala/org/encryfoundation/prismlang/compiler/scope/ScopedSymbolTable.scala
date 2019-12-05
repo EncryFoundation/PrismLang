@@ -1,13 +1,10 @@
 package org.encryfoundation.prismlang.compiler.scope
 
 import cats.implicits._
-import org.encryfoundation.prismlang.compiler.scope.Symbol.{FunctionSymbol, VariableSymbol}
-import org.encryfoundation.prismlang.compiler.{SemanticAnalysisException, TypeMatching}
+import org.encryfoundation.prismlang.compiler.scope.Symbol.{ FunctionSymbol, VariableSymbol }
+import org.encryfoundation.prismlang.compiler.{ SemanticAnalysisException, TypeMatching }
 import org.encryfoundation.prismlang.core.Ast.Expr
-import org.encryfoundation.prismlang.core.Ast.Expr.Call
-import org.encryfoundation.prismlang.core.TypeSystem
 import org.encryfoundation.prismlang.core.Types.PType
-
 import scala.collection.immutable.TreeMap
 
 case class ScopedSymbolTable(scopeLevel: Int,
@@ -45,28 +42,6 @@ case class ScopedSymbolTable(scopeLevel: Int,
   }
 
   def lookupVariable(name: Expr.Name): Option[VariableSymbol] = lookupVariable(name.ident.name)
-
-  def possiblePredicateFunc(name: Expr.Name, argType: PType, typeSystem: TypeSystem): Option[FunctionSymbol] = {
-    lookupFunction(name.ident.name, List(argType))
-  }
-
-  def lookupFunctionByCall(funcCall: Call, typeSystem: TypeSystem, typesResolver: Expr => PType): Option[FunctionSymbol] = funcCall match {
-    case Expr.Call(func @ Expr.Name(_, _), args, _) =>
-      val argsTypes = args.flatMap {
-        case call@ Expr.Call(_, _, _) =>
-          lookupFunctionByCall(call, typeSystem, typesResolver).map(func => List(func.tpe))
-        case name: Expr.Name =>
-          lookupVariable(name).map( variable => List(variable.tpe))
-        case anotherExpr: Expr =>
-          List(typesResolver(anotherExpr)).some
-      }.flatten
-      //todo: Add check for eq args.length and argsTypes.length
-      lookupFunction(func.ident.name, argsTypes)
-    case _ => None
-  }
-
-  def lookup(name: String, currentScopeOnly: Boolean = false): Option[Symbol] =
-    variablesSymbols.get(name).orElse(if (!currentScopeOnly) parentalScopeOpt.flatMap(_.lookup(name)) else None)
 
   def nested(variables: List[VariableSymbol], functions: List[FunctionSymbol], isFunc: Boolean = false): ScopedSymbolTable =
     ScopedSymbolTable(this.scopeLevel + 1, Some(this), variables, functions, isFunc)

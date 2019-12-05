@@ -263,7 +263,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       * type `Func`, check whether `func` can be applied to `coll`. */
     case map @ Expr.Map(coll, func, _) =>
       val collS: Expr = scan(coll)
-      val collectionElType = scan(coll).tpe match {
+      val collectionElType = collS.tpe match {
         case collection: PCollection => collection.valT
         case product: TaggedType => product.underlyingType
         case _ => throw SemanticAnalysisException(s"'map()' is inapplicable to ${collS.tpe}")
@@ -284,7 +284,7 @@ case class StaticAnalyser(initialScope: ScopedSymbolTable, types: TypeSystem) ex
       * type `Func`, check whether `func` can be applied to `coll`. */
     case exists @ Expr.Exists(coll, predicate) =>
       val collS: Expr = scan(coll)
-      val collectionElType = scan(coll).tpe match {
+      val collectionElType = collS.tpe match {
         case collection: PCollection => collection.valT
         case product: TaggedType => product.underlyingType
         case _ => throw SemanticAnalysisException(s"'map()' is inapplicable to ${collS.tpe}")
