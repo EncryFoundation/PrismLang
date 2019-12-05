@@ -4,6 +4,7 @@ import org.encryfoundation.prismlang.compiler.TestCompiler
 import org.encryfoundation.prismlang.core.Ast.Expr.{Compare, _}
 import org.encryfoundation.prismlang.core.Ast._
 import org.encryfoundation.prismlang.core.Types
+import org.encryfoundation.prismlang.core.Types.{PFunc, PInt}
 import org.scalatest.{Matchers, PropSpec}
 
 import scala.util.{Failure, Try}
@@ -422,5 +423,242 @@ class EvaluatorSpec extends PropSpec with Matchers with TestCompiler with ExprEv
     resultTry.isSuccess shouldBe true
 
     resultTry.get shouldBe List("qwe", 1)
+  }
+
+  property("Nested") {
+    val expr: Expr =
+      Block(
+        List(
+          Def(
+            Ident("nested0"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                Def(
+                  Ident("nested1"),
+                  List(
+                    (Ident("arg1"), TypeIdent("Int", List()))
+                  ),
+                  Block(
+                    List(
+                      Name(Ident("arg1"), PInt)
+                    )
+                  )
+                  ,
+                  TypeIdent("Int",List())
+                ),
+                Call(
+                  Name(Ident("nested1")),
+                  List(
+                    Name(Ident("arg"), PInt)
+                  ),
+                  PInt
+                )
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Call(
+            Name(Ident("nested0")),
+            List(
+              IntConst(2)
+            ),
+            PInt
+          )
+        )
+      )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe 2
+  }
+
+  property("Same name different params number (second func)") {
+
+    val expr: Expr =
+      Block(
+        List(
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(2)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List())),
+              (Ident("arg1"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(3)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List())),
+              (Ident("arg1"), TypeIdent("Int", List())),
+              (Ident("arg2"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(4)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Call(
+            Name(Ident("function")),
+            List(
+              IntConst(1),
+              IntConst(1)
+            ),
+            PInt
+          )
+        )
+      )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe 3
+  }
+
+  property("Same name different params number (first func)") {
+    val expr: Expr =
+      Block(
+        List(
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(2)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List())),
+              (Ident("arg1"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(3)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List())),
+              (Ident("arg1"), TypeIdent("Int", List())),
+              (Ident("arg2"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(4)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Call(
+            Name(Ident("function")),
+            List(
+              IntConst(1)
+            ),
+            PInt
+          )
+        )
+      )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe 2
+  }
+
+  property("Same name different params number (third func)") {
+
+    val expr: Expr =
+      Block(
+        List(
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(2)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List())),
+              (Ident("arg1"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(3)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Def(
+            Ident("function"),
+            List(
+              (Ident("arg"), TypeIdent("Int", List())),
+              (Ident("arg1"), TypeIdent("Int", List())),
+              (Ident("arg2"), TypeIdent("Int", List()))
+            ),
+            Block(
+              List(
+                IntConst(4)
+              )
+            ),
+            TypeIdent("Int", List())
+          ),
+          Call(
+            Name(Ident("function")),
+            List(
+              IntConst(1),
+              IntConst(1),
+              IntConst(1)
+            ),
+            PInt
+          )
+        )
+      )
+
+    val resultTry: Try[Any] = eval(compileExpr(expr).get)
+
+    resultTry.isSuccess shouldBe true
+
+    resultTry.get shouldBe 4
   }
 }

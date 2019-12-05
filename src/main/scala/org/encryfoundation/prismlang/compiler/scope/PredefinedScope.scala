@@ -23,7 +23,7 @@ object PredefinedScope {
     collection.AllOf
   )
 
-  val members: List[(String, Types.PType)] = List(
+  val members: List[(String, Types.PFunc)] = List(
     (signature.CheckSig.name, Types.PFunc(signature.CheckSig.args.toList, Types.PBoolean)),
     (hash.Blake2b256Hash.name, Types.PFunc(hash.Blake2b256Hash.args.toList, Types.PCollection.ofByte)),
     (hash.Blake2b512Hash.name, Types.PFunc(hash.Blake2b512Hash.args.toList, Types.PCollection.ofByte)),

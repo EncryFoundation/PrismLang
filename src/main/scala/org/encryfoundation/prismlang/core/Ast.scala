@@ -12,7 +12,7 @@ object Ast {
 
   case class Contract(body: Expr, args: List[(Ident, TypeIdent)]) extends Node
 
-  sealed trait Expr { val tpe: PType }
+  sealed trait Expr {val tpe: PType}
   object Expr {
 
     case class Block(body: List[Expr], override val tpe: PType = Nit) extends Expr {

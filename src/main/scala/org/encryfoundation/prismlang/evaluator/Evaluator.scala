@@ -101,7 +101,6 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
 
       /** Evaluate operands, then perform `op`. */
       case bin @ Expr.Bin(left, op, right) =>
-        logger.debug(s"""Evaluating binary operation "$op" between $left and $right """)
         val leftR: left.tpe.Underlying = eval[left.tpe.Underlying](left)
         val rightR: right.tpe.Underlying = eval[right.tpe.Underlying](right)
         op match {
@@ -148,11 +147,10 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
         }
 
       /** Get referenced name from environment. */
-      case Expr.Name(ident, _) =>
+      case Expr.Name(ident: Ident, _) =>
         logger.debug(s"""Evaluating "Name" expression. Trying to get ${ident.name} from environment""")
         currentEnvironment.get(ident.name) match {
           case Some(v: PValue) => v.value
-          case Some(f: PFunction) => f
           case Some(pf: PFunctionPredef) => pf
           case None => error(s"Unresolved reference '${ident.name}'")
         }
@@ -160,14 +158,20 @@ case class Evaluator(initialEnv: ScopedRuntimeEnvironment, types: TypeSystem) ex
       /** Get called function from env. In case regular function is called, create nested
         * env, put there resolved arguments and evaluate `body`. In case predefined function
         * is called, just call body passing to it list of resolved arguments. */
-      case Expr.Call(name: Expr.Name, args, _) =>
+      case m@Expr.Call(name: Expr.Name, args, _) =>
         logger.debug(s"""Evaluating "Call" expression. Trying to invoke ${name.ident.name}(${args.collect{case name: Expr.Name => s"${name.ident.name}: ${name.tpe}"}.mkString(", ")})""")
-        eval[name.tpe.Underlying](name) match {
-          case func: PFunction => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)):_*)
-          case PFunctionPredef(varargs, body) =>
-            val argsR: List[(String, PValue)] = args.map(arg => eval[arg.tpe.Underlying](arg)).zip(varargs)
-              .map { case (value, (id, argT)) => id -> PValue(value, argT) }
-            body(argsR).getOrElse(error("Predef function execution failed"))
+        currentEnvironment.getFunction(name.ident.name, args.map(_.tpe)) match {
+          case Some(func: PFunction) => invoke(func, args.map(arg => eval[arg.tpe.Underlying](arg)):_*)
+          case None =>
+            eval[name.tpe.Underlying](name) match {
+              case PFunctionPredef(varargs, body) =>
+                val argsR: List[(String, PValue)] = args
+                  .map(arg => eval[arg.tpe.Underlying](arg))
+                  .zip(varargs)
+                  .map { case (value, (id, argT)) => id -> PValue(value, argT) }
+
+                body(argsR).getOrElse(error("Predef function execution failed"))
+            }
         }
 
       /** Evaluate `value`, in case it is an `PObject`, get corresponding field. If evaluated

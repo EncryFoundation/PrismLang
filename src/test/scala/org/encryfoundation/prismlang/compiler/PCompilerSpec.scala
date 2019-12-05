@@ -103,4 +103,80 @@ class PCompilerSpec extends PropSpec with Matchers {
 
     compiledTry.isSuccess shouldBe true
   }
+
+  property("Nested functions resolver") {
+    val source: String =
+      """
+        |contract () = {
+        |
+        |  def nested0(arg: Int): Int = {
+        |     def nested1(arg1: Int): Int = {
+        |       arg1
+        |     }
+        |   nested1(arg)
+        |  }
+        |
+        |  nested0(2)
+        |
+        |  def functionWithArgs(arg: Int): Int = {
+        |   arg
+        |  }
+        |
+        |  def functionWithArgs(arg1: Int, arg2: Int): Int = {
+        |   arg2
+        |  }
+        |
+        |  def functionWithArgs(arg1: Int, arg2: Int, arg3: Int): Int = {
+        |   arg3
+        |  }
+        |
+        |  functionWithArgs(1)
+        |  functionWithArgs(1, 2)
+        |  functionWithArgs(1, 2, 3)
+        |
+        |  true
+        |}
+      """.stripMargin
+
+    val source1: String =
+      """
+        |contract () = {
+        |
+        |  def functionWithArgs(arg1: Int): Int = {
+        |   arg1
+        |  }
+        |
+        |  def functionWithArgs(arg1: Int, arg2: Int): Int = {
+        |   arg2
+        |  }
+        |
+        |  def functionWithArgs(arg1: Int, arg2: Int, arg3: Int): Int = {
+        |   arg3
+        |  }
+        |
+        |  functionWithArgs(1, 2, 3, 4)
+        |
+        |  true
+        |}
+      """.stripMargin
+
+    val source2: String =
+      """
+        |contract () = {
+        |
+        |  let a = 1
+        |  let b = a
+        |
+        |  true
+        |}
+      """.stripMargin
+
+    val compiledTry: Try[CompiledContract] = PCompiler.compile(source)
+    val compiledTry1: Try[CompiledContract] = PCompiler.compile(source1)
+    val compiledTry2: Try[CompiledContract] = PCompiler.compile(source2)
+
+    compiledTry.isSuccess shouldBe true
+    compiledTry1.isSuccess shouldBe false
+    compiledTry2.isSuccess shouldBe true
+  }
 }

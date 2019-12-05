@@ -12,7 +12,7 @@ trait TestCompiler {
   def compileModule(module: Module): Try[CompiledContract] = Try {
     val schemas: List[Types.StructTag] = module.schemas.map(StructDescriptorInterpreter.interpretStruct)
     val contractArgs: List[(String, Types.PType)] = TypeSystem.default.resolveArgs(module.contract.args)
-    val analyser: StaticAnalyser = StaticAnalyser(contractArgs ++ PredefinedScope.members, schemas)
+    val analyser: StaticAnalyser = StaticAnalyser(contractArgs, PredefinedScope.members, schemas)
     val compiledScript: Expr = analyser.scan(Transformer.transform(module.contract.body))
     CompiledContract(contractArgs, compiledScript)
   }

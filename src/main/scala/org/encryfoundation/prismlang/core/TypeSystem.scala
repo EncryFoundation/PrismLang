@@ -34,10 +34,8 @@ case class TypeSystem(additionalTypes: Seq[Types.PType]) extends StrictLogging {
 
   def resolveArgs(args: List[(Ident, TypeIdent)]): List[(String, Types.PType)] = {
     logger.debug(s"Resolving args: ${args.map(arg => s"(${arg._1}, ${arg._2})").mkString(",")}")
-    args.map { case (id, typeId) => id.name -> {
-        resolveType(typeId)
-      }
-    }
+
+    args.map { case (id, typeId) => id.name -> resolveType(typeId) }
   }
 }
 
