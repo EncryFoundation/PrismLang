@@ -2,7 +2,6 @@ package org.encryfoundation.prismlang.parser
 
 import fastparse._
 import org.encryfoundation.prismlang.core.Ast
-import scala.language.implicitConversions
 import scala.util.{Failure, Success, Try}
 
 object Parser {

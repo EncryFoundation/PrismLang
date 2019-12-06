@@ -164,7 +164,7 @@ class PCompilerSpec extends PropSpec with Matchers {
       """
         |contract () = {
         |
-        |  let a = 1
+        |  let a =
         |  let b = a
         |
         |  true
@@ -174,6 +174,7 @@ class PCompilerSpec extends PropSpec with Matchers {
     val compiledTry: Try[CompiledContract] = PCompiler.compile(source)
     val compiledTry1: Try[CompiledContract] = PCompiler.compile(source1)
     val compiledTry2: Try[CompiledContract] = PCompiler.compile(source2)
+    println(compiledTry2)
 
     compiledTry.isSuccess shouldBe true
     compiledTry1.isSuccess shouldBe false
